@@ -4,14 +4,7 @@ module cache_adapter
     input   logic           rst,
 
     // cache side signals, ufp -> upward facing port
-    input   logic   [31:0]  ufp_addr,
-    input   logic           ufp_read,
-    input   logic           ufp_write,
-    input   logic   [255:0] ufp_wdata,
-    output  logic           ufp_ready,
-    output  logic   [31:0]  ufp_raddr,
-    output  logic   [255:0] ufp_rdata,
-    output  logic           ufp_rvalid,
+    cacheline_itf.slave     ufp,
 
     // memory side signals, dfp -> downward facing port
     output  logic   [31:0]  dfp_addr,
@@ -44,38 +37,38 @@ module cache_adapter
     always_comb begin
         next_wdata_state = wdata_state;
         dfp_wdata = 'x;
-        ufp_ready = 1'b0;
+        ufp.ready = 1'b0;
 
         unique case (wdata_state)
             W_Idle: begin
-                ufp_ready = dfp_ready;
-                if (ufp_write) begin
-                    ufp_ready = 1'b0;
-                    dfp_wdata = ufp_wdata[0 +: 64];
+                ufp.ready = dfp_ready;
+                if (ufp.write) begin
+                    ufp.ready = 1'b0;
+                    dfp_wdata = ufp.wdata[0 +: 64];
                     if (dfp_ready) begin
                         next_wdata_state = Issue_1;
                     end
                 end
             end
             Issue_1: begin
-                ufp_ready = 1'b0;
-                dfp_wdata = ufp_wdata[64 +: 64];
+                ufp.ready = 1'b0;
+                dfp_wdata = ufp.wdata[64 +: 64];
                 if (dfp_ready) begin
                     next_wdata_state = Issue_2;
                 end
             end
             Issue_2: begin
-                ufp_ready = 1'b0;
-                dfp_wdata = ufp_wdata[128 +: 64];
+                ufp.ready = 1'b0;
+                dfp_wdata = ufp.wdata[128 +: 64];
                 if (dfp_ready) begin
                     next_wdata_state = Issue_3;
                 end
             end
             Issue_3: begin
-                ufp_ready = 1'b0;
-                dfp_wdata = ufp_wdata[192 +: 64];
+                ufp.ready = 1'b0;
+                dfp_wdata = ufp.wdata[192 +: 64];
                 if (dfp_ready) begin
-                    ufp_ready = 1'b1;
+                    ufp.ready = 1'b1;
                     next_wdata_state = W_Idle;
                 end
             end
@@ -115,8 +108,8 @@ module cache_adapter
 
     always_comb begin
         next_rdata_state = rdata_state;
-        ufp_rdata = 'x;
-        ufp_rvalid = 1'b0;
+        ufp.rdata = 'x;
+        ufp.rvalid = 1'b0;
         for (int i = 0; i < 3; i++) begin
             cache_rdata[i] = 1'b0;
         end
@@ -138,8 +131,8 @@ module cache_adapter
             end
             Collect_3: begin
                 next_rdata_state = R_Idle;
-                ufp_rvalid = 1'b1;
-                ufp_rdata = {dfp_rdata, cached_rdata[2], cached_rdata[1], cached_rdata[0]};
+                ufp.rvalid = 1'b1;
+                ufp.rdata = {dfp_rdata, cached_rdata[2], cached_rdata[1], cached_rdata[0]};
             end
             default: begin
                 // nothing
@@ -147,9 +140,9 @@ module cache_adapter
         endcase
     end
 
-    assign dfp_addr = ufp_addr;
-    assign dfp_read = ufp_read;
-    assign dfp_write = ufp_write;
-    assign ufp_raddr = dfp_raddr;
+    assign dfp_addr = ufp.addr;
+    assign dfp_read = ufp.read;
+    assign dfp_write = ufp.write;
+    assign ufp.raddr = dfp_raddr;
 
 endmodule

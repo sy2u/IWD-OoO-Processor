@@ -11,14 +11,7 @@ import icache_types::*;
     output  logic           ufp_resp,
 
     // memory side signals, dfp -> downward facing port
-    output  logic   [31:0]  dfp_addr,
-    output  logic           dfp_read,
-    output  logic           dfp_write,
-    output  logic   [255:0] dfp_wdata,
-    input   logic           dfp_ready,
-    input   logic   [31:0]  dfp_raddr,
-    input   logic   [255:0] dfp_rdata,
-    input   logic           dfp_rvalid
+    cacheline_itf.master    dfp
 );
             localparam      OFFSET_IDX  = 5;
             localparam      SET_IDX     = 4;
@@ -72,7 +65,7 @@ import icache_types::*;
     assign sram_operating_set = (stall) ? stage_reg.set : ufp_set;
 
     generate for (genvar i = 0; i < NUM_WAYS; i++) begin : arrays
-        mp_cache_data_array data_array (
+        icache_data_array data_array (
             .clk0       (clk),
             .csb0       (data_csb0[i]),
             .web0       (data_web0[i]),
@@ -81,7 +74,7 @@ import icache_types::*;
             .din0       (data_din0),
             .dout0      (data_dout0[i])
         );
-        mp_cache_tag_array tag_array (
+        icache_tag_array tag_array (
             .clk0       (clk),
             .csb0       (tag_csb0[i]),
             .web0       (tag_web0[i]),
@@ -182,7 +175,7 @@ import icache_types::*;
     always_comb begin
         if (allocate_done) begin
             data_wmask0 = '1;
-            data_din0 = dfp_rdata;
+            data_din0 = dfp.rdata;
         end else begin
             // Leave don't care for EDA optimization
             data_wmask0 = 'x;
@@ -197,7 +190,7 @@ import icache_types::*;
     // PROCESS stage
     // ========================================================================
 
-    assign dfp_wdata = 'x;
+    assign dfp.wdata = 'x;
 
     assign ufp_rdata = data_dout0[hit_way][8 * stage_reg.offset +: 32];
     assign ufp_resp = |stage_reg.rmask && ~stall;
@@ -222,12 +215,12 @@ import icache_types::*;
         .allocate_done  (allocate_done),
         .hit_way        (hit_way),
 
-        .dfp_addr       (dfp_addr),
-        .dfp_read       (dfp_read),
-        .dfp_write      (dfp_write),
-        .dfp_ready      (dfp_ready),
-        .dfp_raddr      (dfp_raddr),
-        .dfp_rvalid     (dfp_rvalid)
+        .dfp_addr       (dfp.addr),
+        .dfp_read       (dfp.read),
+        .dfp_write      (dfp.write),
+        .dfp_ready      (dfp.ready),
+        .dfp_raddr      (dfp.raddr),
+        .dfp_rvalid     (dfp.rvalid)
     );
 
     plru_update #(
