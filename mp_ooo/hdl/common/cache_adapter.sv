@@ -1,4 +1,4 @@
-module icache_adapter
+module cache_adapter
 (
     input   logic           clk,
     input   logic           rst,
@@ -24,20 +24,70 @@ module icache_adapter
     input   logic           dfp_rvalid
 );
 
-    logic   [255:0] garbage;
-    assign garbage = ufp_wdata;
+    // wdata issue logic
+    typedef enum logic [1:0] {
+        W_Idle,
+        Issue_1,
+        Issue_2,
+        Issue_3
+    } wdata_state_t;
+    wdata_state_t wdata_state, next_wdata_state;
 
-    assign ufp_raddr = dfp_raddr;
-    assign ufp_ready = dfp_ready;
-    assign dfp_wdata = 'x;
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            wdata_state <= W_Idle;
+        end else begin
+            wdata_state <= next_wdata_state;
+        end
+    end
 
-    assign dfp_addr = ufp_addr;
-    assign dfp_read = ufp_read;
-    assign dfp_write = ufp_write;
+    always_comb begin
+        next_wdata_state = wdata_state;
+        dfp_wdata = 'x;
+        ufp_ready = 1'b0;
+
+        unique case (wdata_state)
+            W_Idle: begin
+                ufp_ready = dfp_ready;
+                if (ufp_write) begin
+                    ufp_ready = 1'b0;
+                    dfp_wdata = ufp_wdata[0 +: 64];
+                    if (dfp_ready) begin
+                        next_wdata_state = Issue_1;
+                    end
+                end
+            end
+            Issue_1: begin
+                ufp_ready = 1'b0;
+                dfp_wdata = ufp_wdata[64 +: 64];
+                if (dfp_ready) begin
+                    next_wdata_state = Issue_2;
+                end
+            end
+            Issue_2: begin
+                ufp_ready = 1'b0;
+                dfp_wdata = ufp_wdata[128 +: 64];
+                if (dfp_ready) begin
+                    next_wdata_state = Issue_3;
+                end
+            end
+            Issue_3: begin
+                ufp_ready = 1'b0;
+                dfp_wdata = ufp_wdata[192 +: 64];
+                if (dfp_ready) begin
+                    ufp_ready = 1'b1;
+                    next_wdata_state = W_Idle;
+                end
+            end
+            default: begin
+                // nothing
+            end
+        endcase
+    end
 
     // rdata collection logic
     typedef enum logic [1:0] {
-        Idle, 
+        R_Idle, 
         Collect_1, 
         Collect_2, 
         Collect_3
@@ -49,7 +99,7 @@ module icache_adapter
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            rdata_state <= Idle;
+            rdata_state <= R_Idle;
         end else begin
             rdata_state <= next_rdata_state;
         end
@@ -72,7 +122,7 @@ module icache_adapter
         end
 
         unique case (rdata_state)
-            Idle: begin
+            R_Idle: begin
                 if (dfp_rvalid) begin
                     next_rdata_state = Collect_1;
                 end
@@ -87,7 +137,7 @@ module icache_adapter
                 cache_rdata[2] = 1'b1;
             end
             Collect_3: begin
-                next_rdata_state = Idle;
+                next_rdata_state = R_Idle;
                 ufp_rvalid = 1'b1;
                 ufp_rdata = {dfp_rdata, cached_rdata[2], cached_rdata[1], cached_rdata[0]};
             end
@@ -96,5 +146,10 @@ module icache_adapter
             end
         endcase
     end
+
+    assign dfp_addr = ufp_addr;
+    assign dfp_read = ufp_read;
+    assign dfp_write = ufp_write;
+    assign ufp_raddr = dfp_raddr;
 
 endmodule
