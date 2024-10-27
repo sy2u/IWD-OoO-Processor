@@ -10,10 +10,10 @@ module frontend_top
     localparam              IF_WIDTH = 2;
 
     logic           frontend_stall;
-    // logic           f0_valid;
-    // logic           f0_ready;
-    // logic           f1_valid;
-    // logic           f1_ready;
+    logic           f0_valid;
+    logic           f0_ready;
+    logic           f1_valid;
+    logic           f1_ready;
 
     // Stage IF0 = Access ICache
 
@@ -24,6 +24,7 @@ module frontend_top
     logic   [31:0]  icache_rdata[IF_WIDTH];
     logic           icache_pending;
     logic           icache_stall;
+    logic           icache_valid;
 
     logic           prev_rst;
     logic           rst_done;
@@ -58,8 +59,20 @@ module frontend_top
         end
     end
 
-    assign icache_read = ~rst && ~frontend_stall;
-    assign icache_stall = icache_pending && ~icache_resp;
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            icache_valid <= '0;
+        end else if (f0_valid && f0_ready) begin
+            icache_valid <= '1;
+        end else if (f1_valid && f1_ready) begin
+            icache_valid <= '0;
+        end
+    end
+
+    assign f0_valid = ~rst && ~frontend_stall;
+    assign f0_ready = ~(icache_pending && ~icache_resp);
+
+    assign icache_read = f0_valid;
 
     icache #(
         .IF_WIDTH(IF_WIDTH)
@@ -75,22 +88,14 @@ module frontend_top
         .dfp            (icache_itf)
     );
 
-    // always_ff @(posedge clk) begin
-    //     if (rst) begin
-    //         f1_valid <= '0;
-    //     end else if (icache_read) begin
-    //         f1_valid <= '1;
-    //     end else if (f1_ready) begin
-    //         f1_valid <= '0;
-    //     end
-    // end
+    assign f1_valid = (icache_valid && icache_resp) && ~frontend_stall;
 
     // Stage IF1 = Read ICache and send into queue
 
     logic                       instr_queue_full;
     logic   [32*IF_WIDTH-1:0]   instr_queue_enq_data;
 
-    // assign f1_ready = ~instr_queue_full;
+    assign f1_ready = ~instr_queue_full;
 
     sync_fifo #(
         .DEPTH          (8),
@@ -99,7 +104,7 @@ module frontend_top
         .clk            (clk),
         .rst            (rst),
 
-        .enq_en         (~frontend_stall && ~rst_done),
+        .enq_en         (f1_valid),
         .full           (instr_queue_full),
         .enq_data       (instr_queue_enq_data),
 
@@ -112,6 +117,6 @@ module frontend_top
         end
     end
 
-    assign frontend_stall = icache_stall || instr_queue_full;
+    assign frontend_stall = ~f0_ready || ~f1_ready;
 
 endmodule
