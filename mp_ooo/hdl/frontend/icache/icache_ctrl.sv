@@ -10,7 +10,7 @@ import icache_types::*; #(
     input   logic                   clk,
     input   logic                   rst,
 
-    input   logic   [3:0]           rmask,
+    input   logic                   read,
     input   logic   [TAG_IDX-1:0]   tag,
     input   logic   [SET_IDX-1:0]   set,
     input   logic   [TAG_IDX:0]     tag_arr_out[NUM_WAYS],
@@ -48,7 +48,7 @@ import icache_types::*; #(
 
         unique case (state)
             PASS_THRU: begin
-                if (|rmask) begin
+                if (read) begin
                     if (~hit) begin
                         dfp_read = 1'b1;
                         if (dfp_ready) begin
@@ -72,7 +72,7 @@ import icache_types::*; #(
         endcase
     end
 
-    assign stall = |rmask && ~hit;
+    assign stall = read && ~hit;
 
     // Hit detection logic
     always_comb begin

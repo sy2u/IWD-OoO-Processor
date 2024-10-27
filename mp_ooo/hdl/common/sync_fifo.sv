@@ -10,8 +10,8 @@ module sync_fifo #(
     output  logic               full,
     input   logic   [WIDTH-1:0] enq_data,
 
-    output  logic               deq_en,
-    input   logic               empty,
+    input   logic               deq_en,
+    output  logic               empty,
     output  logic   [WIDTH-1:0] deq_data
 );
 
@@ -36,11 +36,11 @@ module sync_fifo #(
         end else begin
             if (enq_en && ~full) begin
                 fifo[wr_ptr_actual] <= enq_data;
-                wr_ptr <= wr_ptr + 1;
+                wr_ptr <= (ADDR_IDX+1)'(wr_ptr + 1);
             end
             if (deq_en && ~empty) begin
                 deq_data <= fifo[rd_ptr_actual];
-                rd_ptr <= rd_ptr + 1;
+                rd_ptr <= (ADDR_IDX+1)'(rd_ptr + 1);
             end
         end
     end

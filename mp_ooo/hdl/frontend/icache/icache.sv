@@ -1,22 +1,24 @@
 module icache 
-import icache_types::*;
+import icache_types::*; #(
+            parameter       IF_WIDTH    = 2,
+            parameter       OFFSET_IDX  = 5,
+            parameter       SET_IDX     = 4,
+            parameter       TAG_IDX     = 23,
+            parameter       NUM_WAYS    = 4
+)
 (
     input   logic           clk,
     input   logic           rst,
 
     // cpu side signals, ufp -> upward facing port
     input   logic   [31:0]  ufp_addr,
-    input   logic   [3:0]   ufp_rmask,
-    output  logic   [31:0]  ufp_rdata,
+    input   logic           ufp_read,
+    output  logic   [31:0]  ufp_rdata[IF_WIDTH],
     output  logic           ufp_resp,
 
     // memory side signals, dfp -> downward facing port
     cacheline_itf.master    dfp
 );
-            localparam      OFFSET_IDX  = 5;
-            localparam      SET_IDX     = 4;
-            localparam      TAG_IDX     = 23;
-            localparam      NUM_WAYS    = 4;
             localparam      PLRU_BITS   = NUM_WAYS - 1;
             localparam      WAY_BITS    = $clog2(NUM_WAYS);
 
@@ -119,9 +121,9 @@ import icache_types::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            stage_reg.rmask <= '0;
+            stage_reg.read <= '0;
         end else if (~stall) begin
-            stage_reg.rmask <= ufp_rmask;
+            stage_reg.read <= ufp_read;
             stage_reg.offset <= ufp_offset;
             stage_reg.set <= ufp_set;
             stage_reg.tag <= ufp_tag;
@@ -192,8 +194,13 @@ import icache_types::*;
 
     assign dfp.wdata = 'x;
 
-    assign ufp_rdata = data_dout0[hit_way][8 * stage_reg.offset +: 32];
-    assign ufp_resp = |stage_reg.rmask && ~stall;
+    always_comb begin
+        for (int i = 0; i < IF_WIDTH; i++) begin
+            ufp_rdata[i] = data_dout0[hit_way][(8 * stage_reg.offset + 32 * i) +: 32];
+        end
+    end
+
+    assign ufp_resp = stage_reg.read && ~stall;
 
     icache_ctrl #(
         .TAG_IDX    (TAG_IDX),
@@ -205,7 +212,7 @@ import icache_types::*;
         .clk            (clk),
         .rst            (rst),
 
-        .rmask          (stage_reg.rmask),
+        .read           (stage_reg.read),
         .tag            (stage_reg.tag),
         .set            (stage_reg.set),
         .tag_arr_out    (tag_dout0),
