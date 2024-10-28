@@ -9,7 +9,7 @@ module if1_stage #(
     input   logic   [31:0]  pc_next,
     output  logic           icache_unresponsive,
     output  logic   [31:0]  pc,
-    output  logic   [31:0]  icache_rdata[IF_WIDTH],
+    output  logic   [31:0]  insts[IF_WIDTH],
     output  logic           valid,
 
     // memory side signals, dfp -> downward facing port
@@ -29,6 +29,8 @@ module if1_stage #(
     logic                   icache_resp;
     logic                   icache_pending;
     logic                   icache_valid;
+    logic   [31:0]          temp_icache_rdata[IF_WIDTH];
+    logic   [31:0]          icache_rdata[IF_WIDTH];
 
     assign icache_read = ~rst && ~stall;
     assign valid = icache_valid;
@@ -66,5 +68,17 @@ module if1_stage #(
 
         .dfp            (icache_itf)
     );
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            for (int i = 0; i < IF_WIDTH; i++) begin
+                temp_icache_rdata[i] <= '0;
+            end
+        end else if (icache_resp) begin
+            temp_icache_rdata <= icache_rdata;
+        end
+    end
+
+    assign insts = (icache_resp) ? icache_rdata : temp_icache_rdata;
 
 endmodule
