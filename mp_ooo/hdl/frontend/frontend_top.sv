@@ -10,7 +10,7 @@ module frontend_top
     localparam              IF_WIDTH = 1;
 
     logic                   if1_valid;
-    logic                   frontend_stall;
+    logic                   if1_ready;
 
     // Stage IF0 = Access ICache
 
@@ -18,7 +18,6 @@ module frontend_top
     logic   [31:0]          pc;
     logic                   icache_read;
     logic   [31:0]          icache_rdata[IF_WIDTH];
-    logic                   icache_unresponsive;
 
     logic                   prev_rst;
     logic                   rst_done;
@@ -46,11 +45,14 @@ module frontend_top
         .rst                    (rst),
 
         .pc_next                (pc_next),
-        .stall                  (frontend_stall),
-        .icache_unresponsive    (icache_unresponsive),
         .pc                     (pc),
         .insts                  (icache_rdata),
-        .valid                  (if1_valid),
+
+        .prv_valid              ('1), // pc_next is always generating the next request
+        .prv_ready              (), // not used for now
+
+        .nxt_valid              (if1_valid),
+        .nxt_ready              (if1_ready),
 
         .icache_itf             (icache_itf)
     );
@@ -58,14 +60,16 @@ module frontend_top
     logic                       instr_queue_full;
     logic   [32*IF_WIDTH-1:0]   instr_queue_enq_data;
 
+    assign if1_ready = ~instr_queue_full;
+
     sync_fifo #(
-        .DEPTH          (8),
+        .DEPTH          (16),
         .WIDTH          (32 * IF_WIDTH)
     ) instr_queue(
         .clk            (clk),
         .rst            (rst),
 
-        .enq_en         (if1_valid && ~frontend_stall),
+        .enq_en         (if1_valid),
         .full           (instr_queue_full),
         .enq_data       (instr_queue_enq_data),
 
@@ -77,7 +81,5 @@ module frontend_top
             instr_queue_enq_data[(32 * i) +: 32] = icache_rdata[i];
         end
     end
-
-    assign frontend_stall = icache_unresponsive || instr_queue_full;
 
 endmodule

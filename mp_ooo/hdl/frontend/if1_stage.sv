@@ -5,40 +5,47 @@ module if1_stage #(
     input   logic           clk,
     input   logic           rst,
 
-    input   logic           stall,
+    // Prev stage handshake
+    input   logic           prv_valid,
+    output  logic           prv_ready,
+
+    // Next stage handshake
+    output  logic           nxt_valid,
+    input   logic           nxt_ready,
+
+    // Datapath input
     input   logic   [31:0]  pc_next,
-    output  logic           icache_unresponsive,
+
+    // Datapath output
     output  logic   [31:0]  pc,
     output  logic   [31:0]  insts[IF_WIDTH],
-    output  logic           valid,
 
     // memory side signals, dfp -> downward facing port
     cacheline_itf.master    icache_itf
 );
 
+    logic                   icache_valid;
+    logic                   icache_resp;
+    logic                   icache_pending;
+    logic   [31:0]          icache_rdata[IF_WIDTH];
+    logic                   icache_unresponsive;
+
+    assign prv_ready = ~icache_valid || (nxt_valid && nxt_ready);
+
     // PC update
     always_ff @(posedge clk) begin
         if (rst) begin
             pc <= '0;
-        end else if (~stall) begin
+        end else if (prv_ready && prv_valid) begin
             pc <= pc_next;
         end
     end
 
-    logic                   icache_read;
-    logic                   icache_resp;
-    logic                   icache_pending;
-    logic                   icache_valid;
-    logic   [31:0]          temp_icache_rdata[IF_WIDTH];
-    logic   [31:0]          icache_rdata[IF_WIDTH];
-
-    assign icache_read = ~rst && ~stall;
-    assign valid = icache_valid;
-
+    // Cache state update
     always_ff @(posedge clk) begin
         if (rst) begin
             icache_pending <= '0;
-        end else if (icache_read) begin
+        end else if (prv_ready && prv_valid) begin
             icache_pending <= '1;
         end else if (icache_resp) begin
             icache_pending <= '0;
@@ -48,12 +55,14 @@ module if1_stage #(
     always_ff @(posedge clk) begin
         if (rst) begin
             icache_valid <= '0;
-        end else if (~stall) begin
+        end else if (prv_ready && prv_valid) begin
             icache_valid <= '1;
         end
     end
 
     assign icache_unresponsive = icache_pending && ~icache_resp;
+
+    // I-Cache
 
     icache #(
         .IF_WIDTH(IF_WIDTH)
@@ -62,12 +71,15 @@ module if1_stage #(
         .rst            (rst),
 
         .ufp_addr       (pc_next),
-        .ufp_read       (icache_read),
+        .ufp_read       (prv_ready && prv_valid),
         .ufp_rdata      (icache_rdata),
         .ufp_resp       (icache_resp),
 
         .dfp            (icache_itf)
     );
+
+    // Temporary buffer for output
+    logic   [31:0]          temp_icache_rdata[IF_WIDTH];
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -80,5 +92,7 @@ module if1_stage #(
     end
 
     assign insts = (icache_resp) ? icache_rdata : temp_icache_rdata;
+
+    assign nxt_valid = icache_valid && ~icache_unresponsive;
 
 endmodule
