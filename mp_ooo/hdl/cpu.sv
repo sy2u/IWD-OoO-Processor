@@ -16,10 +16,22 @@ import rv32i_types::*;
 );
 
     cacheline_itf               cacheline_itf_i();
+    logic                       inst_queue_deq;
+    logic                       backend_flush;
+    logic   [31:0]              backend_redirect_pc;
+
+    assign inst_queue_deq = '0;
+    assign backend_flush = '0;
+    assign backend_redirect_pc = 'x;
 
     frontend_top frontend_i(
         .clk            (clk),
         .rst            (rst),
+
+        .backend_flush  (backend_flush),
+        .backend_redirect_pc    (backend_redirect_pc),
+
+        .inst_queue_deq (inst_queue_deq),
 
         .icache_itf     (cacheline_itf_i)
     );

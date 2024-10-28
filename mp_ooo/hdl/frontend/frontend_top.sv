@@ -3,6 +3,11 @@ module frontend_top
     input   logic           clk,
     input   logic           rst,
 
+    input   logic           backend_flush,
+    input   logic   [31:0]  backend_redirect_pc,
+
+    input   logic           inst_queue_deq,
+
     // I cache connected to arbiter (later)
     cacheline_itf.master    icache_itf
 );
@@ -31,8 +36,10 @@ module frontend_top
     always_comb begin
         if (rst_done) begin
             pc_next = 32'h1eceb000;
+        end else if (backend_flush) begin
+            pc_next = backend_redirect_pc;
         end else begin
-            pc_next = pc + (IF_WIDTH * 4);
+            pc_next = pc + unsigned'(IF_WIDTH * 4);
         end
     end
 
@@ -44,15 +51,17 @@ module frontend_top
         .clk                    (clk),
         .rst                    (rst),
 
-        .pc_next                (pc_next),
-        .pc                     (pc),
-        .insts                  (icache_rdata),
+        .flush                  (backend_flush),
 
         .prv_valid              ('1), // pc_next is always generating the next request
-        .prv_ready              (), // not used for now
+        .prv_ready              (),   // not used
 
         .nxt_valid              (if1_valid),
         .nxt_ready              (if1_ready),
+
+        .pc_next                (pc_next),
+        .pc                     (pc),
+        .insts                  (icache_rdata),
 
         .icache_itf             (icache_itf)
     );
@@ -67,13 +76,13 @@ module frontend_top
         .WIDTH          (32 * IF_WIDTH)
     ) instr_queue(
         .clk            (clk),
-        .rst            (rst),
+        .rst            (rst || backend_flush),
 
         .enq_en         (if1_valid),
         .full           (instr_queue_full),
         .enq_data       (instr_queue_enq_data),
 
-        .deq_en         ('0)
+        .deq_en         (inst_queue_deq)
     );
 
     always_comb begin

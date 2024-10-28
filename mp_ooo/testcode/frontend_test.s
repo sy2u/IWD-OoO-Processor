@@ -23,6 +23,22 @@ li x1, 13
 li x1, 14
 li x1, 15
 li x1, 16
+li x1, 17
+li x1, 18
+li x1, 19
+li x1, 20
+li x1, 21
+li x1, 22
+li x1, 23
+li x1, 24
+li x1, 25
+li x1, 26
+li x1, 27
+li x1, 28
+li x1, 29
+li x1, 30
+li x1, 31
+li x1, 32
 
 
 halt:

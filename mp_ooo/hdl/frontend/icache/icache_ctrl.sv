@@ -10,6 +10,7 @@ import icache_types::*; #(
     input   logic                   clk,
     input   logic                   rst,
 
+    input   logic                   kill,
     input   logic                   read,
     input   logic   [TAG_IDX-1:0]   tag,
     input   logic   [SET_IDX-1:0]   set,
@@ -56,11 +57,17 @@ import icache_types::*; #(
                         end
                     end
                 end
+                if (kill) begin
+                    next_state = PASS_THRU;
+                end
             end
             ALLOCATE: begin
                 if (dfp_rvalid && dfp_addr == dfp_raddr) begin
                     next_state = ALLOCATE_STALL;
                     allocate_done = 1'b1;
+                end
+                if (kill) begin
+                    next_state = PASS_THRU;
                 end
             end
             ALLOCATE_STALL: begin

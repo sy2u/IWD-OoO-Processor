@@ -15,6 +15,7 @@ import icache_types::*; #(
     input   logic           ufp_read,
     output  logic   [31:0]  ufp_rdata[IF_WIDTH],
     output  logic           ufp_resp,
+    input   logic           kill, // kill all processing misses
 
     // memory side signals, dfp -> downward facing port
     cacheline_itf.master    dfp
@@ -64,7 +65,7 @@ import icache_types::*; #(
     assign ufp_set = ufp_addr[SET_IDX+OFFSET_IDX-1:OFFSET_IDX];
     assign ufp_tag = ufp_addr[TAG_IDX+SET_IDX+OFFSET_IDX-1:SET_IDX+OFFSET_IDX];
 
-    assign sram_operating_set = (stall) ? stage_reg.set : ufp_set;
+    assign sram_operating_set = (~stall || kill) ? ufp_set : stage_reg.set;
 
     generate for (genvar i = 0; i < NUM_WAYS; i++) begin : arrays
         icache_data_array data_array (
@@ -122,7 +123,7 @@ import icache_types::*; #(
     always_ff @(posedge clk) begin
         if (rst) begin
             stage_reg.read <= '0;
-        end else if (~stall) begin
+        end else if (~stall || kill) begin
             stage_reg.read <= ufp_read;
             stage_reg.offset <= ufp_offset;
             stage_reg.set <= ufp_set;
@@ -138,7 +139,7 @@ import icache_types::*; #(
             valid_csb0[i] = 1'b1;
         end
 
-        if (~stall) begin
+        if (~stall || kill) begin
             for (int i = 0; i < NUM_WAYS; i++) begin
                 data_csb0[i] = 1'b0;
                 tag_csb0[i] = 1'b0;
@@ -196,7 +197,7 @@ import icache_types::*; #(
 
     always_comb begin
         for (int i = 0; i < IF_WIDTH; i++) begin
-            ufp_rdata[i] = data_dout0[hit_way][(8 * stage_reg.offset + 32 * i) +: 32];
+            ufp_rdata[i] = data_dout0[hit_way][(8 * stage_reg.offset + unsigned'(32 * i)) +: 32];
         end
     end
 
@@ -208,10 +209,11 @@ import icache_types::*; #(
         .WAY_BITS   (WAY_BITS),
         .OFFSET_IDX (OFFSET_IDX),
         .SET_IDX    (SET_IDX)
-    ) ppl_ctrl_i (
+    ) icache_ctrl_i (
         .clk            (clk),
         .rst            (rst),
 
+        .kill           (kill),
         .read           (stage_reg.read),
         .tag            (stage_reg.tag),
         .set            (stage_reg.set),

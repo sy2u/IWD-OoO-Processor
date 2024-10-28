@@ -5,6 +5,8 @@ module if1_stage #(
     input   logic           clk,
     input   logic           rst,
 
+    input   logic           flush,
+
     // Prev stage handshake
     input   logic           prv_valid,
     output  logic           prv_ready,
@@ -30,7 +32,7 @@ module if1_stage #(
     logic   [31:0]          icache_rdata[IF_WIDTH];
     logic                   icache_unresponsive;
 
-    assign prv_ready = ~icache_valid || (nxt_valid && nxt_ready);
+    assign prv_ready = ~icache_valid || (nxt_valid && nxt_ready) || flush;
 
     // PC update
     always_ff @(posedge clk) begin
@@ -74,6 +76,7 @@ module if1_stage #(
         .ufp_read       (prv_ready && prv_valid),
         .ufp_rdata      (icache_rdata),
         .ufp_resp       (icache_resp),
+        .kill           (flush),
 
         .dfp            (icache_itf)
     );
