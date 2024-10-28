@@ -112,7 +112,7 @@ endpackage
 package icache_types;
 
     typedef struct packed {
-        logic   [3:0]   rmask;
+        logic           read;
         logic   [4:0]   offset;
         logic   [3:0]   set;
         logic   [22:0]  tag;
