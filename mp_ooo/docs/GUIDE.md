@@ -26,7 +26,7 @@ them in `options.json` as follows:
 
 ```
 ...
-"dw_ip" : ["DW_mult_pipe", "DW_div],
+"dw_ip" : ["DW_mult_pipe", "DW_div"],
 ...
 ```
 

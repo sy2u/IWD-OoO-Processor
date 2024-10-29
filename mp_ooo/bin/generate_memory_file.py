@@ -2,6 +2,7 @@
 
 import sys
 import os
+import shutil
 import pathlib
 import subprocess
 import math
@@ -37,9 +38,18 @@ start_file = os.path.join(script_dir, "startup.s")
 linker_script = os.path.join(script_dir, "link.ld")
 compile = True
 
-assembler="riscv32-unknown-elf-gcc"
-objdump="riscv32-unknown-elf-objdump"
-objcopy="riscv32-unknown-elf-objcopy"
+if shutil.which("riscv32-unknown-elf-gcc"):
+    assembler="riscv32-unknown-elf-gcc"
+    objdump="riscv32-unknown-elf-objdump"
+    objcopy="riscv32-unknown-elf-objcopy"
+elif shutil.which("riscv64-unknown-elf-gcc"):
+    assembler="riscv64-unknown-elf-gcc"
+    objdump="riscv64-unknown-elf-objdump"
+    objcopy="riscv64-unknown-elf-objcopy"
+else:
+    print("[ERROR] No RISCV toolchain found in path")
+    exit(1)
+
 arch = "rv32im"
 abi = "ilp32"
 opt = "-Ofast -flto"

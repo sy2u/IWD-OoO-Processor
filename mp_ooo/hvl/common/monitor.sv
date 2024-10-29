@@ -26,8 +26,6 @@ module monitor #(
     logic [CHANNELS*32-1:0] rvfi_mem_wdata;
     logic [CHANNELS*1 -1:0] rvfi_mem_extamo;
 
-    logic [15:0] errcode;
-
     assign rvfi_trap = '0;
     assign rvfi_intr = '0;
     assign rvfi_mode = '0;
@@ -52,100 +50,6 @@ module monitor #(
         assign rvfi_mem_wdata[channel*32 +: 32] =   itf.mem_wdata[channel];
     end endgenerate
 
-    always @(posedge itf.clk iff !itf.rst) begin
-        for (int unsigned channel = 0; channel < CHANNELS; channel++) begin
-            if ($isunknown(itf.valid[channel])) begin
-                $error("RVFI Interface Error: valid is 1'bx");
-                itf.error <= 1'b1;
-            end
-        end
-    end
-
-    generate for (genvar channel = 0; channel < CHANNELS; channel++) begin : x_detection
-        always @(posedge itf.clk iff (!itf.rst && itf.valid[channel])) begin
-            if ($isunknown(itf.order[channel])) begin
-                $error("RVFI Interface Error: order contains 'x");
-                itf.error <= 1'b1;
-            end
-            if ($isunknown(itf.inst[channel])) begin
-                $error("RVFI Interface Error: inst contains 'x");
-                itf.error <= 1'b1;
-            end
-            if ($isunknown(itf.rs1_addr[channel])) begin
-                $error("RVFI Interface Error: rs1_addr contains 'x");
-                itf.error <= 1'b1;
-            end
-            if ($isunknown(itf.rs2_addr[channel])) begin
-                $error("RVFI Interface Error: rs2_addr contains 'x");
-                itf.error <= 1'b1;
-            end
-            if (itf.rs1_addr[channel] != '0) begin
-                if ($isunknown(itf.rs1_rdata[channel])) begin
-                    $error("RVFI Interface Error: rs1_rdata contains 'x");
-                    itf.error <= 1'b1;
-                end
-            end
-            if (itf.rs2_addr[channel] != '0) begin
-                if ($isunknown(itf.rs2_rdata[channel])) begin
-                    $error("RVFI Interface Error: rs2_rdata contains 'x");
-                    itf.error <= 1'b1;
-                end
-            end
-            if ($isunknown(itf.rd_addr[channel])) begin
-                $error("RVFI Interface Error: rd_addr contains 'x");
-                itf.error <= 1'b1;
-            end
-            if (|itf.rd_addr[channel]) begin
-                if ($isunknown(itf.rd_wdata[channel])) begin
-                    $error("RVFI Interface Error: rd_wdata contains 'x");
-                    itf.error <= 1'b1;
-                end
-            end
-            if ($isunknown(itf.pc_rdata[channel])) begin
-                $error("RVFI Interface Error: pc_rdata contains 'x");
-                itf.error <= 1'b1;
-            end
-            if ($isunknown(itf.pc_wdata[channel])) begin
-                $error("RVFI Interface Error: pc_wdata contains 'x");
-                itf.error <= 1'b1;
-            end
-            if ($isunknown(itf.mem_rmask[channel])) begin
-                $error("RVFI Interface Error: mem_rmask contains 'x");
-                itf.error <= 1'b1;
-            end
-            if ($isunknown(itf.mem_wmask[channel])) begin
-                $error("RVFI Interface Error: mem_wmask contains 'x");
-                itf.error <= 1'b1;
-            end
-            if (|itf.mem_rmask[channel] || |itf.mem_wmask[channel]) begin
-                if ($isunknown(itf.mem_addr[channel])) begin
-                    $error("RVFI Interface Error: mem_addr contains 'x");
-                    itf.error <= 1'b1;
-                end
-            end
-            if (|itf.mem_rmask[channel]) begin
-                for (int i = 0; i < 4; i++) begin
-                    if (itf.mem_rmask[channel][i]) begin
-                        if ($isunknown(itf.mem_rdata[channel][i*8 +: 8])) begin
-                            $error("RVFI Interface Error: mem_rdata contains 'x");
-                            itf.error <= 1'b1;
-                        end
-                    end
-                end
-            end
-            if (|itf.mem_wmask[channel]) begin
-                for (int i = 0; i < 4; i++) begin
-                    if (itf.mem_wmask[channel][i]) begin
-                        if ($isunknown(itf.mem_wdata[channel][i*8 +: 8])) begin
-                            $error("RVFI Interface Error: mem_wdata contains 'x");
-                            itf.error <= 1'b1;
-                        end
-                    end
-                end
-            end
-        end
-    end endgenerate
-
     initial begin
         for (int unsigned channel = 0; channel < CHANNELS; channel++) begin
             itf.halt[channel] = '0;
@@ -161,13 +65,6 @@ module monitor #(
             if (itf.valid[channel] && is_halt(itf.inst[channel])) begin
                 itf.halt[channel] <= 1'b1;
             end
-        end
-    end
-
-    always @(posedge itf.clk) begin
-        if (errcode != 0) begin
-            $error("RVFI Monitor Error");
-            itf.error <= 1'b1;
         end
     end
 
@@ -238,33 +135,6 @@ module monitor #(
         $fclose(time_fd);
     end
 
-    riscv_formal_monitor_rv32imc monitor(
-        .clock              (itf.clk),
-        .reset              (itf.rst),
-        .rvfi_valid         (rvfi_valid),
-        .rvfi_order         (rvfi_order),
-        .rvfi_insn          (rvfi_insn),
-        .rvfi_trap          (rvfi_trap),
-        .rvfi_halt          (rvfi_halt),
-        .rvfi_intr          (rvfi_intr),
-        .rvfi_mode          (rvfi_mode),
-        .rvfi_rs1_addr      (rvfi_rs1_addr),
-        .rvfi_rs2_addr      (rvfi_rs2_addr),
-        .rvfi_rs1_rdata     (rvfi_rs1_rdata),
-        .rvfi_rs2_rdata     (rvfi_rs2_rdata),
-        .rvfi_rd_addr       (rvfi_rd_addr),
-        .rvfi_rd_wdata      (rvfi_rd_wdata),
-        .rvfi_pc_rdata      (rvfi_pc_rdata),
-        .rvfi_pc_wdata      (rvfi_pc_wdata),
-        .rvfi_mem_addr      (rvfi_mem_addr),
-        .rvfi_mem_rmask     (rvfi_mem_rmask),
-        .rvfi_mem_wmask     (rvfi_mem_wmask),
-        .rvfi_mem_rdata     (rvfi_mem_rdata),
-        .rvfi_mem_wdata     (rvfi_mem_wdata),
-        .rvfi_mem_extamo    (rvfi_mem_extamo),
-        .errcode            (errcode)
-    );
-
     int spike_fd;
     initial spike_fd = $fopen("../spike/commit.log", "w");
     final $fclose(spike_fd);
@@ -332,5 +202,139 @@ module monitor #(
             end
         end
     end
+
+    `ifndef ECE411_NO_RVFI
+
+        logic [15:0] errcode;
+
+        always @(posedge itf.clk iff !itf.rst) begin
+            for (int unsigned channel = 0; channel < CHANNELS; channel++) begin
+                if ($isunknown(itf.valid[channel])) begin
+                    $error("RVFI Interface Error: valid is 1'bx");
+                    itf.error <= 1'b1;
+                end
+            end
+        end
+
+        generate for (genvar channel = 0; channel < CHANNELS; channel++) begin : x_detection
+            always @(posedge itf.clk iff (!itf.rst && itf.valid[channel])) begin
+                if ($isunknown(itf.order[channel])) begin
+                    $error("RVFI Interface Error: order contains 'x");
+                    itf.error <= 1'b1;
+                end
+                if ($isunknown(itf.inst[channel])) begin
+                    $error("RVFI Interface Error: inst contains 'x");
+                    itf.error <= 1'b1;
+                end
+                if ($isunknown(itf.rs1_addr[channel])) begin
+                    $error("RVFI Interface Error: rs1_addr contains 'x");
+                    itf.error <= 1'b1;
+                end
+                if ($isunknown(itf.rs2_addr[channel])) begin
+                    $error("RVFI Interface Error: rs2_addr contains 'x");
+                    itf.error <= 1'b1;
+                end
+                if (itf.rs1_addr[channel] != '0) begin
+                    if ($isunknown(itf.rs1_rdata[channel])) begin
+                        $error("RVFI Interface Error: rs1_rdata contains 'x");
+                        itf.error <= 1'b1;
+                    end
+                end
+                if (itf.rs2_addr[channel] != '0) begin
+                    if ($isunknown(itf.rs2_rdata[channel])) begin
+                        $error("RVFI Interface Error: rs2_rdata contains 'x");
+                        itf.error <= 1'b1;
+                    end
+                end
+                if ($isunknown(itf.rd_addr[channel])) begin
+                    $error("RVFI Interface Error: rd_addr contains 'x");
+                    itf.error <= 1'b1;
+                end
+                if (|itf.rd_addr[channel]) begin
+                    if ($isunknown(itf.rd_wdata[channel])) begin
+                        $error("RVFI Interface Error: rd_wdata contains 'x");
+                        itf.error <= 1'b1;
+                    end
+                end
+                if ($isunknown(itf.pc_rdata[channel])) begin
+                    $error("RVFI Interface Error: pc_rdata contains 'x");
+                    itf.error <= 1'b1;
+                end
+                if ($isunknown(itf.pc_wdata[channel])) begin
+                    $error("RVFI Interface Error: pc_wdata contains 'x");
+                    itf.error <= 1'b1;
+                end
+                if ($isunknown(itf.mem_rmask[channel])) begin
+                    $error("RVFI Interface Error: mem_rmask contains 'x");
+                    itf.error <= 1'b1;
+                end
+                if ($isunknown(itf.mem_wmask[channel])) begin
+                    $error("RVFI Interface Error: mem_wmask contains 'x");
+                    itf.error <= 1'b1;
+                end
+                if (|itf.mem_rmask[channel] || |itf.mem_wmask[channel]) begin
+                    if ($isunknown(itf.mem_addr[channel])) begin
+                        $error("RVFI Interface Error: mem_addr contains 'x");
+                        itf.error <= 1'b1;
+                    end
+                end
+                if (|itf.mem_rmask[channel]) begin
+                    for (int i = 0; i < 4; i++) begin
+                        if (itf.mem_rmask[channel][i]) begin
+                            if ($isunknown(itf.mem_rdata[channel][i*8 +: 8])) begin
+                                $error("RVFI Interface Error: mem_rdata contains 'x");
+                                itf.error <= 1'b1;
+                            end
+                        end
+                    end
+                end
+                if (|itf.mem_wmask[channel]) begin
+                    for (int i = 0; i < 4; i++) begin
+                        if (itf.mem_wmask[channel][i]) begin
+                            if ($isunknown(itf.mem_wdata[channel][i*8 +: 8])) begin
+                                $error("RVFI Interface Error: mem_wdata contains 'x");
+                                itf.error <= 1'b1;
+                            end
+                        end
+                    end
+                end
+            end
+        end endgenerate
+
+        always @(posedge itf.clk) begin
+            if (errcode != 0) begin
+                $error("RVFI Monitor Error");
+                itf.error <= 1'b1;
+            end
+        end
+
+        riscv_formal_monitor_rv32imc monitor(
+            .clock              (itf.clk),
+            .reset              (itf.rst),
+            .rvfi_valid         (rvfi_valid),
+            .rvfi_order         (rvfi_order),
+            .rvfi_insn          (rvfi_insn),
+            .rvfi_trap          (rvfi_trap),
+            .rvfi_halt          (rvfi_halt),
+            .rvfi_intr          (rvfi_intr),
+            .rvfi_mode          (rvfi_mode),
+            .rvfi_rs1_addr      (rvfi_rs1_addr),
+            .rvfi_rs2_addr      (rvfi_rs2_addr),
+            .rvfi_rs1_rdata     (rvfi_rs1_rdata),
+            .rvfi_rs2_rdata     (rvfi_rs2_rdata),
+            .rvfi_rd_addr       (rvfi_rd_addr),
+            .rvfi_rd_wdata      (rvfi_rd_wdata),
+            .rvfi_pc_rdata      (rvfi_pc_rdata),
+            .rvfi_pc_wdata      (rvfi_pc_wdata),
+            .rvfi_mem_addr      (rvfi_mem_addr),
+            .rvfi_mem_rmask     (rvfi_mem_rmask),
+            .rvfi_mem_wmask     (rvfi_mem_wmask),
+            .rvfi_mem_rdata     (rvfi_mem_rdata),
+            .rvfi_mem_wdata     (rvfi_mem_wdata),
+            .rvfi_mem_extamo    (rvfi_mem_extamo),
+            .errcode            (errcode)
+        );
+
+    `endif
 
 endmodule

@@ -17,15 +17,16 @@ write C++-based simulation models and testbenches. These are compiled with all
 the tricks that GCC (or Clang) has to offer, which leads to further simulation
 performance gains over traditional SystemVerilog models.
 
-There's also an element of convenience here. Verilator is an open-source
-project, which means that unlike VCS (which is licensed), anyone can run
-Verilator at home. For ECE411, we will have some tips and tricks for getting
-Verilator set up at home, but we do not *officially* support a
-course-staff-backed WFH setup. This is due to the IP you will be using in
-`mp_ooo` - you do not have access to this IP locally, and as a result will need
-to create some simulation models to use on WFH. This does not need to be actual
-synthesizable HDL - just some modules that replicate the expected timing and
-interface of IP you use.
+There's an element of convenience here. Verilator is an open-source project,
+which means that unlike VCS (which is licensed), anyone can run Verilator at
+home. For ECE411, we will have some tips and tricks for getting Verilator set up
+at home, but we do not *officially* support a course-staff-backed WFH
+setup. This is due to the IP you will be using in `mp_ooo` - you do not have
+access to this IP locally, and as a result will need to create some simulation
+models to use on WFH. This does not need to be actual synthesizable HDL - just
+some modules that replicate the expected timing and interface of IP you use.
+
+## Pros and Cons
 
 There are some other tradeoffs to consider here. The big one is that Verilator
 only supports dual-state simulation - this means that every signal in Verilator
@@ -35,7 +36,7 @@ to use VCS to test your design to make sure you have no such issues. Verilator
 will treat Xes in your SV as a 0, so don't worry about potential compatibility
 issues in your SV.
 
-Finally, Verilator in the past has had LRM support issues when compared to
+Additionally, Verilator in the past has had LRM support issues when compared to
 VCS. Constrained randomization and UVM, both things that are very important in
 the verification industry, only started having basic Verilator support earlier
 this year. There are also certain HDL constructs you write that may be flattened
@@ -68,15 +69,15 @@ you should be able to find this package on some package managers, like
 `homebrew`, or compile it yourself.
 
 If you are following this guide on EWS, `verilator` and the RISC-V toolchain has
-already been installed for you, and is loaded as part of the `ece411.sh`
-script you run to gain `vcs` access. You will still need a waveform viewer
-however if you wish to work with traces - Verdi does not support the `.fst`
-files that Verilator dumps. We are currently working on getting surfer or
-gtkwave set up, but for now please use the [web version of
-surfer](https://app.surfer-project.org/), or some other generic waveform viewer
-of your choice. If you use the web waveform viewer, be aware that you should try
-to dump smaller traces when possible to limit RAM consumption. More on this
-later.
+already been installed for you, and is loaded as part of the `ece411.sh` script
+you run to gain `vcs` access. You will still need a waveform viewer however if
+you wish to work with traces - Verdi does not support the `.fst` files that
+Verilator dumps. We are currently working on getting surfer or gtkwave set up,
+but for now please use the [VSCode version of
+surfer](https://marketplace.visualstudio.com/items?itemName=surfer-project.surfer),
+or some other generic waveform viewer of your choice. If you use the VSCode
+waveform viewer, be aware that you should try to dump smaller traces when
+possible to limit RAM consumption. More on this later.
 
 # Running Your First Simulation
 
@@ -110,9 +111,9 @@ this file.
 If you are running large programs, your traces can get very large - Coremark,
 for example, incurs about 500MB of traces on both VCS and Verilator simulation
 platforms. This is fine on EWS (where the storage is free), but if you are
-opening traces in the web browser or locally, you may want to generate smaller
-traces. You can do this by specifying a "time range" for Verilator to dump
-traces. This is done as follows.
+opening traces in the VSCode extension or locally, you may want to generate
+smaller traces. You can do this by specifying a "time range" for Verilator to
+dump traces. This is done as follows.
 
 ```bash
 make run_verilator_top_tb PROG={your program} VER_TRACE_START={start time} VER_TRACE_END={end time}
@@ -127,6 +128,16 @@ while the program is running, you will not receive trace nor the logs. Luckily,
 Verilator runs fast enough that you can reach the timeout in a reasonable amount
 of time. However, if your CPU is hanging, you may be better off using VCS to
 debug, since you can kill the program and still recover some traces.
+
+## Compile Times
+
+Right now for maximum simulation performance, Verilator is compiling your code
+with the `-O3` compilation flag. This is a `gcc` flag that optimizes performance
+of compiled binaries, but comes at the cost of longer compile times. If you are
+using Verilator for debug, this likely is not the behavior you are looking for,
+and you can safely delete the `-O3` in the `VER_FLAGS` variable of the
+Makefile. This will reduce compile times significantly and (to an extent)
+increase runtimes.
 
 # Running Lint
 

@@ -50,6 +50,8 @@ suppress_message PWR-591
 suppress_message PWR-806
 # In design %s, there are sequential cells not driving any load.
 suppress_message OPT-109
+# In design '%s', input pin '%s' of hierarchical cell '%s' has no internal loads and is not connected to any nets.
+suppress_message LINT-60
 
 # %s DEFAULT branch of CASE statement cannot be reached.
 suppress_message ELAB-311

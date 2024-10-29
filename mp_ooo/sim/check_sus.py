@@ -25,7 +25,7 @@ allowed_sv_tasks = [
     "onehot0",
     "fatal",
 ]
-sus_keywords = ["translate_off", "DPI", "include", "xprop_off"]
+sus_keywords = ["translate_off", "DPI", "include", "xprop_off", "lint_off"]
 search_dir = ["hdl", "pkg"]
 allowed_char = set(string.ascii_lowercase + string.ascii_uppercase + string.digits + "._-/")
 
