@@ -21,10 +21,10 @@
 ## All Advanced Features
 
 This list is not exhaustive. If you have a cool idea or find a
-relevant research paper you are interested in, talk to your mentor TA
-and they will assign a fair amount of points for it. If the idea you
-found is especially unique, you might receive extra points for
-originality.
+relevant research paper you are interested in, make a campuswire post
+and course staff will assign a fair amount of points for it. If the
+idea you found is especially unique, you might receive extra points
+for originality.
 
 ### Memory Unit:
 

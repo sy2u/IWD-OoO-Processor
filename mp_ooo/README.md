@@ -1,13 +1,13 @@
 # ECE 411: mp_ooo
 
-## Out-of-Order RISC-V Processor
-
 This document, README.md, forms the specification for the machine problem. For
 more details and documentation, visit the `docs` folder. Inside, you will find:
 
 - [GUIDE.md](./docs/GUIDE.md): Some tips and resources for this MP.
-- [ADVANCED_FEATURES.md](./docs/ADVANCED_FEATURES.md): List of advanced features and their associated point values.
-- [WHAT_IS_AN_OOO.md](./docs/WHAT_IS_AN_OOO.md): Basic overview of an OoO processor.
+- [ADVANCED_FEATURES.md](./docs/ADVANCED_FEATURES.md): List of advanced features
+  and their associated point values.
+- [WHAT_IS_AN_OOO.md](./docs/WHAT_IS_AN_OOO.md): Basic overview of an OoO
+  processor.
 
 # Introduction
 
@@ -20,14 +20,14 @@ interest you.
 
 ## Point Breakdown
 
-| Checkpoint          | Points |
+| Checkpoint | Points |
 |---------------------|--------|
-| CP 1                | 15     |
-| CP 2                | 15     |
-| CP 3                | 20     |
-| Competition         | 20     |
-| Advanced Features   | 20     |
-| Presentation/Report | 10     |
+| CP 1 | 15 |
+| CP 2 | 15 |
+| CP 3 | 20 |
+| Competition | 20 |
+| Advanced Features | 20 |
+| Presentation/Report | 10 |
 
 **Total Points:** 100
 
@@ -76,6 +76,21 @@ set-associative pipelined cache architecture from before. We highly recommend
 attempting to complete/fix your `mp_cache` submission to maximize performance
 during the design competition.
 
+## Outside Code
+
+For this MP, all the RTL/code that you use should be your own, with the
+exception of course-staff provided resources. In addition, you may use any IP
+categorized under `Datapath: Arithmetic Components`, `Datapath: Floating Point`,
+and `Datapath: Sequential Components` as categorized by [the designware
+docs](https://www.synopsys.com/dw/buildingblock.php). The most relevant IP for
+implementing RISC-V extensions will be:
+
+- Multiplier
+- Divider
+- Relevant functional units in `Datapath: Floating Point`
+
+Use of other outside RTL/code is prohibited.
+
 # Checkpoints
 
 This MP is split into 3 mandatory checkpoints, and a final evaluation after the
@@ -94,6 +109,13 @@ your mentor.
 You will be graded by your mentor during your weekly meetings, based on a commit
 of your choice This commit should be pushed to github before the stated deadline
 on each checkpoint.
+
+## Late Policy
+
+Each checkpoint will be graded with the standard late policy shown [on the class
+website](https://courses.grainger.illinois.edu/ece411/fa2024/policy.html).
+
+There will be no partial credit awarded beyond what is outlined in the rubrics below.
 
 ## Checkpoint 1 (15 points)
 
@@ -130,6 +152,32 @@ immediate and register instructions in the RV32I spec. In addition, you will be
 responsible for integrating multiplier and divider Synopsys IPs to implement the
 RISC-V M extension.
 
+In addition, from this checkpoint onwards we will be introducing a toolflow
+based on Verilator. Verilator is a cycle-level simulator that runs
+(significantly) faster than VCS, and will be used to help us run benchmarks
+quickly as part of the competition.  You can learn more about this toolflow in
+[VERILATOR.md](./docs/VERILATOR.md).
+
+You do not need to handle the DIV-by-0 edgecase - this is usually handled via
+an exception from the processor, but we don't support those!
+
+**Requirements**
+- Implement your OoO architecture such that it can execute all immediate and
+  register instructions in RV32I [5]
+- Integrate the multiplier IP with your processor to perform all MUL
+  instructions in RV32M [2]
+- Integrate the divider IP with your processor to perform all DIV instructions
+  in RV32M [2]
+- Modify your `mp_verif` random testbench to test coverage on all the
+  instructions required for this CP [2]
+- Demonstrate that your processor is able to execute instructions out-of-order
+  (via `testcode/ooo_test.s`) [2]
+- Show that your processor is compliant with Verilator's and the Spyglass linter [2]
+
+*There will be no provided tests outside of ooo_test.s* - if you are unable to
+correctly modify the random testbench, the onus of creating comprehensive tests
+to demonstrate what you have completed falls on you.
+
 ## Checkpoint 3 (20 points)
 
 **_Recommended Due Date: 11/11, 11:59PM_**
@@ -146,6 +194,9 @@ deliverable will be completing a successful run on the leaderboard by 11/15. As
 the leaderboard will only begin running on 11/12, we highly recommend you
 construct your own tests prior to this date.
 
+Note that your processor must be compatible with *both* Verilator's lint and the
+standard Spyglass lint in order to appear on leaderboard.
+
 # Final Submission: Competition + Advanced Features (50)
 
 ## Competition (20)
@@ -153,7 +204,8 @@ construct your own tests prior to this date.
 This portion of your grade will be determined by how you fare in comparison to a
 baseline processor and your peers' processors while performing various
 staff-selected benchmarks. You will be evaluated on correctness and relative
-performance.
+performance. An incorrect run of a benchmark (per spike log) will not score any
+points.
 
 The initial benchmark suite and the related performance metrics will be
 announced on the first day of the leaderboard (*11/15*). We will add more
@@ -240,10 +292,10 @@ performance significantly when paired with other advanced features. If you
 prefer, you can ignore this feature and use it very similarly to previous memory
 models which only supported one outstanding request.
 
-<p align="center"> <img src="docs/images/bmem_single_read.svg"/> <p
+<p align="center"> <img src="docs/images/bmem_read_single.svg"/> <p
   align="center">Single Read Request</p> </p>
 
-<p align="center"> <img src="docs/images/bmem_single_write.svg"/> <p
+<p align="center"> <img src="docs/images/bmem_write_single.svg"/> <p
   align="center">Single Write Request</p> </p>
 
 <p align="center"> <img src="docs/images/bmem_read_queue_full.svg"/> <p
@@ -255,7 +307,7 @@ models which only supported one outstanding request.
 <p align="center"> <img src="docs/images/bmem_read_ooo.svg"/> <p
   align="center">Out-Of-Order Read Response</p> </p>
 
-<p align="center"> <img src="docs/images/bmem_read_after_write.svg"/> <p
+<p align="center"> <img src="docs/images/bmem_same_addr_rw.svg"/> <p
   align="center">Mixed Reads and Writes to the Same Destination</p> </p>
 
 ## Repo Parameters
