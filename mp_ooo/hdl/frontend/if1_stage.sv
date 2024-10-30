@@ -57,8 +57,8 @@ module if1_stage #(
     always_ff @(posedge clk) begin
         if (rst) begin
             icache_valid <= '0;
-        end else if (prv_ready && prv_valid) begin
-            icache_valid <= '1;
+        end else if (prv_ready) begin
+            icache_valid <= prv_valid;
         end
     end
 
@@ -85,11 +85,7 @@ module if1_stage #(
     logic   [31:0]          temp_icache_rdata[IF_WIDTH];
 
     always_ff @(posedge clk) begin
-        if (rst) begin
-            for (int i = 0; i < IF_WIDTH; i++) begin
-                temp_icache_rdata[i] <= '0;
-            end
-        end else if (icache_resp) begin
+        if (icache_resp) begin
             temp_icache_rdata <= icache_rdata;
         end
     end
