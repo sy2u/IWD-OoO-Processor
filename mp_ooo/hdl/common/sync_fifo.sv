@@ -33,6 +33,9 @@ module sync_fifo #(
         if (rst) begin
             wr_ptr <= '0;
             rd_ptr <= '0;
+            for (int i = 0; i < DEPTH; i++) begin
+                fifo[i] <= 'x;
+            end
         end else begin
             if (enq_en && ~full) begin
                 fifo[wr_ptr_actual] <= enq_data;

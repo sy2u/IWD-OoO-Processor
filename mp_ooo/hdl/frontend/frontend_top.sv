@@ -12,7 +12,8 @@ module frontend_top
     cacheline_itf.master    icache_itf
 );
 
-    localparam              IF_WIDTH = 1;
+    localparam  unsigned    IF_WIDTH = 1;
+    localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
 
     logic                   if1_valid;
     logic                   if1_ready;
@@ -25,21 +26,18 @@ module frontend_top
     logic   [31:0]          icache_rdata[IF_WIDTH];
 
     logic                   prev_rst;
-    logic                   rst_done;
 
     always_ff @(posedge clk) begin
         prev_rst <= rst;
     end
 
-    assign rst_done = prev_rst && ~rst;
-
     always_comb begin
-        if (rst_done) begin
+        if (prev_rst) begin
             pc_next = 32'h1eceb000;
         end else if (backend_flush) begin
             pc_next = backend_redirect_pc;
         end else begin
-            pc_next = pc + unsigned'(IF_WIDTH * 4);
+            pc_next = (pc + IF_BLK_SIZE) & ~(unsigned'(IF_BLK_SIZE - 1));
         end
     end
 
