@@ -65,7 +65,7 @@ import icache_types::*; #(
     assign ufp_set = ufp_addr[SET_IDX+OFFSET_IDX-1:OFFSET_IDX];
     assign ufp_tag = ufp_addr[TAG_IDX+SET_IDX+OFFSET_IDX-1:SET_IDX+OFFSET_IDX];
 
-    assign sram_operating_set = (~stall || kill) ? ufp_set : stage_reg.set;
+    assign sram_operating_set = (~stall || kill) ? ufp_set : stage_reg.set_i;
 
     generate for (genvar i = 0; i < NUM_WAYS; i++) begin : arrays
         icache_data_array data_array (
@@ -111,7 +111,7 @@ import icache_types::*; #(
         .dout0      (plru_dout0),
         .csb1       (plru_csb1),
         .web1       (plru_web1),
-        .addr1      (stage_reg.set),
+        .addr1      (stage_reg.set_i),
         .din1       (plru_din1)
     );
 
@@ -126,7 +126,7 @@ import icache_types::*; #(
         end else if (~stall || kill) begin
             stage_reg.read <= ufp_read;
             stage_reg.offset <= ufp_offset;
-            stage_reg.set <= ufp_set;
+            stage_reg.set_i <= ufp_set;
             stage_reg.tag <= ufp_tag;
         end
     end
@@ -216,7 +216,7 @@ import icache_types::*; #(
         .kill           (kill),
         .read           (stage_reg.read),
         .tag            (stage_reg.tag),
-        .set            (stage_reg.set),
+        .set            (stage_reg.set_i),
         .tag_arr_out    (tag_dout0),
         .valid_arr_out  (valid_dout0),
 

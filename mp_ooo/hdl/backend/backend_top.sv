@@ -12,6 +12,9 @@ import cpu_params::*;
     output  logic   [31:0]      backend_redirect_pc
 );
 
+    assign backend_flush = 1'b0;
+    assign backend_redirect_pc = 'x;
+
     id_stage id_stage_i(
         .clk                    (clk),
         .rst                    (rst),

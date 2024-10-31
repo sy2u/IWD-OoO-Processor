@@ -27,14 +27,14 @@ module plru_update #(
     logic   [WAY_BITS:0]  visit_bit;
     always_comb begin
         next_plru = current_plru;
-        visit_bit = (WAY_BITS+1)'(hit_way + NUM_WAYS - 1);
+        visit_bit = (WAY_BITS+1)'(hit_way + (WAY_BITS+1)'(NUM_WAYS - 1));
         for (int i = 0; i < WAY_BITS; i++) begin
             if (visit_bit[0]) begin
-                visit_bit = (WAY_BITS+1)'((visit_bit - 1) / 2);
-                next_plru[visit_bit] = 1'b0;
+                visit_bit = (WAY_BITS+1)'((visit_bit - (WAY_BITS+1)'(1)) / (WAY_BITS+1)'(2));
+                next_plru[visit_bit[WAY_BITS-1:0]] = 1'b0;
             end else begin
-                visit_bit = (WAY_BITS+1)'((visit_bit - 1) / 2);
-                next_plru[visit_bit] = 1'b1;
+                visit_bit = (WAY_BITS+1)'((visit_bit - (WAY_BITS+1)'(1)) / (WAY_BITS+1)'(2));
+                next_plru[visit_bit[WAY_BITS-1:0]] = 1'b1;
             end
         end
     end
