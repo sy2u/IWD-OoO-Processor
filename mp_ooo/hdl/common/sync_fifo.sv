@@ -6,18 +6,32 @@ module sync_fifo #(
     input   logic               clk,
     input   logic               rst,
 
-    input   logic               enq_en,
-    output  logic               full,
-    input   logic   [WIDTH-1:0] enq_data,
+    input   logic               in_valid,
+    output  logic               in_ready,
+    input   logic   [WIDTH-1:0] in_data,
 
-    input   logic               deq_en,
-    output  logic               empty,
-    output  logic   [WIDTH-1:0] deq_data
+    output  logic               out_valid,
+    input   logic               out_ready,
+    output  logic   [WIDTH-1:0] out_data
 );
 
     localparam              ADDR_IDX = $clog2(DEPTH);
 
     logic   [WIDTH-1:0]     fifo[DEPTH];
+
+    logic                   enq_en;
+    logic                   full;
+    logic   [WIDTH-1:0]     enq_data;
+    logic                   deq_en;
+    logic                   empty;
+    logic   [WIDTH-1:0]     deq_data;
+
+    assign enq_en = in_valid;
+    assign in_ready = ~full;
+    assign enq_data = in_data;
+    assign deq_en = out_ready;
+    assign out_valid = ~empty;
+    assign out_data = deq_data;
 
     logic   [ADDR_IDX:0]    wr_ptr;
     logic   [ADDR_IDX-1:0]  wr_ptr_actual;

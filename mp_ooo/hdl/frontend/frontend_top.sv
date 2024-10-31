@@ -1,18 +1,18 @@
 module frontend_top
+import cpu_params::*;
 (
-    input   logic           clk,
-    input   logic           rst,
+    input   logic               clk,
+    input   logic               rst,
 
-    input   logic           backend_flush,
-    input   logic   [31:0]  backend_redirect_pc,
+    input   logic               backend_flush,
+    input   logic   [31:0]      backend_redirect_pc,
 
-    input   logic           inst_queue_deq,
+    frontend_fifo_itf.frontend  to_fifo,
 
-    // I cache connected to arbiter (later)
-    cacheline_itf.master    icache_itf
+    // I cache connected to arbiter
+    cacheline_itf.master        icache_itf
 );
 
-    localparam  unsigned    IF_WIDTH = 1;
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
 
     logic                   if1_valid;
@@ -64,24 +64,11 @@ module frontend_top
         .icache_itf             (icache_itf)
     );
 
-    logic                       instr_queue_full;
     logic   [32*IF_WIDTH-1:0]   instr_queue_enq_data;
 
-    assign if1_ready = ~instr_queue_full;
-
-    sync_fifo #(
-        .DEPTH          (16),
-        .WIDTH          (32 * IF_WIDTH)
-    ) instr_queue(
-        .clk            (clk),
-        .rst            (rst || backend_flush),
-
-        .enq_en         (if1_valid),
-        .full           (instr_queue_full),
-        .enq_data       (instr_queue_enq_data),
-
-        .deq_en         (inst_queue_deq)
-    );
+    assign if1_ready = to_fifo.ready;
+    assign to_fifo.valid = if1_valid;
+    assign to_fifo.data = instr_queue_enq_data;
 
     always_comb begin
         for (int i = 0; i < IF_WIDTH; i++) begin
