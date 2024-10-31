@@ -20,14 +20,14 @@ interest you.
 
 ## Point Breakdown
 
-| Checkpoint | Points |
+| Checkpoint          | Points |
 |---------------------|--------|
-| CP 1 | 15 |
-| CP 2 | 15 |
-| CP 3 | 20 |
-| Competition | 20 |
-| Advanced Features | 20 |
-| Presentation/Report | 10 |
+| CP 1                | 15     |
+| CP 2                | 15     |
+| CP 3                | 20     |
+| Competition         | 20     |
+| Advanced Features   | 20     |
+| Presentation/Report | 10     |
 
 **Total Points:** 100
 
@@ -158,16 +158,16 @@ based on Verilator. Verilator is a cycle-level simulator that runs
 quickly as part of the competition.  You can learn more about this toolflow in
 [VERILATOR.md](./docs/VERILATOR.md).
 
-You do not need to handle the DIV-by-0 edgecase - this is usually handled via
-an exception from the processor, but we don't support those!
+You will need to handle the DIV-0 edgecase - please look at the RV32 ISA spec to
+understand the expected behavior here.
 
 **Requirements**
 - Implement your OoO architecture such that it can execute all immediate and
   register instructions in RV32I [5]
 - Integrate the multiplier IP with your processor to perform all MUL
   instructions in RV32M [2]
-- Integrate the divider IP with your processor to perform all DIV instructions
-  in RV32M [2]
+- Integrate the divider IP with your processor to perform all DIV/REM
+  instructions in RV32M [2]
 - Modify your `mp_verif` random testbench to test coverage on all the
   instructions required for this CP [2]
 - Demonstrate that your processor is able to execute instructions out-of-order

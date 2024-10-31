@@ -15,6 +15,8 @@ interface mon_itf#(
             logic   [31:0]  rs2_rdata [CHANNELS];
             logic   [4:0]   rd_addr   [CHANNELS];
             logic   [31:0]  rd_wdata  [CHANNELS];
+            logic   [4:0]   frd_addr  [CHANNELS];
+            logic   [31:0]  frd_wdata [CHANNELS];
             logic   [31:0]  pc_rdata  [CHANNELS];
             logic   [31:0]  pc_wdata  [CHANNELS];
             logic   [31:0]  mem_addr  [CHANNELS];

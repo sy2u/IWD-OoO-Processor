@@ -12,6 +12,20 @@ os.chdir("..")
 with open("options.json") as f:
     j = json.load(f)
 
+if sys.argv[1] == "arch":
+    retval = "rv32im"
+    if j["f_ext"]:
+        retval += 'f'
+    if j["c_ext"]:
+        retval += 'c'
+    print(retval)
+
+if sys.argv[1] == "abi":
+    retval = "ilp32"
+    if j["f_ext"]:
+        retval += 'f'
+    print(retval)
+
 if sys.argv[1] == "clock":
     if j["clock"] % 2 != 0 or j["clock"] < 0:
         print("Error: clock period must be a even positive number")

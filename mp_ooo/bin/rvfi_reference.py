@@ -17,6 +17,8 @@ rvfi_list = [
     "rs2_rdata" ,
     "rd_addr"   ,
     "rd_wdata"  ,
+    "frd_addr"  ,
+    "frd_wdata" ,
     "pc_rdata"  ,
     "pc_wdata"  ,
     "mem_addr"  ,

@@ -38,20 +38,15 @@ start_file = os.path.join(script_dir, "startup.s")
 linker_script = os.path.join(script_dir, "link.ld")
 compile = True
 
-if shutil.which("riscv32-unknown-elf-gcc"):
-    assembler="riscv32-unknown-elf-gcc"
-    objdump="riscv32-unknown-elf-objdump"
-    objcopy="riscv32-unknown-elf-objcopy"
-elif shutil.which("riscv64-unknown-elf-gcc"):
-    assembler="riscv64-unknown-elf-gcc"
-    objdump="riscv64-unknown-elf-objdump"
-    objcopy="riscv64-unknown-elf-objcopy"
-else:
-    print("[ERROR] No RISCV toolchain found in path")
-    exit(1)
+assembler="riscv64-unknown-elf-gcc"
+objdump="riscv64-unknown-elf-objdump"
+objcopy="riscv64-unknown-elf-objcopy"
 
-arch = "rv32im"
-abi = "ilp32"
+result = subprocess.run(f"python3 {script_dir}/get_options.py arch", shell=True, stdout=subprocess.PIPE)
+arch = result.stdout.decode().split('\n')[0]
+result = subprocess.run(f"python3 {script_dir}/get_options.py abi", shell=True, stdout=subprocess.PIPE)
+abi = result.stdout.decode().split('\n')[0]
+
 opt = "-Ofast -flto"
 warn = "-Wall -Wextra -Wno-unused"
 include = "" if len(input_file) == 1 else f"-I {os.path.dirname(os.path.abspath(input_file[0]))}"

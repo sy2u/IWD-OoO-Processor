@@ -13,6 +13,7 @@ VCS_SRCS  := $(PKG_SRCS) $(HDL_SRCS) $(VCS_HVL) $(SRAM_SRCS) $(DW_IP)
 VER_SRCS  := $(PKG_SRCS) $(HDL_SRCS) $(VER_HVL) $(SRAM_SRCS) $(DW_IP)
 VER_EX    := $(PWD)/../hvl/verilator/verilator_harness.cpp
 
+TIMEOUT         ?= 10000000
 VER_TRACE_START ?= -1
 VER_TRACE_END   ?= -1
 
@@ -37,6 +38,7 @@ run_vcs_top_tb: vcs/top_tb $(PROG)
 	python3 $(PWD)/../bin/get_options.py clock
 	python3 $(PWD)/../bin/get_options.py bmem_x
 	cd vcs && ./top_tb -l simulation.log -exitstatus \
+		+TIMEOUT_ECE411=$(TIMEOUT) \
 		+CLOCK_PERIOD_PS_ECE411=$(shell python3 $(PWD)/../bin/get_options.py clock) \
 		+BRAM_0_ON_X_ECE411=$(shell python3 $(PWD)/../bin/get_options.py bmem_x) \
 		+MEMLST_ECE411="$(PWD)/bin/memory_32.lst"
@@ -57,8 +59,8 @@ run_verilator_top_tb: verilator/build/Vtop_tb $(PROG)
 	python3 ../bin/generate_memory_file.py -32 $(PROG)
 	python3 $(PWD)/../bin/get_options.py clock
 	python3 $(PWD)/../bin/get_options.py bmem_x
-	cd verilator && ./build/Vtop_tb $(shell python3 $(PWD)/../bin/get_options.py clock) \
-		$(VER_TRACE_START) $(VER_TRACE_END) \
+	cd verilator && ./build/Vtop_tb $(VER_TRACE_START) $(VER_TRACE_END) \
+		+TIMEOUT_ECE411=$(TIMEOUT) \
 		+CLOCK_PERIOD_PS_ECE411=$(shell python3 $(PWD)/../bin/get_options.py clock) \
 		+BRAM_0_ON_X_ECE411=$(shell python3 $(PWD)/../bin/get_options.py bmem_x) \
 		+MEMLST_ECE411="$(PWD)/bin/memory_32.lst"
@@ -83,11 +85,11 @@ verdi:
 .PHONY: spike
 spike: $(ELF)
 	mkdir -p spike
-	spike --isa=rv32imc -m0x1eceb000:0xe1315000 --log-commits $(ELF) |& tail -n +6 > spike/spike.log
+	spike --isa=$(shell python3 $(PWD)/../bin/get_options.py arch) -m0x1eceb000:0xe1315000 --log-commits $(ELF) |& tail -n +6 > spike/spike.log
 
 .PHONY: interactive_spike
 interactive_spike: $(ELF)
-	spike --isa=rv32imc -m0x1eceb000:0xe1315000 --log-commits -d $(ELF)
+	spike --isa=$(shell python3 $(PWD)/../bin/get_options.py arch) -m0x1eceb000:0xe1315000 --log-commits -d $(ELF)
 
 .PHONY: clean
 clean:

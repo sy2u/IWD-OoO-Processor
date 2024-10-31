@@ -135,73 +135,84 @@ module monitor #(
         $fclose(time_fd);
     end
 
-    int spike_fd;
-    initial spike_fd = $fopen("../spike/commit.log", "w");
-    final $fclose(spike_fd);
+    `ifndef ECE411_NO_SPIKE
 
-    always @ (posedge itf.clk iff !itf.rst) begin
-        for (int unsigned channel = 0; channel < CHANNELS; channel++) begin
-            if(itf.valid[channel]) begin
-                if (itf.order[channel] % 1000 == 0) begin
-                    $display("dut commit No.%d, rd_s: x%02d, rd: 0x%h", itf.order[channel], itf.rd_addr[channel], |itf.rd_addr[channel] ? itf.rd_wdata[channel] : 32'd0);
-                end
-                if (itf.inst[channel][1:0] == 2'b11) begin
-                    $fwrite(spike_fd, "core   0: 3 0x%h (0x%h)", itf.pc_rdata[channel], itf.inst[channel]);
-                end else begin
-                    $fwrite(spike_fd, "core   0: 3 0x%h (0x%h)", itf.pc_rdata[channel], itf.inst[channel][15:0]);
-                end
-                if (itf.rd_addr[channel] != 0) begin
-                    if (itf.rd_addr[channel] < 10)
-                        $fwrite(spike_fd, " x%0d  ", itf.rd_addr[channel]);
-                    else
-                        $fwrite(spike_fd, " x%0d ", itf.rd_addr[channel]);
-                    $fwrite(spike_fd, "0x%h", itf.rd_wdata[channel]);
-                end
-                if (itf.mem_rmask[channel] != 0) begin
-                    automatic int first_1 = 0;
-                    for(int i = 0; i < 4; i++) begin
-                        if(itf.mem_rmask[channel][i]) begin
-                            first_1 = i;
-                            break;
-                        end
+        int spike_fd;
+        initial spike_fd = $fopen("../spike/commit.log", "w");
+        final $fclose(spike_fd);
+
+        always @ (posedge itf.clk iff !itf.rst) begin
+            for (int unsigned channel = 0; channel < CHANNELS; channel++) begin
+                if(itf.valid[channel]) begin
+                    if (itf.order[channel] % 1000 == 0) begin
+                        $display("dut commit No.%d, rd_s: x%02d, rd: 0x%h", itf.order[channel], itf.rd_addr[channel], |itf.rd_addr[channel] ? itf.rd_wdata[channel] : 32'd0);
                     end
-                    $fwrite(spike_fd, " mem 0x%h", {itf.mem_addr[channel][31:2], 2'b0} + first_1);
-                end
-                if (itf.mem_wmask[channel] != 0) begin
-                    automatic int amount_o_1 = 0;
-                    automatic int first_1 = 0;
-                    for(int i = 0; i < 4; i++) begin
-                        if(itf.mem_wmask[channel][i]) begin
-                            amount_o_1 += 1;
-                        end
+                    if (itf.inst[channel][1:0] == 2'b11) begin
+                        $fwrite(spike_fd, "core   0: 3 0x%h (0x%h)", itf.pc_rdata[channel], itf.inst[channel]);
+                    end else begin
+                        $fwrite(spike_fd, "core   0: 3 0x%h (0x%h)", itf.pc_rdata[channel], itf.inst[channel][15:0]);
                     end
-                    for(int i = 0; i < 4; i++) begin
-                        if(itf.mem_wmask[channel][i]) begin
-                            first_1 = i;
-                            break;
-                        end
+                    if (itf.rd_addr[channel] != 0) begin
+                        if (itf.rd_addr[channel] < 10)
+                            $fwrite(spike_fd, " x%0d  ", itf.rd_addr[channel]);
+                        else
+                            $fwrite(spike_fd, " x%0d ", itf.rd_addr[channel]);
+                        $fwrite(spike_fd, "0x%h", itf.rd_wdata[channel]);
                     end
-                    $fwrite(spike_fd, " mem 0x%h", {itf.mem_addr[channel][31:2], 2'b0} + first_1);
-                    case (amount_o_1)
-                        1: begin
-                            automatic logic[7:0] wdata_byte = itf.mem_wdata[channel][8*first_1 +: 8];
-                            $fwrite(spike_fd, " 0x%h", wdata_byte);
+                    if (itf.frd_addr[channel] != 0) begin
+                        if (itf.frd_addr[channel] < 10)
+                            $fwrite(spike_fd, " f%0d  ", itf.frd_addr[channel]);
+                        else
+                            $fwrite(spike_fd, " f%0d ", itf.frd_addr[channel]);
+                        $fwrite(spike_fd, "0x%h", itf.frd_wdata[channel]);
+                    end
+                    if (itf.mem_rmask[channel] != 0) begin
+                        automatic int first_1 = 0;
+                        for(int i = 0; i < 4; i++) begin
+                            if(itf.mem_rmask[channel][i]) begin
+                                first_1 = i;
+                                break;
+                            end
                         end
-                        2: begin
-                            automatic logic[15:0] wdata_half = itf.mem_wdata[channel][8*first_1 +: 16];
-                            $fwrite(spike_fd, " 0x%h", wdata_half);
+                        $fwrite(spike_fd, " mem 0x%h", {itf.mem_addr[channel][31:2], 2'b0} + first_1);
+                    end
+                    if (itf.mem_wmask[channel] != 0) begin
+                        automatic int amount_o_1 = 0;
+                        automatic int first_1 = 0;
+                        for(int i = 0; i < 4; i++) begin
+                            if(itf.mem_wmask[channel][i]) begin
+                                amount_o_1 += 1;
+                            end
                         end
-                        4:
-                            $fwrite(spike_fd, " 0x%h", itf.mem_wdata[channel]);
-                    endcase
-                end
-                $fwrite(spike_fd, "\n");
-                if (is_halt(itf.inst[channel])) begin
-                    break;
+                        for(int i = 0; i < 4; i++) begin
+                            if(itf.mem_wmask[channel][i]) begin
+                                first_1 = i;
+                                break;
+                            end
+                        end
+                        $fwrite(spike_fd, " mem 0x%h", {itf.mem_addr[channel][31:2], 2'b0} + first_1);
+                        case (amount_o_1)
+                            1: begin
+                                automatic logic[7:0] wdata_byte = itf.mem_wdata[channel][8*first_1 +: 8];
+                                $fwrite(spike_fd, " 0x%h", wdata_byte);
+                            end
+                            2: begin
+                                automatic logic[15:0] wdata_half = itf.mem_wdata[channel][8*first_1 +: 16];
+                                $fwrite(spike_fd, " 0x%h", wdata_half);
+                            end
+                            4:
+                                $fwrite(spike_fd, " 0x%h", itf.mem_wdata[channel]);
+                        endcase
+                    end
+                    $fwrite(spike_fd, "\n");
+                    if (is_halt(itf.inst[channel])) begin
+                        break;
+                    end
                 end
             end
         end
-    end
+
+    `endif
 
     `ifndef ECE411_NO_RVFI
 

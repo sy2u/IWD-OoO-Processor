@@ -4,17 +4,17 @@ module top_tb;
     timeprecision 1ps;
 
     int clock_half_period_ps;
+    longint timeout;
     initial begin
         $value$plusargs("CLOCK_PERIOD_PS_ECE411=%d", clock_half_period_ps);
         clock_half_period_ps = clock_half_period_ps / 2;
+        $value$plusargs("TIMEOUT_ECE411=%d", timeout);
     end
 
     bit clk;
     always #(clock_half_period_ps) clk = ~clk;
 
     bit rst;
-
-    int timeout = 10000000; // in cycles, change according to your needs
 
     mem_itf_banked mem_itf(.*);
     dram_w_burst_frfcfs_controller mem(.itf(mem_itf));
