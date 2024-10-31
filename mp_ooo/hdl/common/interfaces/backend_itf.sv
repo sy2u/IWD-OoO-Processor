@@ -21,45 +21,22 @@ endinterface
 
 interface id_int_rs_itf();
 import cpu_params::*;
+import uop_types::*;
 
     logic                   valid;
     logic                   ready;
-    logic   [ROB_IDX-1:0]   rob_id;
-    logic   [PRF_IDX-1:0]   rd_phy;
-    logic   [ARF_IDX-1:0]   rd_arch;
-    logic   [PRF_IDX-1:0]   rs1_phy;
-    logic                   rs1_valid;
-    logic   [PRF_IDX-1:0]   rs2_phy;
-    logic                   rs2_valid;
-    logic                   imm;
-    logic                   opcode; // TODO: Determine opcodes
+    uop_t                   uop;
 
     modport id (
         output              valid,
         input               ready,
-        output              rob_id,
-        output              rd_phy,
-        output              rd_arch,
-        output              rs1_phy,
-        output              rs1_valid,
-        output              rs2_phy,
-        output              rs2_valid,
-        output              imm,
-        output              opcode
+        output              uop
     );
 
     modport int_rs (
         input               valid,
         input               ready,
-        input               rob_id,
-        input               rd_phy,
-        input               rd_arch,
-        input               rs1_phy,
-        input               rs1_valid,
-        input               rs2_phy,
-        input               rs2_valid,
-        input               imm,
-        input               opcode
+        input               uop
     );
 
 endinterface
