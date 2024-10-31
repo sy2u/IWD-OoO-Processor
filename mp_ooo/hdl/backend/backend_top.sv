@@ -15,11 +15,20 @@ import cpu_params::*;
     assign backend_flush = 1'b0;
     assign backend_redirect_pc = 'x;
 
-    id_stage id_stage_i(
-        .clk                    (clk),
-        .rst                    (rst),
+    id_rat_itf                  id_rat_itf_i();
+    id_fl_itf                   id_fl_itf_i();
+    id_rob_itf                  id_rob_itf_i();
+    id_int_rs_itf               id_int_rs_itf_i();
 
-        .from_fifo              (from_fifo)
+    id_stage id_stage_i(
+        // .clk                    (clk),
+        // .rst                    (rst),
+
+        .from_fifo              (from_fifo),
+        .to_rat                 (id_rat_itf_i),
+        .to_fl                  (id_fl_itf_i),
+        .to_rob                 (id_rob_itf_i),
+        .to_int_rs              (id_int_rs_itf_i)
     );
 
 endmodule
