@@ -183,8 +183,8 @@ import cpu_params::*;
         logic   [31:0]          pc;
         logic   [31:0]          inst;
 
-        rs_type_t               rs_type;    // Reservation Station type
-        fu_type_t               fu_type;    // Functional Unit type
+        logic   [1:0]           rs_type;    // Reservation Station type
+        // logic   [1:0]           fu_type;    // Functional Unit type
         logic   [3:0]           fu_opcode;  // FU opcode
         logic   [1:0]           op1_sel;    // Operand 1 select
         logic   [1:0]           op2_sel;    // Operand 2 select
@@ -194,7 +194,7 @@ import cpu_params::*;
         logic   [PRF_IDX-1:0]   rs2_phy;    // Source register 2 (physical)
         logic                   rs1_valid;  // Source register 1 valid (not busy)
         logic                   rs2_valid;  // Source register 2 valid (not busy)
-        logic   [19:0]          imm_packed; // Packed immediate
+        logic   [31:0]          imm; // Packed immediate
         logic   [ROB_IDX-1:0]   rob_id;     // ROB ID
 
         logic   [ARF_IDX-1:0]   rd_arch;    // Destination register (architectural)
