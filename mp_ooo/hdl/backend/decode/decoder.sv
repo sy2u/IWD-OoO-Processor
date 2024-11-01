@@ -44,13 +44,18 @@ import rv32i_types::*;
                 fu_opcode = ALU_ADD;
             end
             op_b_auipc  : begin
+                rs_type = RS_INT;
+                // fu_type = FU_ALU;
+                op1_sel = OP1_PC;
+                op2_sel = OP2_IMM;
+                fu_opcode = ALU_ADD;
             end
-            op_b_jal    : begin
-            end
-            op_b_jalr   : begin
-            end
-            op_b_br     : begin
-            end
+            // op_b_jal    : begin
+            // end
+            // op_b_jalr   : begin
+            // end
+            // op_b_br     : begin
+            // end
             // op_b_load   : begin
             // end
             // op_b_store  : begin
@@ -76,27 +81,33 @@ import rv32i_types::*;
                 endcase
             end
             op_b_reg    : begin
-                rs_type = RS_INT;
-                // fu_type = FU_ALU;
                 op1_sel = OP1_RS1;
                 op2_sel = OP2_RS2;
-                unique case (funct3)
-                    arith_f3_slt: begin
-                        fu_opcode = ALU_SLT;
-                    end
-                    arith_f3_sltu: begin
-                        fu_opcode = ALU_SLTU;
-                    end
-                    arith_f3_sr: begin
-                        fu_opcode = (funct7[5]) ? ALU_SRA : ALU_SRL;
-                    end
-                    arith_f3_add: begin
-                        fu_opcode = (funct7[5]) ? ALU_SUB : ALU_ADD;
-                    end
-                    default: begin
-                        fu_opcode = {1'b0, funct3};
-                    end
-                endcase
+                if (funct7 == muldiv) begin
+                    rs_type = RS_INTM;
+                    // fu_type = FU_MD;
+                    fu_opcode = {1'b0, funct3};
+                end else begin
+                    rs_type = RS_INT;
+                    // fu_type = FU_ALU;
+                    unique case (funct3)
+                        arith_f3_slt: begin
+                            fu_opcode = ALU_SLT;
+                        end
+                        arith_f3_sltu: begin
+                            fu_opcode = ALU_SLTU;
+                        end
+                        arith_f3_sr: begin
+                            fu_opcode = (funct7[5]) ? ALU_SRA : ALU_SRL;
+                        end
+                        arith_f3_add: begin
+                            fu_opcode = (funct7[5]) ? ALU_SUB : ALU_ADD;
+                        end
+                        default: begin
+                            fu_opcode = {1'b0, funct3};
+                        end
+                    endcase
+                end
             end
             default     : begin
                 // Ignore the instruction

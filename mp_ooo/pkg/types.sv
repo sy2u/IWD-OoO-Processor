@@ -45,6 +45,17 @@ package rv32i_types;
     } arith_f3_t;
 
     typedef enum logic [2:0] {
+        muldiv_f3_mul= 3'b000,
+        muldiv_f3_mulh= 3'b001,
+        muldiv_f3_mulhsu= 3'b010,
+        muldiv_f3_mulhu= 3'b011,
+        muldiv_f3_div= 3'b100,
+        muldiv_f3_divu= 3'b101,
+        muldiv_f3_rem= 3'b110,
+        muldiv_f3_remu= 3'b111
+    } muldiv_f3_t;
+
+    typedef enum logic [2:0] {
         load_f3_lb     = 3'b000,
         load_f3_lh     = 3'b001,
         load_f3_lw     = 3'b010,
@@ -69,6 +80,7 @@ package rv32i_types;
 
     typedef enum logic [6:0] {
         base           = 7'b0000000,
+        muldiv         = 7'b0000001,
         variant        = 7'b0100000
     } funct7_t;
 

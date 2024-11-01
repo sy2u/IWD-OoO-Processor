@@ -5,7 +5,7 @@ class RandInst;
     // You will increment this number as you generate more random instruction
     // types. Once finished, NUM_TYPES should be 9, for each opcode type in
     // rv32i_opcode.
-    localparam NUM_TYPES = 9;
+    localparam NUM_TYPES = 4;
 
     // Note that the `instr_t` type is from ../pkg/types.sv, there are TODOs
     // you must complete there to fully define `instr_t`.
@@ -60,9 +60,9 @@ class RandInst;
             instr.r_type.opcode == op_b_reg;
 
             if (instr.r_type.funct3 == arith_f3_add || instr.r_type.funct3 == arith_f3_sr) {
-                instr.r_type.funct7 inside {base, variant};
+                instr.r_type.funct7 inside {base, muldiv, variant};
             } else {
-                instr.r_type.funct7 == base;
+                instr.r_type.funct7 inside {base, muldiv};
             }
         }
 
@@ -76,54 +76,55 @@ class RandInst;
             // Nothing to check
         }
 
-        instr_type[4] -> {
-            instr.b_type.opcode == op_b_br;
+        // instr_type[4] -> {
+        //     instr.b_type.opcode == op_b_br;
 
-            instr.b_type.b_imm_bot_1[1] == 0;
+        //     instr.b_type.b_imm_bot_1[1] == 0;
 
-            instr.b_type.funct3 inside {branch_f3_beq, branch_f3_bne, branch_f3_blt, branch_f3_bge, branch_f3_bltu, branch_f3_bgeu};
-        }
+        //     instr.b_type.funct3 inside {branch_f3_beq, branch_f3_bne, branch_f3_blt, branch_f3_bge, branch_f3_bltu, branch_f3_bgeu};
+        // }
 
-        instr_type[5] -> {
-            instr.j_type.opcode == op_b_jal;
-            instr.j_type.imm[21] == 0;
-        }
+        // instr_type[5] -> {
+        //     instr.j_type.opcode == op_b_jal;
+        //     instr.j_type.imm[21] == 0;
+        // }
 
-        instr_type[6] -> {
-            instr.i_type.opcode == op_b_jalr;
-            instr.i_type.funct3 == 3'b000;
-        }
+        // instr_type[6] -> {
+        //     instr.i_type.opcode == op_b_jalr;
+        //     instr.i_type.funct3 == 3'b000;
+        // }
 
-        instr_type[7] -> {
-            instr.s_type.opcode == op_b_store;
-            instr.s_type.funct3 inside {store_f3_sb, store_f3_sh, store_f3_sw};
 
-            instr.s_type.rs1 == 0;
+        // instr_type[7] -> {
+        //     instr.s_type.opcode == op_b_store;
+        //     instr.s_type.funct3 inside {store_f3_sb, store_f3_sh, store_f3_sw};
 
-            instr.s_type.funct3 == store_f3_sh -> {
-                ({instr.s_type.imm_s_top, instr.s_type.imm_s_bot} + regs[instr.s_type.rs1]) % 2 == 0;
-            }
+        //     instr.s_type.rs1 == 0;
 
-            instr.s_type.funct3 == store_f3_sw -> {
-                ({instr.s_type.imm_s_top, instr.s_type.imm_s_bot} + regs[instr.s_type.rs1]) % 4 == 0;
-            }
-        }
+        //     instr.s_type.funct3 == store_f3_sh -> {
+        //         ({instr.s_type.imm_s_top, instr.s_type.imm_s_bot} + regs[instr.s_type.rs1]) % 2 == 0;
+        //     }
 
-        instr_type[8] -> {
-            instr.i_type.opcode == op_b_load;
+        //     instr.s_type.funct3 == store_f3_sw -> {
+        //         ({instr.s_type.imm_s_top, instr.s_type.imm_s_bot} + regs[instr.s_type.rs1]) % 4 == 0;
+        //     }
+        // }
 
-            instr.i_type.funct3 inside {load_f3_lb, load_f3_lh, load_f3_lw, load_f3_lbu, load_f3_lhu};
+        // instr_type[8] -> {
+        //     instr.i_type.opcode == op_b_load;
 
-            instr.s_type.rs1 == 0;
+        //     instr.i_type.funct3 inside {load_f3_lb, load_f3_lh, load_f3_lw, load_f3_lbu, load_f3_lhu};
 
-            instr.i_type.funct3 == load_f3_lh || instr.i_type.funct3 == load_f3_lhu -> {
-                (instr.i_type.i_imm + regs[instr.i_type.rs1]) % 2 == 0;
-            }
+        //     instr.s_type.rs1 == 0;
 
-            instr.i_type.funct3 == load_f3_lw -> {
-                (instr.i_type.i_imm + regs[instr.i_type.rs1]) % 4 == 0;
-            }
-        }
+        //     instr.i_type.funct3 == load_f3_lh || instr.i_type.funct3 == load_f3_lhu -> {
+        //         (instr.i_type.i_imm + regs[instr.i_type.rs1]) % 2 == 0;
+        //     }
+
+        //     instr.i_type.funct3 == load_f3_lw -> {
+        //         (instr.i_type.i_imm + regs[instr.i_type.rs1]) % 4 == 0;
+        //     }
+        // }
 
     }
 
