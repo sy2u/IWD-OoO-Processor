@@ -145,65 +145,61 @@ import cpu_params::*;
 
     typedef enum logic [1:0] {
         RS_INT      = 2'b00,
-        RS_INTM     = 2'b01,
-        RS_BR       = 2'b10,
-        RS_MEM      = 2'b11
+        RS_INTM     = 2'b01
     } rs_type_t;
 
     typedef enum logic [1:0] {
         FU_ALU      = 2'b00,
-        FU_MULDIV   = 2'b01
+        FU_MD       = 2'b01
     } fu_type_t;
 
-    typedef enum logic [5:0] {
-        UOP_NOP     ,
+    typedef enum logic [3:0] {
+        ALU_ADD,
+        ALU_SLL,
+        ALU_SRA,
+        ALU_SUB,
+        ALU_XOR,
+        ALU_SRL,
+        ALU_OR,
+        ALU_AND,
+        ALU_SLT,
+        ALU_SLTU
+    } aluopc_t;
 
-        UOP_ADDI    ,
-        UOP_SLTI    ,
-        UOP_SLTIU   ,
-        UOP_XORI    ,
-        UOP_ORI     ,
-        UOP_ANDI    ,
-        UOP_SLLI    ,
-        UOP_SRLI    ,
-        UOP_SRAI    ,
-
-        UOP_ADD     ,
-        UOP_SUB     ,
-        UOP_SLL     ,
-        UOP_SLT     ,
-        UOP_SLTU    ,
-        UOP_XOR     ,
-        UOP_SRL     ,
-        UOP_SRA     ,
-        UOP_OR      ,
-        UOP_AND     
-    } uopc_t;
+    typedef enum logic [3:0] {
+        MD_MUL,
+        MD_MULH,
+        MD_MULHSU,
+        MD_MULHU,
+        MD_DIV,
+        MD_DIVU,
+        MD_REM,
+        MD_REMU
+    } mdopc_t;
 
     // Micro-op, the huge meta info that gets passed around the pipeline
     // EDA tools will optimize away anything that is not used in that stage
     typedef struct packed {
         logic   [31:0]          pc;
         logic   [31:0]          inst;
-        rs_type_t               rs_type; // Reservation Station type
-        fu_type_t               fu_type; // Functional Unit type
 
-        // uopc_t                  uopcode; // Micro-opcode
-        op1_sel_t               op1_sel; // Operand 1 select
-        op2_sel_t               op2_sel; // Operand 2 select
-        
+        rs_type_t               rs_type;    // Reservation Station type
+        fu_type_t               fu_type;    // Functional Unit type
+        logic   [3:0]           fu_opcode;  // FU opcode
+        logic   [1:0]           op1_sel;    // Operand 1 select
+        logic   [1:0]           op2_sel;    // Operand 2 select
 
-        logic   [PRF_IDX-1:0]   rd_phy; // Destination register (physical)
-        logic   [PRF_IDX-1:0]   rs1_phy; // Source register 1 (physical)
-        logic   [PRF_IDX-1:0]   rs2_phy; // Source register 2 (physical)
-        logic                   rs1_valid; // Source register 1 valid (not busy)
-        logic                   rs2_valid; // Source register 2 valid (not busy)
+        logic   [PRF_IDX-1:0]   rd_phy;     // Destination register (physical)
+        logic   [PRF_IDX-1:0]   rs1_phy;    // Source register 1 (physical)
+        logic   [PRF_IDX-1:0]   rs2_phy;    // Source register 2 (physical)
+        logic                   rs1_valid;  // Source register 1 valid (not busy)
+        logic                   rs2_valid;  // Source register 2 valid (not busy)
         logic   [19:0]          imm_packed; // Packed immediate
-        logic   [ROB_IDX-1:0]   rob_id; // ROB ID
+        logic   [ROB_IDX-1:0]   rob_id;     // ROB ID
 
-        logic   [ARF_IDX-1:0]   rd_arch; // Destination register (architectural)
-        logic   [ARF_IDX-1:0]   rs1_arch; // Source register 1 (architectural)
-        logic   [ARF_IDX-1:0]   rs2_arch; // Source register 2 (architectural)
+        logic   [ARF_IDX-1:0]   rd_arch;    // Destination register (architectural)
+        logic   [ARF_IDX-1:0]   rs1_arch;   // Source register 1 (architectural)
+        logic   [ARF_IDX-1:0]   rs2_arch;   // Source register 2 (architectural)
     } uop_t;
 
 endpackage

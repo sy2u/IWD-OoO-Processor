@@ -53,9 +53,9 @@ import uop_types::*;
     // Dispatch to INT Reservation Stations
 
     // Valid-Ready signals
-    assign to_rob.valid = from_fifo.valid;
-    assign to_fl.valid = from_fifo.valid;
-    assign to_int_rs.valid = from_fifo.valid;
+    assign to_rob.valid = from_fifo.valid && to_fl.ready && to_int_rs.ready;
+    assign to_fl.valid = from_fifo.valid && to_rob.ready && to_int_rs.ready;
+    assign to_int_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready;
     assign from_fifo.ready = to_fl.ready && to_rob.ready && to_int_rs.ready;
 
 endmodule
