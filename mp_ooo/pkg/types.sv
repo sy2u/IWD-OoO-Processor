@@ -187,9 +187,10 @@ import cpu_params::*;
         rs_type_t               rs_type; // Reservation Station type
         fu_type_t               fu_type; // Functional Unit type
 
-        uopc_t                  uopcode; // Micro-opcode
+        // uopc_t                  uopcode; // Micro-opcode
         op1_sel_t               op1_sel; // Operand 1 select
         op2_sel_t               op2_sel; // Operand 2 select
+        
 
         logic   [PRF_IDX-1:0]   rd_phy; // Destination register (physical)
         logic   [PRF_IDX-1:0]   rs1_phy; // Source register 1 (physical)
@@ -199,9 +200,9 @@ import cpu_params::*;
         logic   [19:0]          imm_packed; // Packed immediate
         logic   [ROB_IDX-1:0]   rob_id; // ROB ID
 
-        logic   [ARF_IDX:0]     rd_arch; // Destination register (architectural)
-        logic   [ARF_IDX:0]     rs1_arch; // Source register 1 (architectural)
-        logic   [ARF_IDX:0]     rs2_arch; // Source register 2 (architectural)
+        logic   [ARF_IDX-1:0]   rd_arch; // Destination register (architectural)
+        logic   [ARF_IDX-1:0]   rs1_arch; // Source register 1 (architectural)
+        logic   [ARF_IDX-1:0]   rs2_arch; // Source register 2 (architectural)
     } uop_t;
 
 endpackage

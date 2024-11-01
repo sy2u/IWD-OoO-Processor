@@ -19,6 +19,9 @@ import cpu_params::*;
     id_fl_itf                   id_fl_itf_i();
     id_rob_itf                  id_rob_itf_i();
     id_int_rs_itf               id_int_rs_itf_i();
+    rob_rrf_itf                 rob_rrf_itf_i();
+    rrf_fl_itf                  rrf_fl_itf_i();
+    cdb_itf                     cdb_itf_i();
 
     id_stage id_stage_i(
         // .clk                    (clk),
@@ -29,6 +32,46 @@ import cpu_params::*;
         .to_fl                  (id_fl_itf_i),
         .to_rob                 (id_rob_itf_i),
         .to_int_rs              (id_int_rs_itf_i)
+    );
+
+    rat rat_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_id                (id_rat_itf_i),
+        .cdb                    (cdb_itf_i)
+    );
+
+    free_list free_list_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_id                (id_fl_itf_i),
+        .from_rrf               (rrf_fl_itf_i)
+    );
+
+    rob rob_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_id                (id_rob_itf_i),
+        .to_rrf                 (rob_rrf_itf_i),
+        .cdb                    (cdb_itf_i)
+    );
+
+    rrf rrf_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_rob               (rob_rrf_itf_i),
+        .to_fl                  (rrf_fl_itf_i)
+    );
+
+    int_rs int_rs_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_id                (id_int_rs_itf_i)
     );
 
 endmodule

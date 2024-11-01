@@ -119,7 +119,6 @@ import cpu_params::*;
 
 endinterface
 
-
 interface rob_rrf_itf();
 import cpu_params::*;
 
@@ -137,6 +136,24 @@ import cpu_params::*;
         input               valid,
         input               rd_phy,
         input               rd_arch
+    );
+
+endinterface
+
+interface rrf_fl_itf();
+import cpu_params::*;
+
+    logic                   valid;
+    logic   [PRF_IDX-1:0]   stale_idx;
+
+    modport rrf (
+        output              valid,
+        input               stale_idx
+    );
+
+    modport fl (
+        input               valid,
+        output              stale_idx
     );
 
 endinterface
