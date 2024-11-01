@@ -5,6 +5,7 @@ import cpu_params::*;
     input   logic               rst,
 
     id_int_rs_itf.int_rs        from_id,
+    cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out
 );
 

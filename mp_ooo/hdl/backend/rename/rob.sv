@@ -6,7 +6,7 @@ import cpu_params::*;
 
     id_rob_itf.rob              from_id,
     rob_rrf_itf.rob             to_rrf,
-    cdb_itf.rob                 cdb
+    cdb_itf.rob                 cdb[CDB_WIDTH]
 );
 
 

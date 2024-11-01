@@ -5,7 +5,7 @@ import cpu_params::*;
     input   logic               rst,
 
     id_rat_itf.rat              from_id,
-    cdb_itf.rat                 cdb
+    cdb_itf.rat                 cdb[CDB_WIDTH]
 );
 
 

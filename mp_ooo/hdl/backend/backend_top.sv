@@ -21,7 +21,7 @@ import cpu_params::*;
     id_int_rs_itf               id_int_rs_itf_i();
     rob_rrf_itf                 rob_rrf_itf_i();
     rrf_fl_itf                  rrf_fl_itf_i();
-    cdb_itf                     cdb_itf_i();
+    cdb_itf                     cdb_itfs[CDB_WIDTH]();
 
     id_stage id_stage_i(
         // .clk                    (clk),
@@ -39,7 +39,7 @@ import cpu_params::*;
         .rst                    (rst),
 
         .from_id                (id_rat_itf_i),
-        .cdb                    (cdb_itf_i)
+        .cdb                    (cdb_itfs)
     );
 
     free_list free_list_i(
@@ -56,7 +56,7 @@ import cpu_params::*;
 
         .from_id                (id_rob_itf_i),
         .to_rrf                 (rob_rrf_itf_i),
-        .cdb                    (cdb_itf_i)
+        .cdb                    (cdb_itfs)
     );
 
     rrf rrf_i(
@@ -72,7 +72,15 @@ import cpu_params::*;
         .rst                    (rst),
 
         .from_id                (id_int_rs_itf_i),
-        .fu_cdb_out             (cdb_itf_i)
+        .cdb                    (cdb_itfs),
+        .fu_cdb_out             (cdb_itfs[0])
     );
+
+    // Temporary signals for INTM
+    assign cdb_itfs[1].valid = 1'b0;
+    assign cdb_itfs[1].rob_id = 'x;
+    assign cdb_itfs[1].rd_phy = 'x;
+    assign cdb_itfs[1].rd_arch = 'x;
+    assign cdb_itfs[1].rd_value = 'x;
 
 endmodule
