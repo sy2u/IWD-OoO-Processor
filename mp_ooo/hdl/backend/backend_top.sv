@@ -71,7 +71,8 @@ import cpu_params::*;
         .clk                    (clk),
         .rst                    (rst),
 
-        .from_id                (id_int_rs_itf_i)
+        .from_id                (id_int_rs_itf_i),
+        .fu_cdb_out             (cdb_itf_i)
     );
 
 endmodule
