@@ -85,12 +85,69 @@ module execute_tb;
         id_int_rs_itf_i.valid <= 1'b0;
     endtask : test_single_instruction
 
+    task test_consecutive_no_dependency(); 
+        // x1(x1) = x2 + 1
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd1;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd2;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.rob_id <= '0;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd1;
+        id_int_rs_itf_i.valid <= 1'b1;
+        // x3(x3) = x4 xor x4
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_XOR;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_RS2;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd3;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd4;
+        id_int_rs_itf_i.uop.rs2_phy <= 6'd4;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd1;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd3;
+        // x5(x5) = x6 or '1
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_OR;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd5;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd6;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= '1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd2;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd5;
+        // x7(x7) = x8 and '1
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_AND;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd7;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd8;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= '1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd3;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd7;
+
+        repeat (1) @(posedge clk);
+        id_int_rs_itf_i.valid <= 1'b0;
+        // x9(x9) = x10 sub 32'd1
+        // x11(x11) = x12 < '1 (u)
+        // x12(x12) = x13 <  '1 (s)
+        // x14(x14) = x15 << 32'd1
+        // x16(x16) = x16 >> 32'd1
+    endtask : test_consecutive_no_dependency
+
     initial begin
         $fsdbDumpfile("dump.fsdb");
         $fsdbDumpvars(0, "+all");
         do_reset();
 
-        test_single_instruction();
+        // test_single_instruction();
+        test_consecutive_no_dependency();
         // rst = 1'b1;
         // // set cdb and rs_prf_itfs to 0
         // cdb_itfs[1].valid = 1'b0;
