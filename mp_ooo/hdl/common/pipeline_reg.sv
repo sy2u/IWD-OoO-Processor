@@ -39,7 +39,6 @@ module pipeline_reg #(
         end
     end
 
-    // PC update
     always_ff @(posedge clk) begin
         if (rst) begin
             reg_data <= '0;

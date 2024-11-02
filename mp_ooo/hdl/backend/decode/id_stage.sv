@@ -95,4 +95,26 @@ import uop_types::*;
     // Backpressure Ready signal
     assign from_fifo.ready = to_fl.ready && to_rob.ready && to_int_rs.ready;
 
+    //////////////////////////
+    //          RVFI        //
+    //////////////////////////
+
+    assign to_rob.rvfi_dbg.order = 'x;
+    assign to_rob.rvfi_dbg.inst = uop.inst;
+    assign to_rob.rvfi_dbg.rs1_addr = uop.rs1_arch;
+    assign to_rob.rvfi_dbg.rs2_addr = uop.rs2_arch;
+    assign to_rob.rvfi_dbg.rs1_rdata = 'x;
+    assign to_rob.rvfi_dbg.rs2_rdata = 'x;
+    assign to_rob.rvfi_dbg.rd_addr = uop.rd_arch;
+    assign to_rob.rvfi_dbg.rd_wdata = 'x;
+    assign to_rob.rvfi_dbg.frd_addr = 'x;
+    assign to_rob.rvfi_dbg.frd_wdata = 'x;
+    assign to_rob.rvfi_dbg.pc_rdata = uop.pc;
+    assign to_rob.rvfi_dbg.pc_wdata = 'x;
+    assign to_rob.rvfi_dbg.mem_addr = 'x;
+    assign to_rob.rvfi_dbg.mem_rmask = 'x;
+    assign to_rob.rvfi_dbg.mem_wmask = 'x;
+    assign to_rob.rvfi_dbg.mem_rdata = 'x;
+    assign to_rob.rvfi_dbg.mem_wdata = 'x;
+
 endmodule
