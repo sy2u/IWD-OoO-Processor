@@ -240,7 +240,7 @@ module execute_tb;
         repeat (1) @(posedge clk);
     
         id_int_rs_itf_i.valid <= 1'b0;
-    endtask : test_consecutive_no_dependency
+    endtask : test_consecutive_with_dependency
 
     initial begin
         $fsdbDumpfile("dump.fsdb");
