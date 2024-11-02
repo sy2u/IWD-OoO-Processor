@@ -34,7 +34,10 @@ import uop_types::*;
     logic   [ARF_IDX-1:0]       rs1_arch;
     logic   [ARF_IDX-1:0]       rs2_arch;
 
-    // Decode
+    //////////////////////////
+    //     Decode Stage     //
+    //////////////////////////
+
     decoder decoder_i(
         .inst                   (from_fifo.data.inst[0]),
         .*
@@ -52,25 +55,38 @@ import uop_types::*;
     assign uop.rs1_arch = rs1_arch;
     assign uop.rs2_arch = rs2_arch;
 
-    // Rename
-    assign to_fl.valid = from_fifo.valid && to_rob.ready && to_int_rs.ready;
+
+    //////////////////////////
+    //     Rename Stage     //
+    //////////////////////////
+
+    // Pop from free list if we do need destination register
+    assign to_fl.valid = from_fifo.valid && to_rob.ready && to_int_rs.ready && (rd_arch != '0);
+
+    // Read from RAT
     assign to_rat.read_arch[0] = uop.rs1_arch;
     assign to_rat.read_arch[1] = uop.rs2_arch;
-    assign to_rat.write_en = from_fifo.valid && to_fl.ready;
-    assign to_rat.write_arch = uop.rd_arch;
-    assign to_rat.write_phy = to_fl.free_idx;
-
     assign uop.rs1_phy = to_rat.read_phy[0];
     assign uop.rs1_valid = to_rat.read_valid[0];
     assign uop.rs2_phy = to_rat.read_phy[1];
     assign uop.rs2_valid = to_rat.read_valid[1];
-    assign uop.rd_phy = to_fl.free_idx;
+
+    // Write to RAT if we do need destination register
+    assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && to_int_rs.ready && (rd_arch != '0);
+    assign to_rat.write_arch = uop.rd_arch;
+    assign to_rat.write_phy = to_fl.free_idx;
+    assign uop.rd_phy = (rd_arch != '0) ? to_fl.free_idx : '0;
 
     // Notify ROB
     assign to_rob.valid = from_fifo.valid && to_fl.ready && to_int_rs.ready;
     assign to_rob.rd_phy = uop.rd_phy;
     assign to_rob.rd_arch = uop.rd_arch;
     assign uop.rob_id = to_rob.rob_id;
+
+
+    //////////////////////////
+    //    Dispatch Stage    //
+    //////////////////////////
 
     // Dispatch to INT Reservation Stations
     assign to_int_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready && (rs_type == RS_INT);

@@ -24,9 +24,11 @@ import rv32i_types::*;
     assign opcode = inst[6:0];
     assign funct3 = inst[14:12];
     assign funct7 = inst[31:25];
-    assign rd_arch = inst[11:7];
-    assign rs1_arch = inst[19:15];
-    assign rs2_arch = inst[24:20];
+
+    // If a register is not used, it's set to r0
+    assign rd_arch = (opcode inside {op_b_lui, op_b_auipc, op_b_imm, op_b_reg}) ? inst[11:7] : '0;
+    assign rs1_arch = (opcode inside {op_b_imm, op_b_reg}) ? inst[19:15] : '0;
+    assign rs2_arch = (opcode == op_b_reg) ? inst[24:20] : '0;
 
     always_comb begin
         rs_type = 'x;
