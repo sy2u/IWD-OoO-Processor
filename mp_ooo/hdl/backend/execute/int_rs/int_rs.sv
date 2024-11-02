@@ -18,11 +18,9 @@ import int_rs_types::*;
     // local copy of cdb
     cdb_rs_t cdb_rs[CDB_WIDTH];
     generate 
-        always_comb begin 
-            for (genvar i = 0; i < CDB_WIDTH; i++) begin 
-                cdb_rs[i].valid  = cdb[i].valid;
-                cdb_rs[i].rd_phy = cdb[i].rd_phy;
-            end
+        for (genvar i = 0; i < CDB_WIDTH; i++) begin 
+            assign cdb_rs[i].valid  = cdb[i].valid;
+            assign cdb_rs[i].rd_phy = cdb[i].rd_phy;
         end
     endgenerate
     // rs array, store uop+available
