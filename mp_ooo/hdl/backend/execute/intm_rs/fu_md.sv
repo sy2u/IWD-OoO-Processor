@@ -59,7 +59,7 @@ import intm_rs_types::*;
     always_ff @( posedge clk ) begin
         if( rst || flush ) begin
             reg_valid <= '0;
-        end else begin
+        end else if (prv_ready) begin
             reg_valid <= prv_valid;
         end
     end
@@ -105,23 +105,23 @@ import intm_rs_types::*;
         outcome = 'x;
         unique case (intm_rs_reg.fu_opcode)
             MD_MUL: begin
-                a = au;
-                b = au;
+                a = as;
+                b = bs;
                 outcome = product[DATA_WIDTH-1:0];
             end
             MD_MULH: begin      // signed x signed
                 a = as;
-                b = as;
+                b = bs;
                 outcome = product[2*DATA_WIDTH-1:DATA_WIDTH];
             end
             MD_MULHSU: begin    // signed x unsigned
                 a = as;
-                b = au;
+                b = bu;
                 outcome = product[2*DATA_WIDTH-1:DATA_WIDTH];
             end
             MD_MULHU: begin     // unsigned x unsigned
                 a = au;
-                b = au;
+                b = bu;
                 outcome = product[2*DATA_WIDTH-1:DATA_WIDTH];
             end
             MD_DIV: begin       // signed / signed
@@ -148,6 +148,7 @@ import intm_rs_types::*;
                 outcome = remainder[DATA_WIDTH-1:0];
                 if( divide_by_0 ) outcome = fu_md_reg.dividend;
             end
+            default: ;
         endcase
     end
 

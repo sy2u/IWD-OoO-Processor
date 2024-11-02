@@ -24,7 +24,8 @@ module fu_md_tb;
     //---------------------------------------------------------------------------------
     import cpu_params::*;
     import intm_rs_types::*;
-    
+    import uop_types::*;
+
     cdb_itf     cdb();
 
     logic               flush;
@@ -79,10 +80,68 @@ module fu_md_tb;
     // Write tasks to test various functionalities: Basic Functionality
     //---------------------------------------------------------------------------------
 
-    task empty();
+    task single_mult();
 
-        $display("\033[32mTest: empty Finished \033[0m");
-    endtask : empty
+        prv_valid <= '1;
+        nxt_ready <= '1;
+        intm_rs_reg.fu_opcode <= MD_MUL;
+        intm_rs_reg.rs1_value <= 32'h5;
+        intm_rs_reg.rs2_value <= 32'h3;
+        @(posedge clk);
+        prv_valid <= '0;
+        intm_rs_reg.rs1_value <= 'x;
+        intm_rs_reg.rs2_value <= 'x;
+        repeat(5) @(posedge clk);
+
+        $display("\033[32mTest: single_mult Finished \033[0m");
+    endtask : single_mult
+
+    task all_mult();
+
+        nxt_ready <= '1;
+
+        prv_valid <= '1;
+        intm_rs_reg.fu_opcode <= MD_MUL;
+        intm_rs_reg.rs1_value <= '1;
+        intm_rs_reg.rs2_value <= 32'h39;
+        @(posedge clk);
+        prv_valid <= '0;
+        intm_rs_reg.rs1_value <= 'x;
+        intm_rs_reg.rs2_value <= 'x;
+        repeat(5) @(posedge clk);
+
+        prv_valid <= '1;
+        intm_rs_reg.fu_opcode <= MD_MULH;
+        intm_rs_reg.rs1_value <= '1;
+        intm_rs_reg.rs2_value <= 32'h39;
+        @(posedge clk);
+        prv_valid <= '0;
+        intm_rs_reg.rs1_value <= 'x;
+        intm_rs_reg.rs2_value <= 'x;
+        repeat(5) @(posedge clk);
+
+        prv_valid <= '1;
+        intm_rs_reg.fu_opcode <= MD_MULHSU;
+        intm_rs_reg.rs1_value <= '1;
+        intm_rs_reg.rs2_value <= 32'h39;
+        @(posedge clk);
+        prv_valid <= '0;
+        intm_rs_reg.rs1_value <= 'x;
+        intm_rs_reg.rs2_value <= 'x;
+        repeat(5) @(posedge clk);
+
+        prv_valid <= '1;
+        intm_rs_reg.fu_opcode <= MD_MULHSU;
+        intm_rs_reg.rs1_value <= 32'h39;
+        intm_rs_reg.rs2_value <= '1;
+        @(posedge clk);
+        prv_valid <= '0;
+        intm_rs_reg.rs1_value <= 'x;
+        intm_rs_reg.rs2_value <= 'x;
+        repeat(5) @(posedge clk);
+
+        $display("\033[32mTest: all_mult Finished \033[0m");
+    endtask : all_mult
 
     //---------------------------------------------------------------------------------
     // Main initial block that calls your tasks, then calls $finish
@@ -90,8 +149,12 @@ module fu_md_tb;
 
     initial begin
 
+        // generate_reset();
+        // single_mult();
+
         generate_reset();
-        empty();
+        all_mult();
+
         repeat(2) @(posedge clk);
 
         $finish;
