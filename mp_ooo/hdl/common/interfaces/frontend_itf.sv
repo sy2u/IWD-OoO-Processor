@@ -1,8 +1,9 @@
 interface frontend_fifo_itf();
+import fetch_types::*;
 
     logic                   valid;
     logic                   ready;
-    logic   [31:0]          data;
+    fetch_packet_t          data;
 
     modport frontend (
         output              valid,

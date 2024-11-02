@@ -1,4 +1,5 @@
-module inst_queue #(
+module inst_queue
+import fetch_types::*; #(
             parameter               DEPTH     = 16,
             parameter               WIDTH     = 32
 )
@@ -8,30 +9,30 @@ module inst_queue #(
 
     input   logic               in_valid,
     output  logic               in_ready,
-    input   logic   [WIDTH-1:0] in_data,
+    input   fetch_packet_t      in_packet,
 
     output  logic               out_valid,
     input   logic               out_ready,
-    output  logic   [WIDTH-1:0] out_data
+    output  fetch_packet_t      out_packet
 );
 
-    localparam              ADDR_IDX = $clog2(DEPTH);
+    localparam                  ADDR_IDX = $clog2(DEPTH);
 
-    logic   [WIDTH-1:0]     fifo[DEPTH];
+    fetch_packet_t              fifo[DEPTH];
 
-    logic                   enq_en;
-    logic                   full;
-    logic   [WIDTH-1:0]     enq_data;
-    logic                   deq_en;
-    logic                   empty;
-    logic   [WIDTH-1:0]     deq_data;
+    logic                       enq_en;
+    logic                       full;
+    fetch_packet_t              enq_data;
+    logic                       deq_en;
+    logic                       empty;
+    fetch_packet_t              deq_data;
 
     assign enq_en = in_valid;
     assign in_ready = ~full;
-    assign enq_data = in_data;
+    assign enq_data = in_packet;
     assign deq_en = out_ready;
     assign out_valid = ~empty;
-    assign out_data = deq_data;
+    assign out_packet = deq_data;
 
     logic   [ADDR_IDX:0]    wr_ptr;
     logic   [ADDR_IDX-1:0]  wr_ptr_actual;
@@ -47,9 +48,7 @@ module inst_queue #(
         if (rst) begin
             wr_ptr <= '0;
             rd_ptr <= '0;
-            for (int i = 0; i < DEPTH; i++) begin
-                fifo[i] <= 'x;
-            end
+            fifo <= '{default: 'x};
         end else begin
             if (enq_en && ~full) begin
                 fifo[wr_ptr_actual] <= enq_data;
@@ -63,6 +62,6 @@ module inst_queue #(
 
     assign empty = (wr_ptr == rd_ptr);
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
-    assign deq_data = (~empty) ? fifo[rd_ptr_actual] : 'x;
+    assign deq_data = (~empty) ? fifo[rd_ptr_actual] : '{default: 'x};
 
 endmodule

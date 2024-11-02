@@ -64,16 +64,10 @@ import cpu_params::*;
         .icache_itf             (icache_itf)
     );
 
-    logic   [32*IF_WIDTH-1:0]   instr_queue_enq_data;
-
     assign if1_ready = to_fifo.ready;
     assign to_fifo.valid = if1_valid;
-    assign to_fifo.data = instr_queue_enq_data;
-
-    always_comb begin
-        for (int i = 0; i < IF_WIDTH; i++) begin
-            instr_queue_enq_data[(32 * i) +: 32] = icache_rdata[i];
-        end
-    end
+    assign to_fifo.data.inst[0] = icache_rdata[0];
+    assign to_fifo.data.pc[0] = pc;
+    assign to_fifo.data.valid[0] = 1'b1;
 
 endmodule

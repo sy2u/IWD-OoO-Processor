@@ -1,9 +1,10 @@
 interface fifo_backend_itf();
 import cpu_params::*;
+import fetch_types::*;
 
     logic                   valid;
     logic                   ready;
-    logic   [31:0]          data;
+    fetch_packet_t          data;
 
     modport fifo (
         output              valid,
@@ -73,7 +74,7 @@ import cpu_params::*;
 
     logic   [ARF_IDX-1:0]   read_arch[2];
     logic   [PRF_IDX-1:0]   read_phy[2];
-    logic   [PRF_IDX-1:0]   read_valid[2];
+    logic                   read_valid[2];
     logic                   write_en;
     logic   [ARF_IDX-1:0]   write_arch;
     logic   [PRF_IDX-1:0]   write_phy;
@@ -148,12 +149,12 @@ import cpu_params::*;
 
     modport rrf (
         output              valid,
-        input               stale_idx
+        output              stale_idx
     );
 
     modport fl (
         input               valid,
-        output              stale_idx
+        input               stale_idx
     );
 
 endinterface

@@ -17,8 +17,8 @@ import cpu_params::*;
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            wr_ptr <= (FREELIST_IDX)'(PRF_DEPTH - 1);
-            rd_ptr <= (FREELIST_IDX)'(0);
+            wr_ptr <= (FREELIST_IDX)'(unsigned'(PRF_DEPTH - 1));
+            rd_ptr <= '0;
             for (int i = 0; i < FREELIST_DEPTH; i++) begin
                 free_list[i] <= (PRF_IDX)'(ARF_DEPTH + i);
             end

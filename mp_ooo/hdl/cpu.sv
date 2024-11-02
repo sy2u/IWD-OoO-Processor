@@ -59,11 +59,11 @@ import rv32i_types::*;
 
         .in_valid       (frontend_fifo_itf_i.valid),
         .in_ready       (frontend_fifo_itf_i.ready),
-        .in_data        (frontend_fifo_itf_i.data),
+        .in_packet      (frontend_fifo_itf_i.data),
 
         .out_valid      (fifo_backend_itf_i.valid),
         .out_ready      (fifo_backend_itf_i.ready),
-        .out_data       (fifo_backend_itf_i.data)
+        .out_packet     (fifo_backend_itf_i.data)
     );
 
     backend_top backend_i(

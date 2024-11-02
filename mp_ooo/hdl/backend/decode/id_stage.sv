@@ -36,12 +36,12 @@ import uop_types::*;
 
     // Decode
     decoder decoder_i(
-        .inst                   (from_fifo.data),
+        .inst                   (from_fifo.data.inst[0]),
         .*
     );
 
-    assign uop.pc = 'x;
-    assign uop.inst = from_fifo.data;
+    assign uop.pc = from_fifo.data.pc[0];
+    assign uop.inst = from_fifo.data.inst[0];
     assign uop.rs_type = rs_type;
     // assign uop.fu_type = fu_type;
     assign uop.fu_opcode = fu_opcode;
@@ -61,7 +61,9 @@ import uop_types::*;
     assign to_rat.write_phy = to_fl.free_idx;
 
     assign uop.rs1_phy = to_rat.read_phy[0];
+    assign uop.rs1_valid = to_rat.read_valid[0];
     assign uop.rs2_phy = to_rat.read_phy[1];
+    assign uop.rs2_valid = to_rat.read_valid[1];
     assign uop.rd_phy = to_fl.free_idx;
 
     // Notify ROB

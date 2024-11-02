@@ -140,6 +140,17 @@ package rv32i_types;
 
 endpackage
 
+package fetch_types;
+import cpu_params::*;
+
+    typedef struct {
+        logic   [31:0]  inst[IF_WIDTH];
+        logic   [31:0]  pc[IF_WIDTH];
+        logic           valid[IF_WIDTH];
+    } fetch_packet_t;
+
+endpackage
+
 package uop_types;
 import cpu_params::*;
 
