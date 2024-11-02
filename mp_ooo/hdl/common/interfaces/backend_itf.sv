@@ -44,6 +44,7 @@ endinterface
 
 interface id_rob_itf();
 import cpu_params::*;
+import rvfi_types::*;
 
     logic                   valid;
     logic                   ready;
