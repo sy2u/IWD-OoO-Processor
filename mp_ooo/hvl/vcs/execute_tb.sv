@@ -76,7 +76,7 @@ module execute_tb;
         id_int_rs_itf_i.uop.rs2_phy <= 6'd0;
         id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
         id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
-        id_int_rs_itf_i.uop.imm <= 20'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
         id_int_rs_itf_i.uop.rob_id <= '0;
         id_int_rs_itf_i.uop.rd_arch <= 5'd1;
         id_int_rs_itf_i.valid <= 1'b1;

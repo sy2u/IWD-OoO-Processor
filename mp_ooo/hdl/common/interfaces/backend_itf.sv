@@ -203,8 +203,8 @@ endinterface
 interface rs_prf_itf();
 import cpu_params::*;
 
-    logic   [ARF_IDX-1:0]   rs1_phy;
-    logic   [ARF_IDX-1:0]   rs2_phy;
+    logic   [PRF_IDX-1:0]   rs1_phy;
+    logic   [PRF_IDX-1:0]   rs2_phy;
     logic   [31:0]          rs1_value;
     logic   [31:0]          rs2_value;
 
