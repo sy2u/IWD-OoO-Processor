@@ -72,7 +72,7 @@ import cpu_params::*;
         .rst                    (rst),
 
         .from_id                (id_int_rs_itf_i),
-        .to_prf                 (rs_prf_itf[0]),
+        .to_prf                 (rs_prf_itfs[0]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[0])
     );
