@@ -235,6 +235,19 @@ import cpu_params::*;
     } cdb_rs_t;
 
     typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+        logic                   valid;
+    } cdb_prf_t;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+    } rs_prf_itf_t;
+
+    typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
         logic   [ARF_IDX-1:0]   rd_arch;
         logic   [PRF_IDX-1:0]   rd_phy;
