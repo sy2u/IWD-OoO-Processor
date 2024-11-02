@@ -46,22 +46,22 @@ import int_rs_types::*;
         if (rst) begin 
             int_rs_top <= '0;
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                int_rs_available[int_rs_push_idx]           <= 1'b1;
-                int_rs_array    [int_rs_push_idx].pc        <= '0;
-                int_rs_array    [int_rs_push_idx].fu_opcode <= '0;
-                int_rs_array    [int_rs_push_idx].op1_sel   <= '0;
-                int_rs_array    [int_rs_push_idx].op2_sel   <= '0;
+                int_rs_available[i]           <= 1'b1;
+                int_rs_array    [i].pc        <= '0;
+                int_rs_array    [i].fu_opcode <= '0;
+                int_rs_array    [i].op1_sel   <= '0;
+                int_rs_array    [i].op2_sel   <= '0;
 
-                int_rs_array    [int_rs_push_idx].rd_phy    <= '0;
-                int_rs_array    [int_rs_push_idx].rd_arch   <= '0;
+                int_rs_array    [i].rd_phy    <= '0;
+                int_rs_array    [i].rd_arch   <= '0;
 
-                int_rs_array    [int_rs_push_idx].rs1_phy   <= '0;
-                int_rs_array    [int_rs_push_idx].rs1_valid <= '0;
-                int_rs_array    [int_rs_push_idx].rs2_phy   <= '0;
-                int_rs_array    [int_rs_push_idx].rs2_valid <= '0;
+                int_rs_array    [i].rs1_phy   <= '0;
+                int_rs_array    [i].rs1_valid <= '0;
+                int_rs_array    [i].rs2_phy   <= '0;
+                int_rs_array    [i].rs2_valid <= '0;
 
-                int_rs_array    [int_rs_push_idx].imm <= '0;
-                int_rs_array    [int_rs_push_idx].rob_id     <= '0;
+                int_rs_array    [i].imm       <= '0;
+                int_rs_array    [i].rob_id    <= '0;
             end
         end else begin 
             // issue > snoop cdb > push
