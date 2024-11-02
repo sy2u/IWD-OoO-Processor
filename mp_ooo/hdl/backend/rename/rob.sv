@@ -10,16 +10,14 @@ import cpu_params::*;
 );
 
     typedef struct packed {
-        
         logic   [ROB_IDX-1:0]   rob_id;
         logic                   valid;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic   [ARF_IDX-1:0]   rd_arch;
         logic   [31 : 0]        rd_value;
-        
     } cdb_rob_t;
 
-    genvar k;
+    genvar k;           // TODO: need figure out how to use genvar and generate
 
     logic                   ready_array [ROB_DEPTH];
     logic   [PRF_IDX-1:0]   prf_idx_array [ROB_DEPTH];
@@ -42,6 +40,7 @@ import cpu_params::*;
 
     cdb_rob_t               cdb_rob[CDB_WIDTH];
 
+    // same logic with fifo queue
     assign {head_ptr_flag, head_ptr} = head_ptr_reg;
     assign {tail_ptr_flag, tail_ptr} = tail_ptr_reg;
 
@@ -50,14 +49,11 @@ import cpu_params::*;
     assign empty = (tail_ptr == head_ptr) && (tail_ptr_flag == head_ptr_flag);
     assign pop = (empty) ? 1'b0 : ready_array[head_ptr];
 
-    assign prf_idx = from_id.rd_phy;
-    assign arf_idx = from_id.rd_arch;
-
+    // create local CDB interface instances
     generate for (k = 0; k < CDB_WIDTH; k++) begin : cdb_assign
         assign cdb_rob[k].rob_id = cdb[k].rob_id;
         assign cdb_rob[k].valid = cdb[k].valid;
     end endgenerate
-
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -75,20 +71,19 @@ import cpu_params::*;
             arf_idx_array <= arf_idx_array;
             ready_array <= ready_array;
 
-            if (from_id.valid && ~full) begin
+            if (from_id.valid && ~full) begin           // push in
                 tail_ptr_reg <= tail_ptr_reg + ROB_IDX'(1);
                 ready_array[tail_ptr] <= '0;
-                prf_idx_array[tail_ptr] <= prf_idx;
-                arf_idx_array[tail_ptr] <= arf_idx;
+                prf_idx_array[tail_ptr] <= from_id.rd_phy;
+                arf_idx_array[tail_ptr] <= from_id.rd_arch;
             end
 
-            if (pop) begin
+            if (pop) begin                              // pop out
                 head_ptr_reg <= head_ptr_reg + ROB_IDX'(1);
-                ready_array[head_ptr] <= '0;    // pop out previous head
+                ready_array[head_ptr] <= '0;
             end
             
-            
-            for (int i = 0; i < CDB_WIDTH; i++) begin
+            for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
                 if (cdb_rob[i].valid) begin
                     ready_array[cdb_rob[i].rob_id] <= '1;
                 end
@@ -116,7 +111,6 @@ import cpu_params::*;
             to_rrf.rd_arch = arf_idx_array[head_ptr];
         end
     end
-
 
 endmodule
 
