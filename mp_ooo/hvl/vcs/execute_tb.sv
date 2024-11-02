@@ -98,6 +98,7 @@ module execute_tb;
         id_int_rs_itf_i.uop.rob_id <= '0;
         id_int_rs_itf_i.uop.rd_arch <= 5'd1;
         id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
         // x3(x3) = x4 xor x4
         id_int_rs_itf_i.uop.fu_opcode <= ALU_XOR;
         id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
@@ -109,6 +110,7 @@ module execute_tb;
         id_int_rs_itf_i.uop.rs2_valid <= 1'b1;
         id_int_rs_itf_i.uop.rob_id <= 5'd1;
         id_int_rs_itf_i.uop.rd_arch <= 5'd3;
+        repeat (1) @(posedge clk);
         // x5(x5) = x6 or '1
         id_int_rs_itf_i.uop.fu_opcode <= ALU_OR;
         id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
@@ -120,6 +122,7 @@ module execute_tb;
         id_int_rs_itf_i.uop.imm <= '1;
         id_int_rs_itf_i.uop.rob_id <= 5'd2;
         id_int_rs_itf_i.uop.rd_arch <= 5'd5;
+        repeat (1) @(posedge clk);
         // x7(x7) = x8 and '1
         id_int_rs_itf_i.uop.fu_opcode <= ALU_AND;
         id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
@@ -131,7 +134,6 @@ module execute_tb;
         id_int_rs_itf_i.uop.imm <= '1;
         id_int_rs_itf_i.uop.rob_id <= 5'd3;
         id_int_rs_itf_i.uop.rd_arch <= 5'd7;
-
         repeat (1) @(posedge clk);
         id_int_rs_itf_i.valid <= 1'b0;
         // x9(x9) = x10 sub 32'd1
