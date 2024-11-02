@@ -92,7 +92,5 @@ import cpu_params::*;
 
     assign rs_prf_itfs[1].rs1_phy   = '0;
     assign rs_prf_itfs[1].rs2_phy   = '0;
-    assign rs_prf_itfs[1].rs1_value = '0;
-    assign rs_prf_itfs[1].rs2_value = '0;
 
 endmodule

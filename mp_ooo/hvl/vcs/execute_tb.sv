@@ -47,8 +47,7 @@ module execute_tb;
 
         rs_prf_itfs[1].rs1_phy   = '0;
         rs_prf_itfs[1].rs2_phy   = '0;
-        rs_prf_itfs[1].rs1_value = '0;
-        rs_prf_itfs[1].rs2_value = '0;
+
 
         repeat (2) @(posedge clk);
         rst <= 1'b0;
@@ -64,7 +63,7 @@ module execute_tb;
         // rs2_phy   <= 6'd0
         // rs1_valid <= 1'b1
         // rs2_valid <= 1'b0
-        // imm_packed <= 20'd1
+        // imm <= 20'd1
         // rob_id <= '0
         // rd_arch <= 5'd1
         // from_id.valid <= 1'b1
@@ -77,7 +76,7 @@ module execute_tb;
         id_int_rs_itf_i.uop.rs2_phy <= 6'd0;
         id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
         id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
-        id_int_rs_itf_i.uop.imm_packed <= 20'd1;
+        id_int_rs_itf_i.uop.imm <= 20'd1;
         id_int_rs_itf_i.uop.rob_id <= '0;
         id_int_rs_itf_i.uop.rd_arch <= 5'd1;
         id_int_rs_itf_i.valid <= 1'b1;

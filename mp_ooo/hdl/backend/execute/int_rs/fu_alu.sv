@@ -30,7 +30,7 @@ import int_rs_types::*;
         unique case (int_rs_reg.op2_sel) 
             OP2_RS2:  b = int_rs_reg.rs2_value;
             OP2_ZERO: b = '0;
-            OP2_IMM:  b = int_rs_reg.imm_packed;
+            OP2_IMM:  b = int_rs_reg.imm;
             default:  b = '0;
         endcase
     end

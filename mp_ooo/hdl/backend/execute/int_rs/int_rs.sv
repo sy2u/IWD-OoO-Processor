@@ -52,7 +52,7 @@ import int_rs_types::*;
                 int_rs_array    [int_rs_push_idx].rs2_phy   <= '0;
                 int_rs_array    [int_rs_push_idx].rs2_valid <= '0;
 
-                int_rs_array    [int_rs_push_idx].imm_packed <= '0;
+                int_rs_array    [int_rs_push_idx].imm <= '0;
                 int_rs_array    [int_rs_push_idx].rob_id     <= '0;
             end
         end else begin 
@@ -75,7 +75,7 @@ import int_rs_types::*;
                 int_rs_array    [int_rs_push_idx].rs2_phy   <= from_id.uop.rs2_phy;
                 int_rs_array    [int_rs_push_idx].rs2_valid <= from_id.uop.rs2_valid;
 
-                int_rs_array    [int_rs_push_idx].imm_packed <= from_id.uop.imm_packed;
+                int_rs_array    [int_rs_push_idx].imm <= from_id.uop.imm;
                 int_rs_array    [int_rs_push_idx].rob_id     <= from_id.uop.rob_id;
             end
 
@@ -201,7 +201,7 @@ import int_rs_types::*;
             int_rs_reg.op1_sel      <= '0;
             int_rs_reg.op2_sel      <= '0;
             int_rs_reg.fu_opcode    <= '0;
-            int_rs_reg.imm_packed   <= '0;
+            int_rs_reg.imm   <= '0;
             int_rs_reg.pc           <= '0;
             int_rs_reg.rs1_value    <= '0;
             int_rs_reg.rs2_value    <= '0;
@@ -215,7 +215,7 @@ import int_rs_types::*;
             int_rs_reg.op1_sel      <= int_rs_array[int_rs_issue_idx].op1_sel;
             int_rs_reg.op2_sel      <= int_rs_array[int_rs_issue_idx].op2_sel;
             int_rs_reg.fu_opcode    <= int_rs_array[int_rs_issue_idx].fu_opcode;
-            int_rs_reg.imm_packed   <= int_rs_array[int_rs_issue_idx].imm_packed;
+            int_rs_reg.imm   <= int_rs_array[int_rs_issue_idx].imm;
             int_rs_reg.pc           <= int_rs_array[int_rs_issue_idx].pc;
 
             int_rs_reg.rs1_value    <= to_prf.rs1_value;
