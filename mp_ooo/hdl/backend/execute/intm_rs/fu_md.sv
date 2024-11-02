@@ -79,7 +79,6 @@ import intm_rs_types::*;
     end
 
     // IP control
-
     always_comb begin
         mul_start = '0;
         div_start = '0;
