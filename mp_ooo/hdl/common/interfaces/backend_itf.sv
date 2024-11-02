@@ -212,14 +212,14 @@ import cpu_params::*;
         output              rs1_phy,
         output              rs2_phy,
         input               rs1_value,
-        input               rs1_value
+        input               rs2_value
     );
 
     modport prf (
         input               rs1_phy,
         input               rs2_phy,
         output              rs1_value,
-        output              rs1_value
+        output              rs2_value
     );
 
 endinterface

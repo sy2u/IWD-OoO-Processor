@@ -145,7 +145,7 @@ import int_rs_types::*;
 
                 unique case (int_rs_array[(INTRS_IDX)'(i+int_rs_top)].op2_sel)
                     OP2_ZERO, OP2_IMM: src1_valid = '1;
-                    OP1_RS2: begin 
+                    OP2_RS2: begin 
                         src2_valid = int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_valid;
                         for (int i = 0; i < CDB_WIDTH; i++) begin 
                             if (cdb[i].valid && (cdb[i].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_phy)) begin 

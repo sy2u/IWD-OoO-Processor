@@ -26,8 +26,8 @@ import cpu_params::*;
 
     always_comb begin
         for (int j = 0; j < CDB_WIDTH; j++) begin 
-            from_rs[j].rs1_value = prf_data[from_rs.rs1_phy];
-            from_rs[j].rs2_value = prf_data[from_rs.rs2_phy];
+            from_rs[j].rs1_value = prf_data[from_rs[j].rs1_phy];
+            from_rs[j].rs2_value = prf_data[from_rs[j].rs2_phy];
 
             for (int i = 0; i < CDB_WIDTH; i++) begin
                 if (cdb[i].valid && (cdb[i].rd_phy == from_rs[j].rs1_phy)) begin 

@@ -83,8 +83,8 @@ vcs/execute_tb: $(VCS_SRCS) $(HDRS)
 
 .PHONY: run_vcs_execute_tb
 run_vcs_execute_tb: vcs/execute_tb
-      rm -f vcs/dump.fsdb
-      cd vcs && ./execute_tb -l simulation.log -exitstatus
+	rm -f vcs/dump.fsdb
+	cd vcs && ./execute_tb -l simulation.log -exitstatus
 
 .PHONY: covrep
 covrep: vcs/top_tb.vdb

@@ -62,7 +62,7 @@ import int_rs_types::*;
     assign fu_alu_reg_ready = 1'b1;
     always_ff @(posedge clk) begin 
         if (rst) begin 
-            fu_alu_reg_valid <= 1b'0;
+            fu_alu_reg_valid <= 1'b0;
             fu_alu_reg       <= '0;
         end else begin 
             fu_alu_reg_valid        <= int_rs_reg_valid && fu_alu_reg_ready;
@@ -80,6 +80,6 @@ import int_rs_types::*;
     assign cdb.rd_phy   = fu_alu_reg.rd_phy;
     assign cdb.rd_arch  = fu_alu_reg.rd_arch;
     assign cdb.rd_value = fu_alu_reg.rd_value;
-    assign cdb.valid    = fu_alu_reg.valid;
+    assign cdb.valid    = fu_alu_reg_valid;
 
 endmodule
