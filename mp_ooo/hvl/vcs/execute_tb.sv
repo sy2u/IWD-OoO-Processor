@@ -196,7 +196,7 @@ module execute_tb;
         id_int_rs_itf_i.uop.rd_arch <= 5'd16;
         repeat (1) @(posedge clk);
         // x17(x17) = x5 >> 32'd1 (sla) : ffffffff
-        id_int_rs_itf_i.uop.fu_opcode <= ALU_SLA;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_SRA;
         id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
         id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
         id_int_rs_itf_i.uop.rd_phy <= 6'd17;
