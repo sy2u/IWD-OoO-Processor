@@ -244,3 +244,13 @@ package icache_types;
 
 endpackage
 
+package rat_types;
+import cpu_params::*;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic                   valid;
+    } cdb_rab_t;
+
+endpackage
