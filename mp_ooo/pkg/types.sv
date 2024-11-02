@@ -227,6 +227,7 @@ package icache_types;
 endpackage
 
 package int_rs_types;
+import cpu_params::*;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
