@@ -409,7 +409,7 @@ module execute_tb;
         // test_consecutive_with_simple_dependency();
         // test_consecutive_with_simple_dependency2();
         test_consecutive_with_complicated_dependency();
-	repeat (10) @(posedge clk);
+	repeat (20) @(posedge clk);
 	$finish;
         
     end
