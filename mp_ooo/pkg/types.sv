@@ -10,11 +10,16 @@ package cpu_params;
     localparam  unsigned    PRF_DEPTH   = 64;
     localparam  unsigned    PRF_IDX     = $clog2(PRF_DEPTH);
 
+    localparam unsigned     INTRS_DEPTH = 8;
+    localparam unsigned     INTRS_IDX   = $clog2(INTRS_DEPTH);    
+
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
 
     localparam  unsigned    CDB_WIDTH   = 2; // currently only ALU
+
+    
 
 endpackage
 
@@ -183,8 +188,8 @@ import cpu_params::*;
         logic   [31:0]          pc;
         logic   [31:0]          inst;
 
-        rs_type_t               rs_type;    // Reservation Station type
-        fu_type_t               fu_type;    // Functional Unit type
+        logic   [1:0]               rs_type;    // Reservation Station type
+        // fu_type_t               fu_type;    // Functional Unit type
         logic   [3:0]           fu_opcode;  // FU opcode
         logic   [1:0]           op1_sel;    // Operand 1 select
         logic   [1:0]           op2_sel;    // Operand 2 select
@@ -219,5 +224,31 @@ package icache_types;
         ALLOCATE_STALL  = 2'b10  // One additional stall after allocate
     } icache_ctrl_fsm_state_t;
 
+endpackage
+
+package int_rs_types;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+
+        logic   [3:0]           fu_opcode;  
+        logic   [1:0]           op1_sel;    
+        logic   [1:0]           op2_sel;    
+
+        logic   [31:0]          pc;
+        logic   [19:0]          imm_packed;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+
+    } int_rs_reg_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+    } fu_alu_reg_t;
 endpackage
 
