@@ -36,7 +36,7 @@ import int_rs_types::*;
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
         if (rst) begin 
-            int_rs_top <= (INTRS_IDX)'b0;
+            int_rs_top <= '0;
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 int_rs_available[int_rs_push_idx]           <= 1'b1;
                 int_rs_array    [int_rs_push_idx].pc        <= '0;
@@ -81,21 +81,18 @@ import int_rs_types::*;
 
             // snoop CDB to update rs1/rs2 valid
             for (int i = 0; i < INTRS_DEPTH; i++) begin
-                genvar k;
-                generate 
-                    for (k = 0; k < CDB_WIDTH; k++) begin 
-                        // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
-                        // set rs1/rs2 to valid
-                        if (cdb[k].valid && !int_rs_available[i]) begin 
-                            if (int_rs_array[i].rs1_phy == cdb[k].rd_phy) begin 
-                                int_rs_array[i].rs1_valid <= 1'b1;
-                            end
-                            if (int_rs_array[i].rs2_phy == cdb[k].rd_phy) begin 
-                                int_rs_array[i].rs2_valid <= 1'b1;
-                            end
+                for (int k = 0; k < CDB_WIDTH; k++) begin 
+                    // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
+                    // set rs1/rs2 to valid
+                    if (cdb[k].valid && !int_rs_available[i]) begin 
+                        if (int_rs_array[i].rs1_phy == cdb[k].rd_phy) begin 
+                            int_rs_array[i].rs1_valid <= 1'b1;
                         end
-                    end 
-                endgenerate
+                        if (int_rs_array[i].rs2_phy == cdb[k].rd_phy) begin 
+                            int_rs_array[i].rs2_valid <= 1'b1;
+                        end
+                    end
+                end 
             end
 
             // pop issued instruction
@@ -103,7 +100,7 @@ import int_rs_types::*;
                 // set rs to available
                 int_rs_available[int_rs_issue_idx] <= 1'b1;
                 // update top pointer
-                int_rs_top <= int_rs_issue_idx + (INTRS_IDX)'d1;
+                int_rs_top <= int_rs_issue_idx + 1'd1;
             end
         end
     end
@@ -137,14 +134,11 @@ import int_rs_types::*;
                     OP1_ZERO, OP1_PC: src1_valid = '1;
                     OP1_RS1: begin 
                         src1_valid = int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_valid;
-                        genvar k;
-                        generate 
-                            for (k = 0; k < CDB_WIDTH; k++) begin 
-                                if (cdb[k].valid && (cdb[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_phy)) begin 
-                                    src1_valid = 1'b1;
-                                end
+                        for (int k = 0; k < CDB_WIDTH; k++) begin 
+                            if (cdb[k].valid && (cdb[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_phy)) begin 
+                                src1_valid = 1'b1;
                             end
-                        endgenerate
+                        end
                     end
                     default: src1_valid = '0;
                 endcase
@@ -153,14 +147,11 @@ import int_rs_types::*;
                     OP2_ZERO, OP2_IMM: src1_valid = '1;
                     OP2_RS2: begin 
                         src2_valid = int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_valid;
-                        genvar k;
-                        generate 
-                            for (k = 0; k < CDB_WIDTH; k++) begin 
-                                if (cdb[k].valid && (cdb[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_phy)) begin 
-                                    src2_valid = 1'b1;
-                                end
+                        for (int k = 0; k < CDB_WIDTH; k++) begin 
+                            if (cdb[k].valid && (cdb[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_phy)) begin 
+                                src2_valid = 1'b1;
                             end
-                        endgenerate
+                        end
                     end
                     default: src2_valid = '0;
                 endcase
