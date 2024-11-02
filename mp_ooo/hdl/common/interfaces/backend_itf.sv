@@ -169,6 +169,8 @@ import cpu_params::*;
     logic   [PRF_IDX-1:0]   rd_phy;
     logic   [ARF_IDX-1:0]   rd_arch;
     logic   [31:0]          rd_value;
+    logic   [31:0]          rs1_value_dbg;
+    logic   [31:0]          rs2_value_dbg;
     logic                   valid;
 
     modport fu (
@@ -176,6 +178,8 @@ import cpu_params::*;
         output              rd_phy,
         output              rd_arch,
         output              rd_value,
+        output              rs1_value_dbg,
+        output              rs2_value_dbg,
         output              valid
     );
 
@@ -192,6 +196,9 @@ import cpu_params::*;
 
     modport rob (
         input               rob_id,
+        input               rd_value,
+        input               rs1_value_dbg,
+        input               rs2_value_dbg,
         input               valid
     );
 
