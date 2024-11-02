@@ -211,7 +211,7 @@ module execute_tb;
         id_int_rs_itf_i.valid <= 1'b0;
     endtask : test_consecutive_no_dependency
 
-    task test_consecutive_with_dependency(); 
+    task test_consecutive_with_simple_dependency(); 
         // x1(x1) = x0 + 1: 1
         id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
         id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
@@ -240,7 +240,66 @@ module execute_tb;
         repeat (1) @(posedge clk);
     
         id_int_rs_itf_i.valid <= 1'b0;
-    endtask : test_consecutive_with_dependency
+    endtask : test_consecutive_with_simple_dependency
+
+    // 0: x2 = x1 + 1: (x1 invalid) 
+    // 1: x3 = x1 + 1:   (x1 invalid)
+    // 2: x4 = x2 + x3:  (x2, x3 invalid)
+    // 3: x7 = x2 + x4   (x2, x4 invalid)
+    // 4: x5 = x2 xor x3 (x2, x3 invalid)
+    // 5: x6 = x4 + x5   (x4, x5 invalid)
+    // 6: x1 = x0 + 1    (x0 valid)
+
+    task test_consecutive_with_simple_dependency2(); 
+        // 0: x2 = x1 + 1: (x1 invalid) 
+        // 1: x3 = x1 + 1:   (x1 invalid)
+        // 2: x1 = x0 + 1    (x0 valid)
+
+        // result:
+        // cycle 0: #2 x1 = 1, #0 issued
+        // cycle 1: #0 in fu, all x1 set to valid, so #1 issued
+        // cycle 2: #0 x2 = 2, #1 in fu
+        // cycle 3: #1 x3 = 2
+
+        // 0: x2 = x1 + 1: (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd0; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd2;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+
+        // 1: x3 = x1 + 1:   (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd1;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd3;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        repeat (1) @(posedge clk);
+
+        // 2: x1 = x0 + 1    (x0 valid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd2;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd1;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd0;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        repeat (1) @(posedge clk);
+    
+        id_int_rs_itf_i.valid <= 1'b0;
+    endtask : test_consecutive_with_simple_dependency2
 
     initial begin
         $fsdbDumpfile("dump.fsdb");
@@ -249,7 +308,8 @@ module execute_tb;
 
         // test_single_instruction();
         // test_consecutive_no_dependency();
-        test_consecutive_with_dependency();
+        // test_consecutive_with_simple_dependency();
+        test_consecutive_with_simple_dependency2();
 	repeat (10) @(posedge clk);
 	$finish;
         
