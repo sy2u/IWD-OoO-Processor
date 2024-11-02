@@ -1,5 +1,6 @@
 module fu_md
 import cpu_params::*;
+import uop_types::*;
 import intm_rs_types::*;
 (
     input   logic               clk,
@@ -25,8 +26,8 @@ import intm_rs_types::*;
     //---------------------------------------------------------------------------------
 
     localparam                  DATA_WIDTH = 32;
-    localparam                  A_WIDTH = DATA_WIDTH+1;
-    localparam                  B_WIDTH = DATA_WIDTH+1;
+    localparam                  A_WIDTH = DATA_WIDTH+1; // msb for sign extension
+    localparam                  B_WIDTH = DATA_WIDTH+1; // msb for sign extension
 
     logic                       mul_start, div_start;
     logic [A_WIDTH-1:0]         a; // Multiplier / Dividend
@@ -47,7 +48,7 @@ import intm_rs_types::*;
     logic                       complete;
     logic [DATA_WIDTH-1:0]      outcome;
     fu_md_reg_t                 fu_md_reg;
-    logic [DATA_WIDTH:0]        rs1_u, rs2_u, rs1_s, rs2_s; // msb for sign extension
+    logic [DATA_WIDTH:0]        au, bu, as, bs; // msb for sign extension
 
     logic                       reg_valid;
 
@@ -83,19 +84,12 @@ import intm_rs_types::*;
         mul_start = '0;
         div_start = '0;
         complete = '0;
-        if( intm_rs_reg.fu_opcode==MD_MUL || intm_rs_reg.fu_opcode==MD_MULH || 
-            intm_rs_reg.fu_opcode==MD_MULHSU || intm_rs_reg.fu_opcode==MD_MULHU ) begin
+        if( intm_rs_reg.fu_opcode==MD_MUL || intm_rs_reg.fu_opcode==MD_MULH || intm_rs_reg.fu_opcode==MD_MULHSU || intm_rs_reg.fu_opcode==MD_MULHU ) begin
             complete = mul_complete;
             if(prv_valid && prv_ready) mul_start = '1;
-        end else begin
+        end else if( intm_rs_reg.fu_opcode==MD_DIV || intm_rs_reg.fu_opcode==MD_DIVU || intm_rs_reg.fu_opcode==MD_REM || intm_rs_reg.fu_opcode==MD_REMU ) begin
             complete = div_complete;
             if(prv_valid && prv_ready) div_start = '1;
-            // handle divide by zero
-            if( divide_by_0 ) begin
-                if( intm_rs_reg.fu_opcode==MD_DIV || intm_rs_reg.fu_opcode==MD_DIVU ) outcome = '1;
-                if( intm_rs_reg.fu_opcode==MD_REM || intm_rs_reg.fu_opcode==MD_REMU ) outcome = fu_md_reg.dividend;
-            end
-            // TODO: IS OVERFLOW HANDLING NEEDED?
         end
     end
 
@@ -134,21 +128,25 @@ import intm_rs_types::*;
                 a = as;
                 b = bs;
                 outcome = quotient[DATA_WIDTH-1:0];
+                if( divide_by_0 ) outcome = '1;
             end
             MD_DIVU: begin      // unsigned / unsigned
                 a = au;
                 b = bu;
                 outcome = quotient[DATA_WIDTH-1:0];
+                if( divide_by_0 ) outcome = '1;
             end
             MD_REM: begin       // signed % signed
                 a = as;
                 b = bs;
                 outcome = remainder[DATA_WIDTH-1:0];
+                if( divide_by_0 ) outcome = fu_md_reg.dividend;
             end
             MD_REMU: begin      // unsigned % unsigned
                 a = au;
                 b = bu;
                 outcome = remainder[DATA_WIDTH-1:0];
+                if( divide_by_0 ) outcome = fu_md_reg.dividend;
             end
         endcase
     end
