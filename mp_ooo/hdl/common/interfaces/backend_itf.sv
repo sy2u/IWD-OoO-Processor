@@ -50,13 +50,15 @@ import cpu_params::*;
     logic   [ROB_IDX-1:0]   rob_id;
     logic   [PRF_IDX-1:0]   rd_phy;
     logic   [ARF_IDX-1:0]   rd_arch;
+    rvfi_dbg_t              rvfi_dbg;
 
     modport id (
         output              valid,
         input               ready,
         input               rob_id,
         output              rd_phy,
-        output              rd_arch
+        output              rd_arch,
+        output              rvfi_dbg
     );
 
     modport rob (
@@ -64,7 +66,8 @@ import cpu_params::*;
         output              ready,
         output              rob_id,
         input               rd_phy,
-        input               rd_arch
+        input               rd_arch,
+        input               rvfi_dbg
     );
 
 endinterface
