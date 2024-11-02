@@ -8,6 +8,7 @@ import int_rs_types::*;
 
     id_int_rs_itf.int_rs        from_id,
     rs_prf_itf.rs               to_prf,
+    input   logic               cdb_test[CDB_WIDTH],
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out
 );
@@ -18,7 +19,7 @@ import int_rs_types::*;
     // rs array, store uop+available
     uop_t int_rs_array      [INTRS_DEPTH];
     logic int_rs_available  [INTRS_DEPTH];
-    logic cdb_test [CDB_WIDTH];
+    // logic cdb_test [CDB_WIDTH];
 
     // pointer to top of the array (like a fifo queue)
     logic [INTRS_IDX-1:0] int_rs_top;
@@ -38,9 +39,6 @@ import int_rs_types::*;
         // rs array reset to all available, and top point to 0
         if (rst) begin 
             int_rs_top <= '0;
-            for (int i = 0; i < CDB_WIDTH; i++) begin 
-                cdb_test[i] <= 1'b0;
-            end
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 int_rs_available[int_rs_push_idx]           <= 1'b1;
                 int_rs_array    [int_rs_push_idx].pc        <= '0;

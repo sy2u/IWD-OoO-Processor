@@ -16,7 +16,7 @@ module execute_tb;
     id_int_rs_itf               id_int_rs_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
-
+    logic   cdb_test[CDB_WIDTH];
     int_rs int_rs_i(
         .clk                    (clk),
         .rst                    (rst),
@@ -24,6 +24,7 @@ module execute_tb;
         .from_id                (id_int_rs_itf_i),
         .to_prf                 (rs_prf_itfs[0]),
         .cdb                    (cdb_itfs),
+        .cdb_test               (cdb_test),
         .fu_cdb_out             (cdb_itfs[0])
     );
 
@@ -48,7 +49,9 @@ module execute_tb;
         rs_prf_itfs[1].rs1_phy   = '0;
         rs_prf_itfs[1].rs2_phy   = '0;
 
-
+        for (int i = 0; i < CDB_WIDTH; i++) begin 
+            cdb_test[i] = 1'b0;
+        end
         repeat (2) @(posedge clk);
         rst <= 1'b0;
 
