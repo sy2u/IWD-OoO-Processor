@@ -18,6 +18,7 @@ import int_rs_types::*;
     // rs array, store uop+available
     uop_t int_rs_array      [INTRS_DEPTH];
     logic int_rs_available  [INTRS_DEPTH];
+    logic cdb_test [CDB_WIDTH];
 
     // pointer to top of the array (like a fifo queue)
     logic [INTRS_IDX-1:0] int_rs_top;
@@ -37,6 +38,9 @@ import int_rs_types::*;
         // rs array reset to all available, and top point to 0
         if (rst) begin 
             int_rs_top <= '0;
+            for (int i = 0; i < CDB_WIDTH; i++) begin 
+                cdb_test[i] <= 1'b0;
+            end
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 int_rs_available[int_rs_push_idx]           <= 1'b1;
                 int_rs_array    [int_rs_push_idx].pc        <= '0;
@@ -84,14 +88,17 @@ import int_rs_types::*;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
                     // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
                     // set rs1/rs2 to valid
-                    if (cdb[k].valid && !int_rs_available[i]) begin 
-                        if (int_rs_array[i].rs1_phy == cdb[k].rd_phy) begin 
-                            int_rs_array[i].rs1_valid <= 1'b1;
-                        end
-                        if (int_rs_array[i].rs2_phy == cdb[k].rd_phy) begin 
-                            int_rs_array[i].rs2_valid <= 1'b1;
-                        end
+                    if (cdb_test[k] && !int_rs_available[i]) begin 
+                        int_rs_array[i].rs1_valid <= 1'b1;
                     end
+                    // if (cdb[k].valid && !int_rs_available[i]) begin 
+                    //     if (int_rs_array[i].rs1_phy == cdb[k].rd_phy) begin 
+                    //         int_rs_array[i].rs1_valid <= 1'b1;
+                    //     end
+                    //     if (int_rs_array[i].rs2_phy == cdb[k].rd_phy) begin 
+                    //         int_rs_array[i].rs2_valid <= 1'b1;
+                    //     end
+                    // end
                 end 
             end
 
