@@ -52,6 +52,7 @@ import int_rs_types::*;
             ALU_AND : alu_out = au &   bu;
             ALU_SLT : alu_out = {31'd0, (as <  bs)};
             ALU_SLTU: alu_out = {31'd0, (au <  bu)};
+	    default : alu_out = 'x;
         endcase
     end
 

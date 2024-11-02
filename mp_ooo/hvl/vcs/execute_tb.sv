@@ -83,7 +83,7 @@ module execute_tb;
         // from_id.valid <= 1'b0
         repeat (1) @(posedge clk);
         id_int_rs_itf_i.valid <= 1'b0;
-
+	repeat (10) @(posedge clk);
 	$finish;
         
     end
