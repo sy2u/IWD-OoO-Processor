@@ -63,6 +63,6 @@ module inst_queue #(
 
     assign empty = (wr_ptr == rd_ptr);
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
-    assign deq_data = fifo[rd_ptr_actual];
+    assign deq_data = (~empty) ? fifo[rd_ptr_actual] : 'x;
 
 endmodule

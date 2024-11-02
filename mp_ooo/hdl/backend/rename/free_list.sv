@@ -27,10 +27,13 @@ import cpu_params::*;
                 free_list[wr_ptr] <= from_rrf.stale_idx;
                 wr_ptr <= (FREELIST_IDX)'(wr_ptr + 1);
             end
+            if (from_id.ready && from_id.valid) begin
+                rd_ptr <= (FREELIST_IDX)'(rd_ptr + 1);
+            end
         end
     end
 
-    assign from_id.free_idx = free_list[rd_ptr];
+    assign from_id.free_idx = (from_id.ready) ? free_list[rd_ptr] : 'x;
     assign from_id.ready = ~(wr_ptr == rd_ptr);
 
 endmodule
