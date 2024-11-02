@@ -211,47 +211,45 @@ module execute_tb;
         id_int_rs_itf_i.valid <= 1'b0;
     endtask : test_consecutive_no_dependency
 
+    task test_consecutive_with_dependency(); 
+        // x1(x1) = x0 + 1: 1
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd1;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd0;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd0;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd1;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        // x2(x2) = x1 + 1 : 2
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd2;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd1;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd2;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+    
+        id_int_rs_itf_i.valid <= 1'b0;
+    endtask : test_consecutive_no_dependency
+
     initial begin
         $fsdbDumpfile("dump.fsdb");
         $fsdbDumpvars(0, "+all");
         do_reset();
 
         // test_single_instruction();
-        test_consecutive_no_dependency();
-        // rst = 1'b1;
-        // // set cdb and rs_prf_itfs to 0
-        // cdb_itfs[1].valid = 1'b0;
-        // cdb_itfs[1].rob_id = 'x;
-        // cdb_itfs[1].rd_phy = 'x;
-        // cdb_itfs[1].rd_arch = 'x;
-        // cdb_itfs[1].rd_value = 'x;
-
-        // rs_prf_itfs[1].rs1_phy   = '0;
-        // rs_prf_itfs[1].rs2_phy   = '0;
-
-        // repeat (2) @(posedge clk);
-        // rst <= 1'b0;
-
-        // // single add
-        // // x1 (x1) = x2 + 1
-        // id_int_rs_itf_i.uop.pc <= '0;
-        // id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
-        // id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
-        // id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
-        // id_int_rs_itf_i.uop.rd_phy <= 6'd1;
-        // id_int_rs_itf_i.uop.rs1_phy <= 6'd2;
-        // id_int_rs_itf_i.uop.rs2_phy <= 6'd0;
-        // id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
-        // id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
-        // id_int_rs_itf_i.uop.imm <= 32'd1;
-        // id_int_rs_itf_i.uop.rob_id <= '0;
-        // id_int_rs_itf_i.uop.rd_arch <= 5'd1;
-        // id_int_rs_itf_i.valid <= 1'b1;
-
-        // // cycle 1
-        // // from_id.valid <= 1'b0
-        // repeat (1) @(posedge clk);
-        // id_int_rs_itf_i.valid <= 1'b0;
+        // test_consecutive_no_dependency();
+        test_consecutive_with_dependency();
 	repeat (10) @(posedge clk);
 	$finish;
         
