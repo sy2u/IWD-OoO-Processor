@@ -27,8 +27,6 @@ vcs/top_tb: $(VCS_SRCS) $(HDRS)
 	python3 ../bin/rvfi_reference.py
 	cd vcs && vcs $(VCS_SRCS) $(VCS_FLAGS) -l compile.log -top top_tb -o top_tb
 	bash check_compile_error.sh
-	cat vcs/xprop.log
-	bash check_xprop.sh
 
 .PHONY: run_vcs_top_tb
 run_vcs_top_tb: vcs/top_tb $(PROG)

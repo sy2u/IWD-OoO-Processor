@@ -45,6 +45,10 @@ if sys.argv[1] == "dw_ip":
         if result.returncode == 1:
             with open("sim/vcs_warn.config", "a") as f:
                 f.write("{\n    +lint=none;\n    +module=" + i + ";\n}\n")
+        result = subprocess.run(f"grep -nw {i} sim/xprop.config", shell=True, stdout=subprocess.PIPE)
+        if result.returncode == 1:
+            with open("sim/xprop.config", "a") as f:
+                f.write("module {" + i + "} {xpropOff};\n")
     print(' '.join([os.environ["DW"] + '/sim_ver/' + x + '.v' for x in j['dw_ip']]))
 
 if sys.argv[1] == "min_power":

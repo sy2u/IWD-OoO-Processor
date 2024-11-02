@@ -50,6 +50,17 @@ package rv32i_types;
     } arith_f3_t;
 
     typedef enum logic [2:0] {
+        muldiv_f3_mul= 3'b000,
+        muldiv_f3_mulh= 3'b001,
+        muldiv_f3_mulhsu= 3'b010,
+        muldiv_f3_mulhu= 3'b011,
+        muldiv_f3_div= 3'b100,
+        muldiv_f3_divu= 3'b101,
+        muldiv_f3_rem= 3'b110,
+        muldiv_f3_remu= 3'b111
+    } muldiv_f3_t;
+
+    typedef enum logic [2:0] {
         load_f3_lb     = 3'b000,
         load_f3_lh     = 3'b001,
         load_f3_lw     = 3'b010,
@@ -74,6 +85,7 @@ package rv32i_types;
 
     typedef enum logic [6:0] {
         base           = 7'b0000000,
+        muldiv         = 7'b0000001,
         variant        = 7'b0100000
     } funct7_t;
 
@@ -133,6 +145,17 @@ package rv32i_types;
 
 endpackage
 
+package fetch_types;
+import cpu_params::*;
+
+    typedef struct {
+        logic   [31:0]  inst[IF_WIDTH];
+        logic   [31:0]  pc[IF_WIDTH];
+        logic           valid[IF_WIDTH];
+    } fetch_packet_t;
+
+endpackage
+
 package uop_types;
 import cpu_params::*;
 
@@ -188,8 +211,8 @@ import cpu_params::*;
         logic   [31:0]          pc;
         logic   [31:0]          inst;
 
-        logic   [1:0]               rs_type;    // Reservation Station type
-        // fu_type_t               fu_type;    // Functional Unit type
+        logic   [1:0]           rs_type;    // Reservation Station type
+        // logic   [1:0]           fu_type;    // Functional Unit type
         logic   [3:0]           fu_opcode;  // FU opcode
         logic   [1:0]           op1_sel;    // Operand 1 select
         logic   [1:0]           op2_sel;    // Operand 2 select
@@ -271,3 +294,83 @@ import cpu_params::*;
     } fu_alu_reg_t;
 endpackage
 
+package int_rs_types;
+import cpu_params::*;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic                   valid;
+    } cdb_rs_t;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+        logic                   valid;
+    } cdb_prf_t;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+    } rs_prf_itf_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+
+        logic   [3:0]           fu_opcode;  
+        logic   [1:0]           op1_sel;    
+        logic   [1:0]           op2_sel;    
+
+        logic   [31:0]          pc;
+        logic   [31:0]          imm;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+
+    } int_rs_reg_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+    } fu_alu_reg_t;
+endpackage
+
+package rat_types;
+import cpu_params::*;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic                   valid;
+    } cdb_rat_t;
+
+endpackage
+
+package rvfi_types;
+import cpu_params::*;
+
+    typedef struct packed {
+        logic   [63:0]          order;
+        logic   [31:0]          inst;
+        logic   [5:0]           rs1_addr;
+        logic   [5:0]           rs2_addr;
+        logic   [31:0]          rs1_rdata;
+        logic   [31:0]          rs2_rdata;
+        logic   [5:0]           rd_addr;
+        logic   [31:0]          rd_wdata;
+        logic   [5:0]           frd_addr;
+        logic   [31:0]          frd_wdata;
+        logic   [31:0]          pc_rdata;
+        logic   [31:0]          pc_wdata;
+        logic   [31:0]          mem_addr;
+        logic   [3:0]           mem_rmask;
+        logic   [3:0]           mem_wmask;
+        logic   [31:0]          mem_rdata;
+        logic   [31:0]          mem_wdata;
+    } rvfi_dbg_t;
+
+endpackage

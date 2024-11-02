@@ -1,9 +1,10 @@
 interface fifo_backend_itf();
 import cpu_params::*;
+import fetch_types::*;
 
     logic                   valid;
     logic                   ready;
-    logic   [31:0]          data;
+    fetch_packet_t          data;
 
     modport fifo (
         output              valid,
@@ -43,19 +44,22 @@ endinterface
 
 interface id_rob_itf();
 import cpu_params::*;
+import rvfi_types::*;
 
     logic                   valid;
     logic                   ready;
     logic   [ROB_IDX-1:0]   rob_id;
     logic   [PRF_IDX-1:0]   rd_phy;
     logic   [ARF_IDX-1:0]   rd_arch;
+    rvfi_dbg_t              rvfi_dbg;
 
     modport id (
         output              valid,
         input               ready,
         input               rob_id,
         output              rd_phy,
-        output              rd_arch
+        output              rd_arch,
+        output              rvfi_dbg
     );
 
     modport rob (
@@ -63,7 +67,8 @@ import cpu_params::*;
         output              ready,
         output              rob_id,
         input               rd_phy,
-        input               rd_arch
+        input               rd_arch,
+        input               rvfi_dbg
     );
 
 endinterface
@@ -73,7 +78,7 @@ import cpu_params::*;
 
     logic   [ARF_IDX-1:0]   read_arch[2];
     logic   [PRF_IDX-1:0]   read_phy[2];
-    logic   [PRF_IDX-1:0]   read_valid[2];
+    logic                   read_valid[2];
     logic                   write_en;
     logic   [ARF_IDX-1:0]   write_arch;
     logic   [PRF_IDX-1:0]   write_phy;
@@ -148,12 +153,12 @@ import cpu_params::*;
 
     modport rrf (
         output              valid,
-        input               stale_idx
+        output              stale_idx
     );
 
     modport fl (
         input               valid,
-        output              stale_idx
+        input               stale_idx
     );
 
 endinterface
@@ -165,6 +170,8 @@ import cpu_params::*;
     logic   [PRF_IDX-1:0]   rd_phy;
     logic   [ARF_IDX-1:0]   rd_arch;
     logic   [31:0]          rd_value;
+    logic   [31:0]          rs1_value_dbg;
+    logic   [31:0]          rs2_value_dbg;
     logic                   valid;
 
     modport fu (
@@ -172,6 +179,8 @@ import cpu_params::*;
         output              rd_phy,
         output              rd_arch,
         output              rd_value,
+        output              rs1_value_dbg,
+        output              rs2_value_dbg,
         output              valid
     );
 
@@ -188,6 +197,9 @@ import cpu_params::*;
 
     modport rob (
         input               rob_id,
+        input               rd_value,
+        input               rs1_value_dbg,
+        input               rs2_value_dbg,
         input               valid
     );
 
