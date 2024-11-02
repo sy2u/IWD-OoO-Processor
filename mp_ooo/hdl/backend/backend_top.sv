@@ -22,7 +22,7 @@ import cpu_params::*;
     rob_rrf_itf                 rob_rrf_itf_i();
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
-
+    rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
     id_stage id_stage_i(
         // .clk                    (clk),
         // .rst                    (rst),
@@ -72,15 +72,25 @@ import cpu_params::*;
         .rst                    (rst),
 
         .from_id                (id_int_rs_itf_i),
+        .to_prf                 (rs_prf_itfs[0]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[0])
     );
 
+    prf prf_i(
+        .clk                    (clk),
+        .rst                    (rst),
+        .from_rs                (rs_prf_itfs),
+        .cdb                    (cdb_itfs)
+    );
     // Temporary signals for INTM
     assign cdb_itfs[1].valid = 1'b0;
     assign cdb_itfs[1].rob_id = 'x;
     assign cdb_itfs[1].rd_phy = 'x;
     assign cdb_itfs[1].rd_arch = 'x;
     assign cdb_itfs[1].rd_value = 'x;
+
+    assign rs_prf_itfs[1].rs1_phy   = '0;
+    assign rs_prf_itfs[1].rs2_phy   = '0;
 
 endmodule

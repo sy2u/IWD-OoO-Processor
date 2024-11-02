@@ -10,11 +10,16 @@ package cpu_params;
     localparam  unsigned    PRF_DEPTH   = 64;
     localparam  unsigned    PRF_IDX     = $clog2(PRF_DEPTH);
 
+    localparam unsigned     INTRS_DEPTH = 8;
+    localparam unsigned     INTRS_IDX   = $clog2(INTRS_DEPTH);    
+
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
 
     localparam  unsigned    CDB_WIDTH   = 2; // currently only ALU
+
+    
 
 endpackage
 
@@ -242,6 +247,96 @@ package icache_types;
         ALLOCATE_STALL  = 2'b10  // One additional stall after allocate
     } icache_ctrl_fsm_state_t;
 
+endpackage
+
+package int_rs_types;
+import cpu_params::*;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic                   valid;
+    } cdb_rs_t;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+        logic                   valid;
+    } cdb_prf_t;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+    } rs_prf_itf_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+
+        logic   [3:0]           fu_opcode;  
+        logic   [1:0]           op1_sel;    
+        logic   [1:0]           op2_sel;    
+
+        logic   [31:0]          pc;
+        logic   [31:0]          imm;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+
+    } int_rs_reg_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+    } fu_alu_reg_t;
+endpackage
+
+package int_rs_types;
+import cpu_params::*;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic                   valid;
+    } cdb_rs_t;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+        logic                   valid;
+    } cdb_prf_t;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+    } rs_prf_itf_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+
+        logic   [3:0]           fu_opcode;  
+        logic   [1:0]           op1_sel;    
+        logic   [1:0]           op2_sel;    
+
+        logic   [31:0]          pc;
+        logic   [31:0]          imm;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+
+    } int_rs_reg_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+    } fu_alu_reg_t;
 endpackage
 
 package rat_types;

@@ -36,7 +36,7 @@ import uop_types::*;
 
     modport int_rs (
         input               valid,
-        input               ready,
+        output              ready,
         input               uop
     );
 
@@ -207,6 +207,31 @@ import cpu_params::*;
         input               rd_phy,
         input               rd_arch,
         input               valid
+    );
+
+endinterface
+
+
+interface rs_prf_itf();
+import cpu_params::*;
+
+    logic   [PRF_IDX-1:0]   rs1_phy;
+    logic   [PRF_IDX-1:0]   rs2_phy;
+    logic   [31:0]          rs1_value;
+    logic   [31:0]          rs2_value;
+
+    modport rs (
+        output              rs1_phy,
+        output              rs2_phy,
+        input               rs1_value,
+        input               rs2_value
+    );
+
+    modport prf (
+        input               rs1_phy,
+        input               rs2_phy,
+        output              rs1_value,
+        output              rs2_value
     );
 
 endinterface
