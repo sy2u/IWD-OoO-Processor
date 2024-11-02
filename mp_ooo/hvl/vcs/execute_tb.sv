@@ -33,7 +33,7 @@ module execute_tb;
         .cdb                    (cdb_itfs)
     );
     
-    task do_reset() 
+    task do_reset();
         rst = 1'b1;
         repeat (2) @(posedge clk);
         rst <= 1'b0;
@@ -62,9 +62,9 @@ module execute_tb;
         id_int_rs_itf_i.valid <= 1'b0;
 
         repeat (2) @(posedge clk);
-    endtask
+    endtask : do_reset
 
-    task test_single_instruction() 
+    task test_single_instruction();
         // single add
         // x1 (x1) = x2 + 1
         id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
@@ -83,7 +83,8 @@ module execute_tb;
         // from_id.valid <= 1'b0
         repeat (1) @(posedge clk);
         id_int_rs_itf_i.valid <= 1'b0;
-    endtask
+    endtask : test_single_instruction
+
     initial begin
         $fsdbDumpfile("dump.fsdb");
         $fsdbDumpvars(0, "+all");
