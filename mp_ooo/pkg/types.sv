@@ -251,6 +251,6 @@ import cpu_params::*;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic   [ARF_IDX-1:0]   rd_arch;
         logic                   valid;
-    } cdb_rab_t;
+    } cdb_rat_t;
 
 endpackage
