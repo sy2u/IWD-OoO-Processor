@@ -9,20 +9,22 @@ import cpu_params::*;
 );
 
     logic     [PRF_IDX-1:0]     mem [ARF_DEPTH];
+
     always_ff @( posedge clk ) begin
         if( rst ) begin 
             for( int i = 0; i < ARF_DEPTH; i++ ) begin
                 mem[i] <= {1'b0, ARF_IDX'(i)};  // sync with rat
             end
         end else begin
-            if( from_rob.valid ) 
+            if( from_rob.valid && (from_rob.rd_arch!='0) ) 
                 mem[from_rob.rd_arch] <= from_rob.rd_phy;
         end
     end
+    
     always_comb begin
         to_fl.valid = '0;
         to_fl.stale_idx = 'x;
-        if( from_rob.valid ) begin
+        if( from_rob.valid && (from_rob.rd_arch!='0) ) begin
             to_fl.valid = '1;
             to_fl.stale_idx = mem[from_rob.rd_arch];
         end

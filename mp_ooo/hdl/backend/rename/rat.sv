@@ -50,6 +50,15 @@ import rat_types::*;
                 else if ( cdb_local[i].rd_arch==from_id.read_arch[1] ) from_id.read_valid[1] = '1;
             end
         end
+        // handle r0
+        if( from_id.read_arch[0] == '0 ) begin
+            from_id.read_phy[0]   = '0;
+            from_id.read_valid[0] = '1;
+        end
+        if( from_id.read_arch[1] == '0 ) begin
+            from_id.read_phy[1]   = '0;
+            from_id.read_valid[1] = '1;
+        end
     end
 
 
