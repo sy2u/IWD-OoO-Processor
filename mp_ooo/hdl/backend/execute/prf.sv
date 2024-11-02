@@ -16,9 +16,9 @@ import int_rs_types::*;
     rs_prf_itf_t    from_rs_local   [CDB_WIDTH];
     generate 
         for (genvar i = 0; i < CDB_WIDTH; i++) begin 
-            assign cdb_local[i].valid  = cdb[i].valid;
-            assign cdb_local[i].rd_phy = cdb[i].rd_phy;
-            assign cdb[i].rd_value     = cdb_local[i].rd_value;
+            assign cdb_local[i].valid       = cdb[i].valid;
+            assign cdb_local[i].rd_phy      = cdb[i].rd_phy;
+            assign cdb_local[i].rd_value    = cdb[i].rd_value;
 
             assign from_rs_local[i].rs1_phy = from_rs[i].rs1_phy;
             assign from_rs_local[i].rs2_phy = from_rs[i].rs2_phy;
