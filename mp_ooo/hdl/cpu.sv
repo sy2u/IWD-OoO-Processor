@@ -50,10 +50,10 @@ import rv32i_types::*;
         .dfp_rvalid     (bmem_rvalid)
     );
 
-    sync_fifo #(
+    inst_queue #(
         .DEPTH          (16),
         .WIDTH          (32 * IF_WIDTH)
-    ) inst_queue(
+    ) inst_queue_i(
         .clk            (clk),
         .rst            (rst || backend_flush),
 
