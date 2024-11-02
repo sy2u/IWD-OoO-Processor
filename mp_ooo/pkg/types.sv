@@ -230,6 +230,11 @@ package int_rs_types;
 import cpu_params::*;
 
     typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic                   valid;
+    } cdb_rs_t;
+
+    typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
         logic   [ARF_IDX-1:0]   rd_arch;
         logic   [PRF_IDX-1:0]   rd_phy;

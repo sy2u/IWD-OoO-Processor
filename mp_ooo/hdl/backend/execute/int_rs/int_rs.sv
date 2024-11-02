@@ -8,7 +8,6 @@ import int_rs_types::*;
 
     id_int_rs_itf.int_rs        from_id,
     rs_prf_itf.rs               to_prf,
-    input   logic               cdb_test[CDB_WIDTH],
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out
 );
@@ -16,10 +15,18 @@ import int_rs_types::*;
     // Reservation Stations  //
     ///////////////////////////
 
+    // local copy of cdb
+    cdb_rs_t cdb_rs[CDB_WIDTH];
+
+    always_comb begin 
+        for (int i = 0; i < CDB_WIDTH; i++) begin 
+            cdb_rs[i].valid  = cdb[i].valid;
+            cdb_rs[i].rd_phy = cdb[i].rd_phy;
+        end
+    end
     // rs array, store uop+available
     uop_t int_rs_array      [INTRS_DEPTH];
     logic int_rs_available  [INTRS_DEPTH];
-    // logic cdb_test [CDB_WIDTH];
 
     // pointer to top of the array (like a fifo queue)
     logic [INTRS_IDX-1:0] int_rs_top;
@@ -86,17 +93,14 @@ import int_rs_types::*;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
                     // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
                     // set rs1/rs2 to valid
-                    if (cdb_test[k] && !int_rs_available[i]) begin 
-                        int_rs_array[i].rs1_valid <= 1'b1;
+                    if (cdb_rs[k].valid && !int_rs_available[i]) begin 
+                        if (int_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
+                            int_rs_array[i].rs1_valid <= 1'b1;
+                        end
+                        if (int_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
+                            int_rs_array[i].rs2_valid <= 1'b1;
+                        end
                     end
-                    // if (cdb[k].valid && !int_rs_available[i]) begin 
-                    //     if (int_rs_array[i].rs1_phy == cdb[k].rd_phy) begin 
-                    //         int_rs_array[i].rs1_valid <= 1'b1;
-                    //     end
-                    //     if (int_rs_array[i].rs2_phy == cdb[k].rd_phy) begin 
-                    //         int_rs_array[i].rs2_valid <= 1'b1;
-                    //     end
-                    // end
                 end 
             end
 
@@ -140,7 +144,7 @@ import int_rs_types::*;
                     OP1_RS1: begin 
                         src1_valid = int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_valid;
                         for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb[k].valid && (cdb[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_phy)) begin 
+                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_phy)) begin 
                                 src1_valid = 1'b1;
                             end
                         end
@@ -153,7 +157,7 @@ import int_rs_types::*;
                     OP2_RS2: begin 
                         src2_valid = int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_valid;
                         for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb[k].valid && (cdb[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_phy)) begin 
+                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_phy)) begin 
                                 src2_valid = 1'b1;
                             end
                         end
