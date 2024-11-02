@@ -37,7 +37,7 @@ import int_rs_types::*;
     logic [B_WIDTH-1:0]         b; // Multiplicand / Divisor
 
     logic                       mul_complete;
-    logic [A_WIDTH+B_WIDTH-1:0] mul_product;
+    logic [A_WIDTH+B_WIDTH-1:0] product;
 
     logic                       div_complete;
     logic [A_WIDTH-1 : 0]       quotient;
@@ -48,7 +48,7 @@ import int_rs_types::*;
     // Wrap up as Pipelined Register:
     //---------------------------------------------------------------------------------
 
-    logic                       tc_mode;
+    logic                       tc_mode;    // 0 for unsigned, 1 for 2's complement
     logic                       reg_valid;
 
     assign nxt_valid = reg_valid;
@@ -85,6 +85,6 @@ import int_rs_types::*;
     divider (.clk(clk), .rst_n(~rst), .hold('0),
             .start(div_start), .a(a), .b(b),
             .complete(div_complete), .divide_by_0(divide_by_0),
-            .quotient(quotient), .remainder(remainde) );
+            .quotient(quotient), .remainder(remainder) );
 
 endmodule
