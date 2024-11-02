@@ -9,5 +9,4 @@ import cpu_params::*;
 );
 
 
-
 endmodule
