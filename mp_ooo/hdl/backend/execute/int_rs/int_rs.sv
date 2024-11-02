@@ -17,13 +17,14 @@ import int_rs_types::*;
 
     // local copy of cdb
     cdb_rs_t cdb_rs[CDB_WIDTH];
-
-    always_comb begin 
-        for (int i = 0; i < CDB_WIDTH; i++) begin 
-            cdb_rs[i].valid  = cdb[i].valid;
-            cdb_rs[i].rd_phy = cdb[i].rd_phy;
+    generate 
+        always_comb begin 
+            for (genvar i = 0; i < CDB_WIDTH; i++) begin 
+                cdb_rs[i].valid  = cdb[i].valid;
+                cdb_rs[i].rd_phy = cdb[i].rd_phy;
+            end
         end
-    end
+    endgenerate
     // rs array, store uop+available
     uop_t int_rs_array      [INTRS_DEPTH];
     logic int_rs_available  [INTRS_DEPTH];
