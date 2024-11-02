@@ -86,7 +86,7 @@ module execute_tb;
     endtask : test_single_instruction
 
     task test_consecutive_no_dependency(); 
-        // x1(x1) = x2 + 1
+        // x1(x1) = x2 + 1: 1
         id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
         id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
         id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
@@ -99,7 +99,7 @@ module execute_tb;
         id_int_rs_itf_i.uop.rd_arch <= 5'd1;
         id_int_rs_itf_i.valid <= 1'b1;
         repeat (1) @(posedge clk);
-        // x3(x3) = x4 xor x4
+        // x3(x3) = x4 xor x4: 0
         id_int_rs_itf_i.uop.fu_opcode <= ALU_XOR;
         id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
         id_int_rs_itf_i.uop.op2_sel <= OP2_RS2;
@@ -111,7 +111,7 @@ module execute_tb;
         id_int_rs_itf_i.uop.rob_id <= 5'd1;
         id_int_rs_itf_i.uop.rd_arch <= 5'd3;
         repeat (1) @(posedge clk);
-        // x5(x5) = x6 or '1
+        // x5(x5) = x6 or '1: ffffffff
         id_int_rs_itf_i.uop.fu_opcode <= ALU_OR;
         id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
         id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
@@ -123,7 +123,7 @@ module execute_tb;
         id_int_rs_itf_i.uop.rob_id <= 5'd2;
         id_int_rs_itf_i.uop.rd_arch <= 5'd5;
         repeat (1) @(posedge clk);
-        // x7(x7) = x8 and '1
+        // x7(x7) = x8 and '1: 0
         id_int_rs_itf_i.uop.fu_opcode <= ALU_AND;
         id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
         id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
@@ -135,12 +135,80 @@ module execute_tb;
         id_int_rs_itf_i.uop.rob_id <= 5'd3;
         id_int_rs_itf_i.uop.rd_arch <= 5'd7;
         repeat (1) @(posedge clk);
+        // x9(x9) = x10 sub 32'd1: ffffffff
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_SUB;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd9;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd10;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd4;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd9;
+        repeat (1) @(posedge clk);
+        // x11(x11) = x12 < '1 (u): 1
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_SLTU;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd11;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd12;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= '1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd5;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd11;
+        repeat (1) @(posedge clk);
+        // x13(x13) = x14 <  '1 (s): 0
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_SLT;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd13;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd14;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= '1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd6;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd13;
+        repeat (1) @(posedge clk);
+        // x15(x15) = x1 << 32'd1 : 2
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_SLL;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd15;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd7;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd15;
+        repeat (1) @(posedge clk);
+        // x16(x16) = x5 >> 32'd1 : 7fffffff
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_SRL;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd16;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd5;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd8;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd16;
+        repeat (1) @(posedge clk);
+        // x17(x17) = x5 >> 32'd1 (sla) : ffffffff
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_SLA;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd17;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd5;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.rob_id <= 5'd9;
+        id_int_rs_itf_i.uop.rd_arch <= 5'd17;
+        repeat (1) @(posedge clk);
+
         id_int_rs_itf_i.valid <= 1'b0;
-        // x9(x9) = x10 sub 32'd1
-        // x11(x11) = x12 < '1 (u)
-        // x12(x12) = x13 <  '1 (s)
-        // x14(x14) = x15 << 32'd1
-        // x16(x16) = x16 >> 32'd1
     endtask : test_consecutive_no_dependency
 
     initial begin

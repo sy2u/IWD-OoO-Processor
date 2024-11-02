@@ -34,7 +34,7 @@ import int_rs_types::*;
             end
         end else begin
             for (int i = 0; i < CDB_WIDTH; i++) begin
-                if (cdb_local[i].valid) begin 
+                if (cdb_local[i].valid && (cdb_local[i].rd_phy != '0)) begin 
                     prf_data[cdb_local[i].rd_phy] <= cdb_local[i].rd_value;
                 end
             end
@@ -42,7 +42,7 @@ import int_rs_types::*;
     end
 
     always_comb begin
-        for (int j = 0; j < CDB_WIDTH; j++) begin 
+        for (int j = 0; j < CDB_WIDTH; j++) begin
             from_rs_local[j].rs1_value = prf_data[from_rs_local[j].rs1_phy];
             from_rs_local[j].rs2_value = prf_data[from_rs_local[j].rs2_phy];
 
@@ -54,6 +54,14 @@ import int_rs_types::*;
                 if (cdb_local[i].valid && (cdb_local[i].rd_phy == from_rs_local[j].rs2_phy)) begin 
                     from_rs_local[j].rs2_value = cdb_local[i].rd_value;
                 end
+            end
+
+            if (from_rs_local[j].rs1_phy == '0) begin 
+                from_rs_local[j].rs1_value = '0;
+            end
+
+            if (from_rs_local[j].rs2_phy == '0) begin 
+                from_rs_local[j].rs2_value = '0;
             end
         end
     end
