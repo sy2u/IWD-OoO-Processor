@@ -2,8 +2,9 @@ covergroup instr_cg with function sample(instr_t instr);
     // Easy covergroup to see that we're at least exercising
     // every opcode. Since opcode is an enum, this makes bins
     // for all its members.
-    all_opcodes : coverpoint instr.i_type.opcode;
-
+    all_opcodes : coverpoint instr.i_type.opcode {
+        ignore_bins not_for_cp2 = {op_b_jal, op_b_jalr, op_b_br, op_b_load, op_b_store};
+    }
 
     // Some simple coverpoints on various instruction fields.
     // Recognize that these coverpoints are inherently less useful
@@ -54,12 +55,16 @@ covergroup instr_cg with function sample(instr_t instr);
         illegal_bins STORE_FUNCT3 = funct3_cross with (
             instr.i_type.opcode == op_b_store && !(instr.i_type.funct3 inside {store_f3_sb, store_f3_sh, store_f3_sw})
         );
+
+        illegal_bins IGNORE_CP3 = funct3_cross with (
+            instr.i_type.opcode inside {op_b_jal, op_b_jalr, op_b_br, op_b_load, op_b_store}
+        );
     }
 
     // Coverpoint to make separate bins for funct7.
     coverpoint instr.r_type.funct7 {
         bins range[] = {[0:$]};
-        ignore_bins not_in_spec = {[1:31], [33:127]};
+        ignore_bins not_in_spec = {[2:31], [33:127]};
     }
 
     // Cross coverage for funct7.
@@ -75,6 +80,10 @@ covergroup instr_cg with function sample(instr_t instr);
         ignore_bins REG_FUNCT7 = funct7_cross with (
             instr.r_type.opcode == op_b_reg && instr.r_type.funct7 == variant 
             && !(instr.r_type.funct3 inside {arith_f3_add, arith_f3_sr})
+        );
+
+        ignore_bins IMM_RV32M_FUNCT7 = funct7_cross with (
+            instr.r_type.opcode == op_b_imm && instr.r_type.funct7 == muldiv
         );
 
         ignore_bins IMM_SLL_FUNCT7 = funct7_cross with (

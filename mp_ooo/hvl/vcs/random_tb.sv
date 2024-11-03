@@ -123,6 +123,9 @@ import rv32i_types::*; #(
             end
     end
 
+    int covered;
+    int total;
+
     // A single initial block ensures random stability.
     initial begin
 
@@ -134,6 +137,27 @@ import rv32i_types::*; #(
 
         // Run!
         run_random_instrs();
+
+        gen.instr_cg.all_opcodes.get_coverage(covered, total);
+        $display("all_opcodes: %0d/%0d", covered, total);
+
+        gen.instr_cg.all_funct7.get_coverage(covered, total);
+        $display("all_funct7: %0d/%0d", covered, total);
+
+        gen.instr_cg.all_funct3.get_coverage(covered, total);
+        $display("all_funct3: %0d/%0d", covered, total);
+
+        gen.instr_cg.all_regs_rs1.get_coverage(covered, total);
+        $display("all_regs_rs1: %0d/%0d", covered, total);
+
+        gen.instr_cg.all_regs_rs2.get_coverage(covered, total);
+        $display("all_regs_rs2: %0d/%0d", covered, total);
+
+        gen.instr_cg.funct3_cross.get_coverage(covered, total);
+        $display("funct3_cross: %0d/%0d", covered, total);
+
+        gen.instr_cg.funct7_cross.get_coverage(covered, total);
+        $display("funct7_cross: %0d/%0d", covered, total);
 
         // Finish up
         $display("Random testbench finished!");
