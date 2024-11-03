@@ -148,10 +148,10 @@ endpackage
 package fetch_types;
 import cpu_params::*;
 
-    typedef struct {
-        logic   [31:0]  inst[IF_WIDTH];
-        logic   [31:0]  pc[IF_WIDTH];
-        logic           valid[IF_WIDTH];
+    typedef struct packed {
+        logic   [IF_WIDTH-1:0]  [31:0]  inst;
+        logic   [IF_WIDTH-1:0]  [31:0]  pc;
+        logic   [IF_WIDTH-1:0]          valid;
     } fetch_packet_t;
 
 endpackage
@@ -263,7 +263,7 @@ import cpu_params::*;
         logic                   valid;
     } cdb_prf_t;
 
-    typedef struct {
+    typedef struct packed {
         logic   [PRF_IDX-1:0]   rs1_phy;
         logic   [PRF_IDX-1:0]   rs2_phy;
         logic   [31:0]          rs1_value;
