@@ -18,9 +18,10 @@ import uop_types::*;
     id_rob_itf.id               to_rob,
 
     // INT Reservation Stations
-    id_int_rs_itf.id            to_int_rs
+    id_int_rs_itf.id            to_int_rs,
 
     // INTM Reservation Stations
+    id_int_rs_itf.id            to_intm_rs
 
 );
     uop_t                       uop;
@@ -62,7 +63,9 @@ import uop_types::*;
     //////////////////////////
 
     // Pop from free list if we do need destination register
-    assign to_fl.valid = from_fifo.valid && to_rob.ready && to_int_rs.ready && (rd_arch != '0) && ~inst_invalid;
+    logic rs_ready;
+    assign rs_ready = (to_int_rs.ready && (rs_type == RS_INT)) || (to_intm_rs.ready && (rs_type == RS_INTM));
+    assign to_fl.valid = from_fifo.valid && to_rob.ready && rs_ready && (rd_arch != '0)  && ~inst_invalid;
 
     // Read from RAT
     assign to_rat.read_arch[0] = uop.rs1_arch;
@@ -73,13 +76,13 @@ import uop_types::*;
     assign uop.rs2_valid = to_rat.read_valid[1];
 
     // Write to RAT if we do need destination register
-    assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && to_int_rs.ready && (rd_arch != '0) && ~inst_invalid;
+    assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && rs_ready && (rd_arch != '0) && ~inst_invalid;
     assign to_rat.write_arch = uop.rd_arch;
     assign to_rat.write_phy = to_fl.free_idx;
     assign uop.rd_phy = (rd_arch != '0) ? to_fl.free_idx : '0;
 
     // Notify ROB
-    assign to_rob.valid = from_fifo.valid && to_fl.ready && to_int_rs.ready && ~inst_invalid;
+    assign to_rob.valid = from_fifo.valid && to_fl.ready && rs_ready && ~inst_invalid;
     assign to_rob.rd_phy = uop.rd_phy;
     assign to_rob.rd_arch = uop.rd_arch;
     assign uop.rob_id = to_rob.rob_id;
@@ -93,8 +96,12 @@ import uop_types::*;
     assign to_int_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready && (rs_type == RS_INT) && ~inst_invalid;
     assign to_int_rs.uop = uop;
 
+    // Dispatch to INTM Reservation Stations
+    assign to_intm_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready && (rs_type == RS_INTM) && ~inst_invalid;
+    assign to_intm_rs.uop = uop;
+
     // Backpressure Ready signal
-    assign from_fifo.ready = to_fl.ready && to_rob.ready && to_int_rs.ready && ~inst_invalid;
+    assign from_fifo.ready = to_fl.ready && to_rob.ready && rs_ready && ~inst_invalid;
 
     //////////////////////////
     //          RVFI        //

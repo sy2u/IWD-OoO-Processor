@@ -23,6 +23,8 @@ for v in sys.argv[1:]:
     else:
         input_file.append(os.path.abspath(v))
 
+addressability.append(int(32))
+
 if len(input_file) == 0 or len(addressability) == 0:
     print(sprint_color("[ERROR]", RED) + " Missing Argument.")
     print("[INFO]  Compile a C source files or a RISC-V assembly file, or convert a RISC-V ELF file, into a memory file for simulation.")

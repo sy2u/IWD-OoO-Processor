@@ -1,7 +1,7 @@
-module fu_md
+module fu_mul
 import cpu_params::*;
 import uop_types::*;
-import intm_rs_types::*;
+import int_rs_types::*;
 (
     input   logic               clk,
     input   logic               rst,
@@ -29,34 +29,27 @@ import intm_rs_types::*;
     localparam                  A_WIDTH = DATA_WIDTH+1; // msb for sign extension
     localparam                  B_WIDTH = DATA_WIDTH+1; // msb for sign extension
 
-    logic                       mul_start, div_start;
+    logic                       start;
     logic [A_WIDTH-1:0]         a; // Multiplier / Dividend
     logic [B_WIDTH-1:0]         b; // Multiplicand / Divisor
 
-    logic                       mul_complete;
+    logic                       complete;
     logic [A_WIDTH+B_WIDTH-1:0] product;
-
-    logic                       div_complete;
-    logic [A_WIDTH-1:0]         quotient;
-    logic [B_WIDTH-1:0]         remainder;
-    logic                       divide_by_0;
 
     //---------------------------------------------------------------------------------
     // Wrap up as Pipelined Register:
     //---------------------------------------------------------------------------------
 
-    logic                       is_multiply;
-    logic                       complete;
+    logic                       issue;
     logic [DATA_WIDTH-1:0]      outcome;
-    fu_md_reg_t                 fu_md_reg;
     logic [DATA_WIDTH:0]        au, bu, as, bs; // msb for sign extension
 
     logic                       reg_valid;
-    logic                       reg_start;
 
     // handshake control
     assign nxt_valid = reg_valid && complete;
     assign prv_ready = ~reg_valid || (nxt_valid && nxt_ready);
+    assign issue = prv_ready && prv_valid;
 
     always_ff @( posedge clk ) begin
         if( rst || flush ) begin
@@ -66,46 +59,28 @@ import intm_rs_types::*;
         end
     end
 
-    // load meta data
-    always_ff @( posedge clk ) begin
-        if( rst ) begin
-            fu_md_reg <= '0;
-        end else begin
-            if( prv_ready && prv_valid ) begin
-                fu_md_reg.rob_id <= intm_rs_reg.rob_id;
-                fu_md_reg.rd_arch <= intm_rs_reg.rd_arch;
-                fu_md_reg.rd_phy <= intm_rs_reg.rd_phy;
-                fu_md_reg.rs1_value <= intm_rs_reg.rs1_value;
-                fu_md_reg.rs2_value <= intm_rs_reg.rs2_value;
-                fu_md_reg.fu_opcode <= intm_rs_reg.fu_opcode;
-            end
-        end
-    end
-
     // start signal generation
     always_ff @( posedge clk ) begin
         if( rst ) begin
-            reg_start <= '0;
+            start <= '0;
         end else begin
-            if ( reg_start ) begin
-                reg_start <= '0;
-            end else if( prv_ready && prv_valid ) begin
-                reg_start <= '1;
+            if ( start ) begin
+                start <= '0;
+            end else if( issue ) begin
+                start <= '1;
             end
         end
     end
 
-    // IP control
-    assign  is_multiply = (fu_md_reg.fu_opcode inside {MD_MUL, MD_MULH, MD_MULHSU, MD_MULHU});
-    assign  complete = (is_multiply) ? mul_complete : div_complete;
-    assign  mul_start = (reg_start) && is_multiply;
-    assign  div_start = (reg_start) && ~is_multiply;
+    //---------------------------------------------------------------------------------
+    // IP Control:
+    //---------------------------------------------------------------------------------
 
     // mult: multiplier and multiplicand are interchanged
-    assign  au = {1'b0, fu_md_reg.rs1_value};
-    assign  bu = {1'b0, fu_md_reg.rs2_value}; 
-    assign  as = {fu_md_reg.rs1_value[DATA_WIDTH-1], fu_md_reg.rs1_value};
-    assign  bs = {fu_md_reg.rs2_value[DATA_WIDTH-1], fu_md_reg.rs2_value};
+    assign  au = {1'b0, intm_rs_reg.rs1_value};
+    assign  bu = {1'b0, intm_rs_reg.rs2_value}; 
+    assign  as = {intm_rs_reg.rs1_value[DATA_WIDTH-1], intm_rs_reg.rs1_value};
+    assign  bs = {intm_rs_reg.rs2_value[DATA_WIDTH-1], intm_rs_reg.rs2_value};
 
     always_comb begin
         a = '0;
@@ -132,30 +107,6 @@ import intm_rs_types::*;
                 b = bu;
                 outcome = product[2*DATA_WIDTH-1:DATA_WIDTH];
             end
-            MD_DIV: begin       // signed / signed
-                a = as;
-                b = bs;
-                outcome = quotient[DATA_WIDTH-1:0];
-                if( divide_by_0 ) outcome = '1;
-            end
-            MD_DIVU: begin      // unsigned / unsigned
-                a = au;
-                b = bu;
-                outcome = quotient[DATA_WIDTH-1:0];
-                if( divide_by_0 ) outcome = '1;
-            end
-            MD_REM: begin       // signed % signed
-                a = as;
-                b = bs;
-                outcome = remainder[DATA_WIDTH-1:0];
-                if( divide_by_0 ) outcome = fu_md_reg.rs1_value;
-            end
-            MD_REMU: begin      // unsigned % unsigned
-                a = au;
-                b = bu;
-                outcome = remainder[DATA_WIDTH-1:0];
-                if( divide_by_0 ) outcome = fu_md_reg.rs1_value;
-            end
             default: ;
         endcase
     end
@@ -174,24 +125,52 @@ import intm_rs_types::*;
     DW_mult_seq #(A_WIDTH, B_WIDTH, TC_MODE, NUM_CYC, 
                 RST_MODE, INPUT_MODE, OUTPUT_MODE, EARLY_START)
     signed_mul (.clk(clk), .rst_n(~rst), .hold('0),
-                .start(mul_start), .a(a), .b(b),
-                .complete(mul_complete), .product(product) );
-
-    DW_div_seq #(A_WIDTH, B_WIDTH, TC_MODE, NUM_CYC,
-                RST_MODE, INPUT_MODE, OUTPUT_MODE, EARLY_START)
-    divider (.clk(clk), .rst_n(~rst), .hold('0),
-            .start(div_start), .a(a), .b(b),
-            .complete(div_complete), .divide_by_0(divide_by_0),
-            .quotient(quotient), .remainder(remainder) );
+                .start(start), .a(a), .b(b),
+                .complete(complete), .product(product) );
 
     //---------------------------------------------------------------------------------
-    // Broadcast to CDB:
+    // Boardcast to CDB:
     //---------------------------------------------------------------------------------
+    fu_reg_t                    fu_mul_reg;
+    logic                       fu_mul_reg_valid, fu_mul_reg_ready;
+    logic                       pending;
 
-    assign cdb.rob_id   = fu_md_reg.rob_id;
-    assign cdb.rd_phy   = fu_md_reg.rd_phy;
-    assign cdb.rd_arch  = fu_md_reg.rd_arch;
-    assign cdb.rd_value = outcome;
-    assign cdb.valid    = nxt_valid;
+    always_ff @( posedge clk ) begin
+        if( rst ) begin
+            pending <= '0;
+        end else begin
+            if ( start ) begin
+                pending <= '1;
+            end else if( pending && prv_valid && fu_mul_reg_ready ) begin
+                pending <= '0;
+            end
+        end
+    end
+
+    assign fu_mul_reg_ready = 1'b1;
+    always_ff @(posedge clk) begin 
+        if (rst) begin 
+            fu_mul_reg_valid <= 1'b0;
+            fu_mul_reg       <= '0;
+        end else begin 
+            fu_mul_reg_valid <= fu_mul_reg_ready && prv_valid && pending;
+            if (prv_valid && fu_mul_reg_ready) begin 
+                fu_mul_reg.rob_id       <= intm_rs_reg.rob_id;
+                fu_mul_reg.rd_arch      <= intm_rs_reg.rd_arch;
+                fu_mul_reg.rd_phy       <= intm_rs_reg.rd_phy;
+                fu_mul_reg.rd_value     <= outcome;
+                fu_mul_reg.rs1_value_dbg<= intm_rs_reg.rs1_value;
+                fu_mul_reg.rs2_value_dbg<= intm_rs_reg.rs2_value;
+            end
+        end
+    end
+
+    assign cdb.rob_id           = fu_mul_reg.rob_id;
+    assign cdb.rd_phy           = fu_mul_reg.rd_phy;
+    assign cdb.rd_arch          = fu_mul_reg.rd_arch;
+    assign cdb.rd_value         = fu_mul_reg.rd_value;
+    assign cdb.valid            = fu_mul_reg_valid;
+    assign cdb.rs1_value_dbg    = fu_mul_reg.rs1_value_dbg;
+    assign cdb.rs2_value_dbg    = fu_mul_reg.rs2_value_dbg;
 
 endmodule

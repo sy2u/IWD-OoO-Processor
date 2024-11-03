@@ -57,7 +57,7 @@ import int_rs_types::*;
     end
 
     // fu_alu_reg update
-    fu_alu_reg_t fu_alu_reg;
+    fu_reg_t     fu_alu_reg;
     logic        fu_alu_reg_valid;
     logic        fu_alu_reg_ready;
     assign fu_alu_reg_ready = 1'b1;

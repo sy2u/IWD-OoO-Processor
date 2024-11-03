@@ -23,7 +23,7 @@ module fu_md_tb;
     // Declare FU_MD port signals:
     //---------------------------------------------------------------------------------
     import cpu_params::*;
-    import intm_rs_types::*;
+    import int_rs_types::*;
     import uop_types::*;
 
     cdb_itf     cdb();

@@ -76,6 +76,7 @@ def generate_instruction():
         'slt', 'sltu', 'addi', 'slli', 'srli', 'srai', 'andi', 
         'ori', 'xori', 'slti', 'sltiu', 'lui', 'auipc', 
         # 'sb', 'sh', 'sw', 'lb', 'lh', 'lw', 'lbu', 'lhu'
+        'mul', 'mulh', 'mulhu', 'mulhsu', 'div', 'divu', 'rem', 'remu'
     ])
     
     if instr_type in ['add', 'sub', 'sll', 'srl', 'sra', 'and', 'or', 'xor', 'slt', 'sltu']:
@@ -86,6 +87,8 @@ def generate_instruction():
         return generate_i_shamt_type(instr_type)
     elif instr_type in ['lui', 'auipc']:
         return generate_u_type(instr_type)
+    elif instr_type in ['mul', 'mulh', 'mulhu', 'mulhsu', 'div', 'divu', 'rem', 'remu']:
+        return generate_r_type(instr_type)
     # elif instr_type in ['sb', 'sh', 'sw']:
     #     return generate_s_type(instr_type)
     # elif instr_type in ['lb', 'lh', 'lw', 'lbu', 'lhu']:

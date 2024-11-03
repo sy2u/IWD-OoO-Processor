@@ -38,7 +38,7 @@ import int_rs_types::*;
 
     // issue logic
     logic                 intm_rs_issue_en;
-    logic [INTRS_IDX-1:0] int_rs_issue_idx;
+    logic [INTRS_IDX-1:0] intm_rs_issue_idx;
     logic                 src1_valid;
     logic                 src2_valid;
     logic                 fu_md_ready, fu_md_valid;
@@ -101,9 +101,9 @@ import int_rs_types::*;
             // pop issued instruction
             if (fu_md_valid) begin 
                 // set rs to available
-                int_rs_available[int_rs_issue_idx] <= 1'b1;
+                int_rs_available[intm_rs_issue_idx] <= 1'b1;
                 // update top pointer
-                int_rs_top <= int_rs_issue_idx + 1'd1;
+                int_rs_top <= intm_rs_issue_idx + 1'd1;
             end
         end
     end
@@ -127,8 +127,8 @@ import int_rs_types::*;
     // issue enable logic
     // loop from top until src all valid
     always_comb begin
-        intm_rs_issue_en  = '0;
-        int_rs_issue_idx = '0; 
+        intm_rs_issue_en = '0;
+        intm_rs_issue_idx = '0; 
         src1_valid       = '0;
         src2_valid       = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
@@ -145,7 +145,7 @@ import int_rs_types::*;
                 end
                 if (src1_valid && src2_valid) begin 
                     intm_rs_issue_en = '1;
-                    int_rs_issue_idx = (INTRS_IDX)'(i+int_rs_top);
+                    intm_rs_issue_idx = (INTRS_IDX)'(i+int_rs_top);
                     break;
                 end
             end
@@ -168,8 +168,8 @@ import int_rs_types::*;
     //---------------------------------------------------------------------------------
 
     // communicate with prf
-    assign to_prf.rs1_phy = intm_rs_array[int_rs_issue_idx].rs1_phy;
-    assign to_prf.rs2_phy = intm_rs_array[int_rs_issue_idx].rs2_phy;
+    assign to_prf.rs1_phy = intm_rs_array[intm_rs_issue_idx].rs1_phy;
+    assign to_prf.rs2_phy = intm_rs_array[intm_rs_issue_idx].rs2_phy;
 
     intm_rs_reg_t   intm_rs_reg;
     logic           intm_rs_reg_valid;
@@ -185,16 +185,13 @@ import int_rs_types::*;
             intm_rs_reg.fu_opcode    <= '0;
             intm_rs_reg.rs1_value    <= '0;
             intm_rs_reg.rs2_value    <= '0;
-
         end else begin
             intm_rs_reg_valid           <= intm_rs_issue_en && fu_md_ready;
             if (intm_rs_issue_en && fu_md_ready) begin 
-                intm_rs_reg.rob_id      <= intm_rs_array[int_rs_issue_idx].rob_id;
-                intm_rs_reg.rd_phy      <= intm_rs_array[int_rs_issue_idx].rd_phy;
-                intm_rs_reg.rd_arch     <= intm_rs_array[int_rs_issue_idx].rd_arch;
-
-                intm_rs_reg.fu_opcode   <= intm_rs_array[int_rs_issue_idx].fu_opcode;
-
+                intm_rs_reg.rob_id      <= intm_rs_array[intm_rs_issue_idx].rob_id;
+                intm_rs_reg.rd_phy      <= intm_rs_array[intm_rs_issue_idx].rd_phy;
+                intm_rs_reg.rd_arch     <= intm_rs_array[intm_rs_issue_idx].rd_arch;
+                intm_rs_reg.fu_opcode   <= intm_rs_array[intm_rs_issue_idx].fu_opcode;
                 intm_rs_reg.rs1_value   <= to_prf.rs1_value;
                 intm_rs_reg.rs2_value   <= to_prf.rs2_value;
             end
@@ -204,7 +201,7 @@ import int_rs_types::*;
     //---------------------------------------------------------------------------------
     // Instantiation:
     //---------------------------------------------------------------------------------
-    fu_md fu_md_i(
+    fu_mul fu_mul_i(
         .clk(clk),
         .rst(rst),
         .flush('0),
