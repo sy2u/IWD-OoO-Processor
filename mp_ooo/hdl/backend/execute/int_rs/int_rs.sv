@@ -190,7 +190,7 @@ import int_rs_types::*;
     fu_alu fu_alu_i(
         .clk                    (clk),
         .rst                    (rst),
-        .in_rs_valid            (int_rs_valid),
+        .int_rs_valid            (int_rs_valid),
         .fu_alu_ready           (fu_alu_ready),
         .fu_alu_reg_in          (fu_alu_reg_in),
         .cdb                    (fu_cdb_out)

@@ -24,7 +24,7 @@ import int_rs_types::*;
 
     // to int_rs
     // assign fu_alu_ready = ~fu_alu_valid || (fu_alu_valid && cdb_ready)
-    assign fu_alu_ready = 1;
+    assign fu_alu_ready = 1'b1;
 
     always_ff @(posedge clk) begin 
         if (rst) begin 
@@ -94,7 +94,7 @@ import int_rs_types::*;
     ///////////////////
     // FU_ALU TO CDB //
     ///////////////////
-    assign cdb_ready = 1;
+    assign cdb_ready = 1'b1;
 
     always_ff @(posedge clk) begin 
         if (rst) begin 
