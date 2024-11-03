@@ -20,7 +20,7 @@ import cpu_params::*;
             wr_ptr <= (FREELIST_IDX)'(unsigned'(PRF_DEPTH - 1));
             rd_ptr <= '0;
             for (int i = 0; i < FREELIST_DEPTH; i++) begin
-                free_list[i] <= (PRF_IDX)'(ARF_DEPTH + i);
+                free_list[i] <= (PRF_IDX)'(ARF_DEPTH + unsigned'(i));
             end
         end else begin
             if (from_rrf.valid) begin

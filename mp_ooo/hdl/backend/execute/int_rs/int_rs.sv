@@ -46,45 +46,16 @@ import int_rs_types::*;
         if (rst) begin 
             int_rs_top <= '0;
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                int_rs_available[i]           <= 1'b1;
-                int_rs_array    [i].pc        <= '0;
-                int_rs_array    [i].fu_opcode <= '0;
-                int_rs_array    [i].op1_sel   <= '0;
-                int_rs_array    [i].op2_sel   <= '0;
-
-                int_rs_array    [i].rd_phy    <= '0;
-                int_rs_array    [i].rd_arch   <= '0;
-
-                int_rs_array    [i].rs1_phy   <= '0;
-                int_rs_array    [i].rs1_valid <= '0;
-                int_rs_array    [i].rs2_phy   <= '0;
-                int_rs_array    [i].rs2_valid <= '0;
-
-                int_rs_array    [i].imm       <= '0;
-                int_rs_array    [i].rob_id    <= '0;
+                int_rs_available[i] <= 1'b1;
+                int_rs_array[i]     <= '{default: 'x};
             end
         end else begin 
             // issue > snoop cdb > push
             // push renamed instruction
             if (int_rs_push_en) begin 
                 // set rs to unavailable
-                int_rs_available[int_rs_push_idx]           <= 1'b0;
-
-                int_rs_array    [int_rs_push_idx].pc        <= from_id.uop.pc;
-                int_rs_array    [int_rs_push_idx].fu_opcode <= from_id.uop.fu_opcode;
-                int_rs_array    [int_rs_push_idx].op1_sel   <= from_id.uop.op1_sel;
-                int_rs_array    [int_rs_push_idx].op2_sel   <= from_id.uop.op2_sel;
-
-                int_rs_array    [int_rs_push_idx].rd_phy    <= from_id.uop.rd_phy;
-                int_rs_array    [int_rs_push_idx].rd_arch   <= from_id.uop.rd_arch;
-
-                int_rs_array    [int_rs_push_idx].rs1_phy   <= from_id.uop.rs1_phy;
-                int_rs_array    [int_rs_push_idx].rs1_valid <= from_id.uop.rs1_valid;
-                int_rs_array    [int_rs_push_idx].rs2_phy   <= from_id.uop.rs2_phy;
-                int_rs_array    [int_rs_push_idx].rs2_valid <= from_id.uop.rs2_valid;
-
-                int_rs_array    [int_rs_push_idx].imm <= from_id.uop.imm;
-                int_rs_array    [int_rs_push_idx].rob_id     <= from_id.uop.rob_id;
+                int_rs_available[int_rs_push_idx]   <= 1'b0;
+                int_rs_array[int_rs_push_idx]       <= from_id.uop;
             end
 
             // snoop CDB to update rs1/rs2 valid
@@ -120,8 +91,8 @@ import int_rs_types::*;
         int_rs_push_idx = '0;
         if (from_id.valid && from_id.ready) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                if (int_rs_available[(INTRS_IDX)'(i+int_rs_top)]) begin 
-                    int_rs_push_idx = (INTRS_IDX)'(i+int_rs_top);
+                if (int_rs_available[(INTRS_IDX)'(unsigned'(i) + int_rs_top)]) begin 
+                    int_rs_push_idx = (INTRS_IDX)'(unsigned'(i) + int_rs_top);
                     int_rs_push_en = 1'b1;
                     break;
                 end
@@ -137,13 +108,13 @@ import int_rs_types::*;
         src1_valid       = '0;
         src2_valid       = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (!int_rs_available[(INTRS_IDX)'(i+int_rs_top)]) begin 
-                unique case (int_rs_array[(INTRS_IDX)'(i+int_rs_top)].op1_sel)
+            if (!int_rs_available[(INTRS_IDX)'(unsigned'(i) + int_rs_top)]) begin 
+                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].op1_sel)
                     OP1_ZERO, OP1_PC: src1_valid = '1;
                     OP1_RS1: begin 
-                        src1_valid = int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_valid;
+                        src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].rs1_valid;
                         for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_phy)) begin 
+                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].rs1_phy)) begin 
                                 src1_valid = 1'b1;
                             end
                         end
@@ -151,12 +122,12 @@ import int_rs_types::*;
                     default: src1_valid = '0;
                 endcase
 
-                unique case (int_rs_array[(INTRS_IDX)'(i+int_rs_top)].op2_sel)
+                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].op2_sel)
                     OP2_ZERO, OP2_IMM: src2_valid = '1;
                     OP2_RS2: begin 
-                        src2_valid = int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_valid;
+                        src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].rs2_valid;
                         for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_phy)) begin 
+                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].rs2_phy)) begin 
                                 src2_valid = 1'b1;
                             end
                         end
@@ -166,7 +137,7 @@ import int_rs_types::*;
 
                 if (src1_valid && src2_valid) begin 
                     int_rs_issue_en = '1;
-                    int_rs_issue_idx = (INTRS_IDX)'(i+int_rs_top);
+                    int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i) + int_rs_top);
                     break;
                 end
             end
