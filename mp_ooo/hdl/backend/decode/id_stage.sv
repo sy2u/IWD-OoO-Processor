@@ -33,6 +33,7 @@ import uop_types::*;
     logic   [ARF_IDX-1:0]       rd_arch;
     logic   [ARF_IDX-1:0]       rs1_arch;
     logic   [ARF_IDX-1:0]       rs2_arch;
+    logic                       inst_invalid;
 
     //////////////////////////
     //     Decode Stage     //
@@ -61,7 +62,7 @@ import uop_types::*;
     //////////////////////////
 
     // Pop from free list if we do need destination register
-    assign to_fl.valid = from_fifo.valid && to_rob.ready && to_int_rs.ready && (rd_arch != '0);
+    assign to_fl.valid = from_fifo.valid && to_rob.ready && to_int_rs.ready && (rd_arch != '0) && ~inst_invalid;
 
     // Read from RAT
     assign to_rat.read_arch[0] = uop.rs1_arch;
@@ -72,13 +73,13 @@ import uop_types::*;
     assign uop.rs2_valid = to_rat.read_valid[1];
 
     // Write to RAT if we do need destination register
-    assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && to_int_rs.ready && (rd_arch != '0);
+    assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && to_int_rs.ready && (rd_arch != '0) && ~inst_invalid;
     assign to_rat.write_arch = uop.rd_arch;
     assign to_rat.write_phy = to_fl.free_idx;
     assign uop.rd_phy = (rd_arch != '0) ? to_fl.free_idx : '0;
 
     // Notify ROB
-    assign to_rob.valid = from_fifo.valid && to_fl.ready && to_int_rs.ready;
+    assign to_rob.valid = from_fifo.valid && to_fl.ready && to_int_rs.ready && ~inst_invalid;
     assign to_rob.rd_phy = uop.rd_phy;
     assign to_rob.rd_arch = uop.rd_arch;
     assign uop.rob_id = to_rob.rob_id;
@@ -89,11 +90,11 @@ import uop_types::*;
     //////////////////////////
 
     // Dispatch to INT Reservation Stations
-    assign to_int_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready && (rs_type == RS_INT);
+    assign to_int_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready && (rs_type == RS_INT) && ~inst_invalid;
     assign to_int_rs.uop = uop;
 
     // Backpressure Ready signal
-    assign from_fifo.ready = to_fl.ready && to_rob.ready && to_int_rs.ready;
+    assign from_fifo.ready = to_fl.ready && to_rob.ready && to_int_rs.ready && ~inst_invalid;
 
     //////////////////////////
     //          RVFI        //
