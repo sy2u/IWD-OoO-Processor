@@ -76,6 +76,7 @@ import rvfi_types::*;
             tail_ptr_reg <= '0;
 
             rvfi_itf <= '0;
+            rvfi_itf.order <= '1;
         end else begin
             head_ptr_reg <= head_ptr_reg;
             tail_ptr_reg <= tail_ptr_reg;
@@ -100,7 +101,7 @@ import rvfi_types::*;
                 rvfi_itf <= rvfi_array[head_ptr];
                 // rvfi_itf.valid <= '1;
                 rvfi_itf.order <= rvfi_itf.order + 1;
-                rvfi_itf.pc_wdata <= rvfi_array[head_ptr].pc_rdata + 4;
+                rvfi_itf.pc_wdata <= rvfi_array[head_ptr].pc_rdata + 4;     // TODO: not supporting branching yet
             end
             
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
