@@ -71,19 +71,6 @@ run_verilator_lint: $(VER_SRCS) $(HDRS) $(VER_EX)
 	cd verilator ;\
 	verilator --lint-only $(VER_FLAGS) $(VER_SRCS) --top-module top_tb --exe $(VER_EX)
 
-vcs/execute_tb: $(VCS_SRCS) $(HDRS)
-	mkdir -p vcs
-	python3 check_sus.py
-	cd vcs && vcs $(VCS_SRCS) $(VCS_FLAGS) -l compile.log -top execute_tb -o execute_tb
-	bash check_compile_error.sh
-	cat vcs/xprop.log
-	bash check_xprop.sh
-
-.PHONY: run_vcs_execute_tb
-run_vcs_execute_tb: vcs/execute_tb
-	rm -f vcs/dump.fsdb
-	cd vcs && ./execute_tb -l simulation.log -exitstatus
-
 .PHONY: covrep
 covrep: vcs/top_tb.vdb
 	cd vcs && urg -dir top_tb.vdb
