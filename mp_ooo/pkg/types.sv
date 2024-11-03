@@ -291,6 +291,8 @@ import cpu_params::*;
         logic   [ARF_IDX-1:0]   rd_arch;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic   [31:0]          rd_value;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
     } fu_alu_reg_t;
 endpackage
 
