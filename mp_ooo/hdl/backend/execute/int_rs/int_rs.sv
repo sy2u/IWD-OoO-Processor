@@ -155,61 +155,44 @@ import int_rs_types::*;
         end
     end
     
-    ////////////////
-    // INT_RS Reg //
-    ////////////////
-    int_rs_reg_t    int_rs_reg;
-
-    
-    logic           int_rs_reg_ready;
-    logic           int_rs_reg_valid;
-    
 
     // communicate with prf
     assign to_prf.rs1_phy = int_rs_array[int_rs_issue_idx].rs1_phy;
     assign to_prf.rs2_phy = int_rs_array[int_rs_issue_idx].rs2_phy;
 
-    // update int_rs_reg
-    assign          int_rs_reg_ready = 1'b1;
-    always_ff @(posedge clk) begin 
-        if (rst) begin 
-            int_rs_reg_valid        <= '0;
+    //////////////////////
+    // INT_RS to FU_ALU //
+    //////////////////////
+    logic           int_rs_valid;
+    logic           fu_alu_ready;
+    fu_alu_reg_t    fu_alu_reg_in;
 
-            int_rs_reg.rob_id       <= '0;
-            int_rs_reg.rd_phy       <= '0;
-            int_rs_reg.rd_arch      <= '0;
-            int_rs_reg.op1_sel      <= '0;
-            int_rs_reg.op2_sel      <= '0;
-            int_rs_reg.fu_opcode    <= '0;
-            int_rs_reg.imm   <= '0;
-            int_rs_reg.pc           <= '0;
-            int_rs_reg.rs1_value    <= '0;
-            int_rs_reg.rs2_value    <= '0;
+    // handshake with fu_alu_reg:
+    assign int_rs_valid = int_rs_issue_en;
 
-        end else begin
-            int_rs_reg_valid        <= int_rs_issue_en && int_rs_reg_ready;
-            if (int_rs_issue_en && int_rs_reg_ready) begin 
-            int_rs_reg.rob_id       <= int_rs_array[int_rs_issue_idx].rob_id;
-            int_rs_reg.rd_phy       <= int_rs_array[int_rs_issue_idx].rd_phy;
-            int_rs_reg.rd_arch      <= int_rs_array[int_rs_issue_idx].rd_arch;
-            int_rs_reg.op1_sel      <= int_rs_array[int_rs_issue_idx].op1_sel;
-            int_rs_reg.op2_sel      <= int_rs_array[int_rs_issue_idx].op2_sel;
-            int_rs_reg.fu_opcode    <= int_rs_array[int_rs_issue_idx].fu_opcode;
-            int_rs_reg.imm   <= int_rs_array[int_rs_issue_idx].imm;
-            int_rs_reg.pc           <= int_rs_array[int_rs_issue_idx].pc;
+    // send data to fu_alu_reg
+    always_comb begin 
+        fu_alu_reg_in.rob_id       = int_rs_array[int_rs_issue_idx].rob_id;
+        fu_alu_reg_in.rd_phy       = int_rs_array[int_rs_issue_idx].rd_phy;
+        fu_alu_reg_in.rd_arch      = int_rs_array[int_rs_issue_idx].rd_arch;
+        fu_alu_reg_in.op1_sel      = int_rs_array[int_rs_issue_idx].op1_sel;
+        fu_alu_reg_in.op2_sel      = int_rs_array[int_rs_issue_idx].op2_sel;
+        fu_alu_reg_in.fu_opcode    = int_rs_array[int_rs_issue_idx].fu_opcode;
+        fu_alu_reg_in.imm          = int_rs_array[int_rs_issue_idx].imm;
+        fu_alu_reg_in.pc           = int_rs_array[int_rs_issue_idx].pc;
 
-            int_rs_reg.rs1_value    <= to_prf.rs1_value;
-            int_rs_reg.rs2_value    <= to_prf.rs2_value;
-            end
-        end
+        fu_alu_reg_in.rs1_value    = to_prf.rs1_value;
+        fu_alu_reg_in.rs2_value    = to_prf.rs2_value;
     end
+
     
     // Functional Units
     fu_alu fu_alu_i(
         .clk                    (clk),
         .rst                    (rst),
-        .int_rs_reg             (int_rs_reg),
-        .int_rs_reg_valid       (int_rs_reg_valid),
+        .in_rs_valid            (int_rs_valid),
+        .fu_alu_ready           (fu_alu_ready),
+        .fu_alu_reg_in          (fu_alu_reg_in),
         .cdb                    (fu_cdb_out)
     );
 
