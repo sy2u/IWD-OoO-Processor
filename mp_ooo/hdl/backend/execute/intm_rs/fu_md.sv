@@ -45,6 +45,7 @@ import intm_rs_types::*;
     // Wrap up as Pipelined Register:
     //---------------------------------------------------------------------------------
 
+    logic                       is_multiply;
     logic                       complete;
     logic [DATA_WIDTH-1:0]      outcome;
     fu_md_reg_t                 fu_md_reg;
@@ -53,10 +54,10 @@ import intm_rs_types::*;
     logic                       reg_valid;
     logic                       reg_start;
 
+    // handshake control
     assign nxt_valid = reg_valid && complete;
     assign prv_ready = ~reg_valid || (nxt_valid && nxt_ready);
 
-    // handshake control
     always_ff @( posedge clk ) begin
         if( rst || flush ) begin
             reg_valid <= '0;
@@ -77,7 +78,6 @@ import intm_rs_types::*;
                 fu_md_reg.rs1_value <= intm_rs_reg.rs1_value;
                 fu_md_reg.rs2_value <= intm_rs_reg.rs2_value;
                 fu_md_reg.fu_opcode <= intm_rs_reg.fu_opcode;
-                fu_md_reg.dividend <= intm_rs_reg.rs1_value;
             end
         end
     end
@@ -96,7 +96,6 @@ import intm_rs_types::*;
     end
 
     // IP control
-    logic                       is_multiply;
     assign  is_multiply = (fu_md_reg.fu_opcode inside {MD_MUL, MD_MULH, MD_MULHSU, MD_MULHU});
     assign  complete = (is_multiply) ? mul_complete : div_complete;
     assign  mul_start = (reg_start) && is_multiply;
@@ -149,13 +148,13 @@ import intm_rs_types::*;
                 a = as;
                 b = bs;
                 outcome = remainder[DATA_WIDTH-1:0];
-                if( divide_by_0 ) outcome = fu_md_reg.dividend;
+                if( divide_by_0 ) outcome = fu_md_reg.rs1_value;
             end
             MD_REMU: begin      // unsigned % unsigned
                 a = au;
                 b = bu;
                 outcome = remainder[DATA_WIDTH-1:0];
-                if( divide_by_0 ) outcome = fu_md_reg.dividend;
+                if( divide_by_0 ) outcome = fu_md_reg.rs1_value;
             end
             default: ;
         endcase
@@ -168,8 +167,8 @@ import intm_rs_types::*;
     localparam                  NUM_CYC = 3;        // minimal possible delay
     localparam                  TC_MODE = 1;        // signed
     localparam                  RST_MODE = 1;       // sync mode
-    localparam                  INPUT_MODE = 0;     // registered input
-    localparam                  OUTPUT_MODE = 0;    // registered output
+    localparam                  INPUT_MODE = 0;     // input must be stable during the computation
+    localparam                  OUTPUT_MODE = 0;    // output must be stable during the computation
     localparam                  EARLY_START = 0;    // start computation in cycle 0
 
     DW_mult_seq #(A_WIDTH, B_WIDTH, TC_MODE, NUM_CYC, 

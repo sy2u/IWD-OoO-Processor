@@ -351,8 +351,6 @@ import cpu_params::*;
         logic   [3:0]           fu_opcode;
         logic   [31:0]          rs1_value;
         logic   [31:0]          rs2_value;
-
-        logic   [31:0]          dividend;   // to handle divide by zero
     } fu_md_reg_t;
 
 endpackage

@@ -331,7 +331,7 @@ module fu_md_tb;
 
     task handshake();
 
-        nxt_ready <= '0;
+        nxt_ready <= '1;
 
         prv_valid <= '1;
         intm_rs_reg.fu_opcode <= MD_MUL;
@@ -343,8 +343,9 @@ module fu_md_tb;
         intm_rs_reg.rs2_value <= 'x;
 
         @(posedge clk);
-        nxt_ready <= '1;
-        @(posedge clk);
+        nxt_ready <= '0;
+
+        repeat(3) @(posedge clk);
         prv_valid <= '1;
         intm_rs_reg.fu_opcode <= MD_MUL;
         intm_rs_reg.rs1_value <= 32'h4;
@@ -353,11 +354,62 @@ module fu_md_tb;
         prv_valid <= '0;
         intm_rs_reg.rs1_value <= 'x;
         intm_rs_reg.rs2_value <= 'x;
-        
+
+        @(posedge clk); 
+        nxt_ready <= '1;
+        prv_valid <= '1;
+        intm_rs_reg.fu_opcode <= MD_MUL;
+        intm_rs_reg.rs1_value <= 32'h5;
+        intm_rs_reg.rs2_value <= 32'h7;
+        @(posedge clk);
+        prv_valid <= '0;
+        intm_rs_reg.rs1_value <= 'x;
+        intm_rs_reg.rs2_value <= 'x;
+
+        repeat(4) @(posedge clk);
+        prv_valid <= '1;
+        intm_rs_reg.fu_opcode <= MD_MUL;
+        intm_rs_reg.rs1_value <= 32'h6;
+        intm_rs_reg.rs2_value <= 32'h8;
+        @(posedge clk);
+        prv_valid <= '0;
+        intm_rs_reg.rs1_value <= 'x;
+        intm_rs_reg.rs2_value <= 'x;
+
         repeat(5) @(posedge clk);
 
         $display("\033[32mTest: handshake Finished \033[0m");
     endtask : handshake
+
+    task mult( int rs1, int rs2  );
+        prv_valid <= '1;
+        intm_rs_reg.fu_opcode <= MD_MUL;
+        intm_rs_reg.rs1_value <= 32'(rs1);
+        intm_rs_reg.rs2_value <= 32'(rs2);
+        @(posedge clk);
+        prv_valid <= '0;
+        intm_rs_reg.rs1_value <= 'x;
+        intm_rs_reg.rs2_value <= 'x;
+    endtask
+
+
+    task consecutive_compute();
+
+        nxt_ready <= '1;
+        prv_valid <= '0;
+
+        @(posedge clk);
+        mult(32'd1, 32'd1);
+    
+        for( int i = 0; i < 4; i++ ) begin
+            repeat(2) @(posedge clk);
+            mult(32'(i+5),32'(i+7));
+        end
+
+        repeat(5) @(posedge clk);
+
+        $display("\033[32mTest: consecutive_compute Finished \033[0m");
+    endtask : consecutive_compute
 
     //---------------------------------------------------------------------------------
     // Main initial block that calls your tasks, then calls $finish
@@ -383,8 +435,11 @@ module fu_md_tb;
         // generate_reset();
         // divide_by_0();
 
+        // generate_reset();
+        // handshake();
+
         generate_reset();
-        handshake();
+        consecutive_compute();
 
         repeat(2) @(posedge clk);
 
