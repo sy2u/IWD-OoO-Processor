@@ -97,8 +97,8 @@ import int_rs_types::*;
         int_rs_push_idx = '0;
         if (from_id.valid && from_id.ready) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                if (intm_rs_available[(INTRS_IDX)'(i+int_rs_top)]) begin 
-                    int_rs_push_idx = (INTRS_IDX)'(i+int_rs_top);
+                if (intm_rs_available[(INTRS_IDX)'(unsigned'(i)+int_rs_top)]) begin 
+                    int_rs_push_idx = (INTRS_IDX)'(unsigned'(i)+int_rs_top);
                     int_rs_push_en = 1'b1;
                     break;
                 end
@@ -114,20 +114,20 @@ import int_rs_types::*;
         src1_valid       = '0;
         src2_valid       = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (!intm_rs_available[(INTRS_IDX)'(i+int_rs_top)]) begin 
-                src1_valid = intm_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_valid;
-                src2_valid = intm_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_valid;
+            if (!intm_rs_available[(INTRS_IDX)'(unsigned'(i)+int_rs_top)]) begin 
+                src1_valid = intm_rs_array[(INTRS_IDX)'(unsigned'(i)+int_rs_top)].rs1_valid;
+                src2_valid = intm_rs_array[(INTRS_IDX)'(unsigned'(i)+int_rs_top)].rs2_valid;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTRS_IDX)'(unsigned'(i)+int_rs_top)].rs1_phy)) begin 
                         src1_valid = 1'b1;
                     end
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTRS_IDX)'(unsigned'(i)+int_rs_top)].rs2_phy)) begin 
                         src2_valid = 1'b1;
                     end
                 end
                 if (src1_valid && src2_valid) begin
                     intm_rs_issue_en = '1;
-                    intm_rs_issue_idx = (INTRS_IDX)'(i+int_rs_top);
+                    intm_rs_issue_idx = (INTRS_IDX)'(unsigned'(i)+int_rs_top);
                 end
             end
         end

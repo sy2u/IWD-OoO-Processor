@@ -17,7 +17,8 @@ import int_rs_types::*;
 
     logic            cdb_ready;
     logic            cdb_valid;
-    fu_reg_t         cdb_reg;
+    fu_cdb_reg_t     cdb_reg;
+
     ////////////////
     // FU_ALU_REG //
     ////////////////

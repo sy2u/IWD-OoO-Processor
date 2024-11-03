@@ -184,7 +184,7 @@ import int_rs_types::*;
     // Wrap up as Pipelined Register: To Next
     //---------------------------------------------------------------------------------
 
-    fu_reg_t                    fu_md_reg;
+    fu_cdb_reg_t                fu_md_reg;
     logic                       cdb_valid, cdb_ready;
     
     assign cdb_ready = 1'b1;

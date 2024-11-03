@@ -106,5 +106,5 @@ def generate_asm_program(num_instructions):
     return '\n'.join(program)
 
 # Generate a random assembly program with 10 instructions plus the magic instruction
-asm_program = generate_asm_program(100000)
+asm_program = generate_asm_program(10000)
 print(asm_program)
