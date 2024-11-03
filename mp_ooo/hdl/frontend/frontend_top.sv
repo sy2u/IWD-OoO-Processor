@@ -10,13 +10,13 @@ import cpu_params::*;
     frontend_fifo_itf.frontend  to_fifo,
 
     // I cache connected to arbiter
-    // cacheline_itf.master        icache_itf
+    cacheline_itf.master        icache_itf
 
     // Randomized testing
-    output  logic   [31:0]      imem_addr,
-    output  logic   [3:0]       imem_rmask,
-    input   logic   [31:0]      imem_rdata,
-    input   logic               imem_resp
+    // output  logic   [31:0]      imem_addr,
+    // output  logic   [3:0]       imem_rmask,
+    // input   logic   [31:0]      imem_rdata,
+    // input   logic               imem_resp
 );
 
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
@@ -66,12 +66,13 @@ import cpu_params::*;
         .pc                     (pc),
         .insts                  (insts),
 
-        // .icache_itf             (icache_itf)
+        .icache_itf             (icache_itf)
 
-        .imem_addr              (imem_addr),
-        .imem_rmask             (imem_rmask),
-        .imem_rdata             (imem_rdata),
-        .imem_resp              (imem_resp)
+        // For randomized testing
+        // .imem_addr              (imem_addr),
+        // .imem_rmask             (imem_rmask),
+        // .imem_rdata             (imem_rdata),
+        // .imem_resp              (imem_resp)
     );
 
     assign if1_ready = to_fifo.ready;

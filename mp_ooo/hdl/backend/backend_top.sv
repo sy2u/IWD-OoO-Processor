@@ -89,6 +89,8 @@ import cpu_params::*;
     assign cdb_itfs[1].rd_phy = 'x;
     assign cdb_itfs[1].rd_arch = 'x;
     assign cdb_itfs[1].rd_value = 'x;
+    assign cdb_itfs[1].rs1_value_dbg = 'x;
+    assign cdb_itfs[1].rs2_value_dbg = 'x;
 
     assign rs_prf_itfs[1].rs1_phy   = '0;
     assign rs_prf_itfs[1].rs2_phy   = '0;

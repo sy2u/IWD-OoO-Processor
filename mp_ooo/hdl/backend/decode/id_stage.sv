@@ -65,8 +65,8 @@ import uop_types::*;
     assign to_fl.valid = from_fifo.valid && to_rob.ready && to_int_rs.ready && (rd_arch != '0) && ~inst_invalid;
 
     // Read from RAT
-    assign to_rat.read_arch[0] = uop.rs1_arch;
-    assign to_rat.read_arch[1] = uop.rs2_arch;
+    assign to_rat.read_arch[0] = rs1_arch;
+    assign to_rat.read_arch[1] = rs2_arch;
     assign uop.rs1_phy = to_rat.read_phy[0];
     assign uop.rs1_valid = to_rat.read_valid[0];
     assign uop.rs2_phy = to_rat.read_phy[1];
