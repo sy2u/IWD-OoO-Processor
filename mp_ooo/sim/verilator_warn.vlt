@@ -1,10 +1,6 @@
 `verilator_config
 lint_off -rule WIDTHEXPAND -file "*/rvfimon.v"
 lint_off -rule WIDTHTRUNC  -file "*/rvfimon.v"
-lint_off -rule WIDTHTRUNC  -file "*/DW_div_seq.v"
-lint_off -rule WIDTHTRUNC  -file "*/DW_mult_seq.v"
-lint_off -rule SYNCASYNCNET  -file "*/DW_div_seq.v"
-lint_off -rule SYNCASYNCNET  -file "*/DW_mult_seq.v"
 lint_off -rule BLKSEQ
 lint_off -rule GENUNNAMED
 lint_off -rule DECLFILENAME
