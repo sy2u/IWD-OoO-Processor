@@ -311,13 +311,13 @@ import cpu_params::*;
     typedef struct packed {
         logic   [63:0]          order;
         logic   [31:0]          inst;
-        logic   [5:0]           rs1_addr;
-        logic   [5:0]           rs2_addr;
+        logic   [4:0]           rs1_addr;
+        logic   [4:0]           rs2_addr;
         logic   [31:0]          rs1_rdata;
         logic   [31:0]          rs2_rdata;
-        logic   [5:0]           rd_addr;
+        logic   [4:0]           rd_addr;
         logic   [31:0]          rd_wdata;
-        logic   [5:0]           frd_addr;
+        logic   [4:0]           frd_addr;
         logic   [31:0]          frd_wdata;
         logic   [31:0]          pc_rdata;
         logic   [31:0]          pc_wdata;

@@ -56,9 +56,6 @@ module top_tb;
         rst = 1'b1;
         repeat (2) @(posedge clk);
         rst <= 1'b0;
-
-        repeat (90) @(posedge clk);
-        $finish;
     end
 
     always @(posedge clk) begin

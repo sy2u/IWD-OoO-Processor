@@ -99,11 +99,10 @@ import rvfi_types::*;
                 head_ptr_reg <= head_ptr_reg + ROB_IDX'(1);
                 ready_array[head_ptr] <= '0;
                 rvfi_itf <= rvfi_array[head_ptr];
-                // rvfi_itf.valid <= '1;
                 rvfi_itf.order <= rvfi_itf.order + 1;
                 rvfi_itf.pc_wdata <= rvfi_array[head_ptr].pc_rdata + 4;     // TODO: not supporting branching yet
             end
-            
+
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
                 if (cdb_rob[i].valid) begin
                     ready_array[cdb_rob[i].rob_id] <= '1;
