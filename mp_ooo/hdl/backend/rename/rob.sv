@@ -1,5 +1,6 @@
 module rob
 import cpu_params::*;
+import rvfi_types::*;
 (
     input   logic               clk,
     input   logic               rst,
@@ -12,9 +13,9 @@ import cpu_params::*;
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
         logic                   valid;
-        logic   [PRF_IDX-1:0]   rd_phy;
-        logic   [ARF_IDX-1:0]   rd_arch;
-        logic   [31 : 0]        rd_value;
+        logic   [31:0]          rd_value;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
     } cdb_rob_t;
 
     genvar k;           // TODO: need figure out how to use genvar and generate
@@ -38,7 +39,11 @@ import cpu_params::*;
     logic                   empty;
     logic                   pop;
 
-    cdb_rob_t               cdb_rob[CDB_WIDTH];
+    cdb_rob_t               cdb_rob [CDB_WIDTH];
+
+    rvfi_dbg_t              rvfi_itf;
+    rvfi_dbg_t              rvfi_array [ROB_DEPTH];
+
 
     // same logic with fifo queue
     assign {head_ptr_flag, head_ptr} = head_ptr_reg;
@@ -53,7 +58,11 @@ import cpu_params::*;
     generate for (k = 0; k < CDB_WIDTH; k++) begin : cdb_assign
         assign cdb_rob[k].rob_id = cdb[k].rob_id;
         assign cdb_rob[k].valid = cdb[k].valid;
+        assign cdb_rob[k].rd_value = cdb[k].rd_value;
+        assign cdb_rob[k].rs1_value_dbg = cdb[k].rs1_value_dbg;
+        assign cdb_rob[k].rs2_value_dbg = cdb[k].rs2_value_dbg;
     end endgenerate
+
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -61,9 +70,12 @@ import cpu_params::*;
                 ready_array[i] <= '0;
                 prf_idx_array[i] <= 'x;
                 arf_idx_array[i] <= 'x;
+                rvfi_array[i] <= '0;
             end
             head_ptr_reg <= '0;
             tail_ptr_reg <= '0;
+
+            rvfi_itf.order <= 64'h0;
         end else begin
             head_ptr_reg <= head_ptr_reg;
             tail_ptr_reg <= tail_ptr_reg;
@@ -71,21 +83,28 @@ import cpu_params::*;
             arf_idx_array <= arf_idx_array;
             ready_array <= ready_array;
 
+            rvfi_array <= rvfi_array;
+
             if (from_id.valid && ~full) begin           // push in
                 tail_ptr_reg <= tail_ptr_reg + ROB_IDX'(1);
                 ready_array[tail_ptr] <= '0;
                 prf_idx_array[tail_ptr] <= from_id.rd_phy;
                 arf_idx_array[tail_ptr] <= from_id.rd_arch;
+                rvfi_array[tail_ptr] <= from_id.rvfi_dbg;       // for rvfi storage
             end
 
             if (pop) begin                              // pop out
                 head_ptr_reg <= head_ptr_reg + ROB_IDX'(1);
                 ready_array[head_ptr] <= '0;
+                rvfi_itf.order <= rvfi_itf.order + 1;
             end
-            
+
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
                 if (cdb_rob[i].valid) begin
                     ready_array[cdb_rob[i].rob_id] <= '1;
+                    rvfi_array[cdb_rob[i].rob_id].rd_wdata <= cdb_rob[i].rd_value;
+                    rvfi_array[cdb_rob[i].rob_id].rs1_rdata <= cdb_rob[i].rs1_value_dbg;
+                    rvfi_array[cdb_rob[i].rob_id].rs2_rdata <= cdb_rob[i].rs2_value_dbg;
                 end
             end
         end
@@ -112,5 +131,27 @@ import cpu_params::*;
         end
     end
 
-endmodule
+    //////////////////////////
+    //          RVFI        //
+    //////////////////////////
 
+    rvfi_dbg_t rvfi_head;
+    assign rvfi_head = rvfi_array[head_ptr];
+    assign rvfi_itf.inst = rvfi_head.inst;
+    assign rvfi_itf.rs1_addr = rvfi_head.rs1_addr;
+    assign rvfi_itf.rs2_addr = rvfi_head.rs2_addr;
+    assign rvfi_itf.rs1_rdata = rvfi_head.rs1_rdata;
+    assign rvfi_itf.rs2_rdata = rvfi_head.rs2_rdata;
+    assign rvfi_itf.rd_addr = rvfi_head.rd_addr;
+    assign rvfi_itf.rd_wdata = rvfi_head.rd_wdata;
+    assign rvfi_itf.frd_addr = rvfi_head.frd_addr;
+    assign rvfi_itf.frd_wdata = rvfi_head.frd_wdata;
+    assign rvfi_itf.pc_rdata = rvfi_head.pc_rdata;
+    assign rvfi_itf.pc_wdata = rvfi_head.pc_rdata + 4;
+    assign rvfi_itf.mem_addr = rvfi_head.mem_addr;
+    assign rvfi_itf.mem_rmask = rvfi_head.mem_rmask;
+    assign rvfi_itf.mem_wmask = rvfi_head.mem_wmask;
+    assign rvfi_itf.mem_rdata = rvfi_head.mem_rdata;
+    assign rvfi_itf.mem_wdata = rvfi_head.mem_wdata;
+
+endmodule

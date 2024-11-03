@@ -11,10 +11,10 @@ import rv32i_types::*;
     output  logic   [1:0]           op1_sel,
     output  logic   [1:0]           op2_sel,
     output  logic   [31:0]          imm,
-
     output  logic   [ARF_IDX-1:0]   rd_arch,
     output  logic   [ARF_IDX-1:0]   rs1_arch,
-    output  logic   [ARF_IDX-1:0]   rs2_arch
+    output  logic   [ARF_IDX-1:0]   rs2_arch,
+    output  logic                   inst_invalid
 );
 
     logic   [6:0]               opcode;
@@ -29,6 +29,7 @@ import rv32i_types::*;
     assign rd_arch = (opcode inside {op_b_lui, op_b_auipc, op_b_imm, op_b_reg}) ? inst[11:7] : '0;
     assign rs1_arch = (opcode inside {op_b_imm, op_b_reg}) ? inst[19:15] : '0;
     assign rs2_arch = (opcode == op_b_reg) ? inst[24:20] : '0;
+    assign inst_invalid = (opcode == '0);
 
     always_comb begin
         rs_type = 'x;

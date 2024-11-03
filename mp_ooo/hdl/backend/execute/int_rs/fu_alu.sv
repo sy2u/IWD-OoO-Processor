@@ -72,15 +72,19 @@ import int_rs_types::*;
                 fu_alu_reg.rd_arch  <= int_rs_reg.rd_arch;
                 fu_alu_reg.rd_phy   <= int_rs_reg.rd_phy;
                 fu_alu_reg.rd_value <= alu_out;
+                fu_alu_reg.rs1_value_dbg <= int_rs_reg.rs1_value;
+                fu_alu_reg.rs2_value_dbg <= int_rs_reg.rs2_value;
             end
         end
     end
 
     // fu_alu_reg to cdb
-    assign cdb.rob_id   = fu_alu_reg.rob_id;
-    assign cdb.rd_phy   = fu_alu_reg.rd_phy;
-    assign cdb.rd_arch  = fu_alu_reg.rd_arch;
-    assign cdb.rd_value = fu_alu_reg.rd_value;
-    assign cdb.valid    = fu_alu_reg_valid;
+    assign cdb.rob_id           = fu_alu_reg.rob_id;
+    assign cdb.rd_phy           = fu_alu_reg.rd_phy;
+    assign cdb.rd_arch          = fu_alu_reg.rd_arch;
+    assign cdb.rd_value         = fu_alu_reg.rd_value;
+    assign cdb.valid            = fu_alu_reg_valid;
+    assign cdb.rs1_value_dbg    = fu_alu_reg.rs1_value_dbg;
+    assign cdb.rs2_value_dbg    = fu_alu_reg.rs2_value_dbg;
 
 endmodule
