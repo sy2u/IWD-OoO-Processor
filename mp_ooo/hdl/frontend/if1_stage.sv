@@ -23,7 +23,13 @@ module if1_stage #(
     output  logic   [31:0]  insts[IF_WIDTH],
 
     // memory side signals, dfp -> downward facing port
-    cacheline_itf.master    icache_itf
+    // cacheline_itf.master    icache_itf
+
+    // Randomized testing
+    output  logic   [31:0]  imem_addr,
+    output  logic   [3:0]   imem_rmask,
+    input   logic   [31:0]  imem_rdata,
+    input   logic           imem_resp
 );
 
     logic                   icache_valid;
@@ -66,20 +72,26 @@ module if1_stage #(
 
     // I-Cache
 
-    icache #(
-        .IF_WIDTH(IF_WIDTH)
-    ) icache_i (
-        .clk            (clk),
-        .rst            (rst),
+    // icache #(
+    //     .IF_WIDTH(IF_WIDTH)
+    // ) icache_i (
+    //     .clk            (clk),
+    //     .rst            (rst),
 
-        .ufp_addr       (pc_next),
-        .ufp_read       (prv_ready && prv_valid),
-        .ufp_rdata      (icache_rdata),
-        .ufp_resp       (icache_resp),
-        .kill           (flush),
+    //     .ufp_addr       (pc_next),
+    //     .ufp_read       (prv_ready && prv_valid),
+    //     .ufp_rdata      (icache_rdata),
+    //     .ufp_resp       (icache_resp),
+    //     .kill           (flush),
 
-        .dfp            (icache_itf)
-    );
+    //     .dfp            (icache_itf)
+    // );
+
+    // Randomized testing
+    assign imem_addr = pc_next;
+    assign imem_rmask = '1;
+    assign icache_rdata[0] = imem_rdata;
+    assign icache_resp = imem_resp;
 
     // Temporary buffer for output
     logic   [31:0]          temp_icache_rdata[IF_WIDTH];

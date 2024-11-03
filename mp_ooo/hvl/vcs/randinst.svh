@@ -60,9 +60,11 @@ class RandInst;
             instr.r_type.opcode == op_b_reg;
 
             if (instr.r_type.funct3 == arith_f3_add || instr.r_type.funct3 == arith_f3_sr) {
-                instr.r_type.funct7 inside {base, muldiv, variant};
+                // instr.r_type.funct7 inside {base, muldiv, variant};
+                instr.r_type.funct7 inside {base, variant};
             } else {
-                instr.r_type.funct7 inside {base, muldiv};
+                // instr.r_type.funct7 inside {base, muldiv};
+                instr.r_type.funct7 inside {base};
             }
         }
 

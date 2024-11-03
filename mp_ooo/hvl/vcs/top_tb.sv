@@ -16,11 +16,14 @@ module top_tb;
 
     bit rst;
 
-    mem_itf_banked mem_itf(.*);
-    dram_w_burst_frfcfs_controller mem(.itf(mem_itf));
+    // mem_itf_banked mem_itf(.*);
+    // dram_w_burst_frfcfs_controller mem(.itf(mem_itf));
 
-    // mem_itf_w_mask random_mem_itf(.*);
-    // random_tb random_tb(.itf(random_mem_itf), .reg_data(regs_v)); // For randomized testing
+    // For randomized testing
+    logic [31:0] regs_v[32];
+    assign regs_v = '{default: 32'h0};
+    mem_itf_w_mask #(.CHANNELS(2)) mem_itf(.*);
+    random_tb random_tb(.itf(mem_itf), .reg_data(regs_v));
 
     mon_itf #(.CHANNELS(8)) mon_itf(.*);
     monitor #(.CHANNELS(8)) monitor(.itf(mon_itf));
@@ -29,24 +32,28 @@ module top_tb;
         .clk            (clk),
         .rst            (rst),
 
-        .bmem_addr  (mem_itf.addr  ),
-        .bmem_read  (mem_itf.read  ),
-        .bmem_write (mem_itf.write ),
-        .bmem_wdata (mem_itf.wdata ),
-        .bmem_ready (mem_itf.ready ),
-        .bmem_raddr (mem_itf.raddr ),
-        .bmem_rdata (mem_itf.rdata ),
-        .bmem_rvalid(mem_itf.rvalid)
+        // .bmem_addr  (mem_itf.addr  ),
+        // .bmem_read  (mem_itf.read  ),
+        // .bmem_write (mem_itf.write ),
+        // .bmem_wdata (mem_itf.wdata ),
+        // .bmem_ready (mem_itf.ready ),
+        // .bmem_raddr (mem_itf.raddr ),
+        // .bmem_rdata (mem_itf.rdata ),
+        // .bmem_rvalid(mem_itf.rvalid)
 
         // For random testing
-        // .imem_addr      (random_mem_itf.addr [0]),
-        // .imem_rmask     (random_mem_itf.rmask[0]),
-        // .imem_rdata     (random_mem_itf.rdata[0]),
-        // .imem_resp      (random_mem_itf.resp [0]),
+        .imem_addr      (mem_itf.addr [0]),
+        .imem_rmask     (mem_itf.rmask[0]),
+        .imem_rdata     (mem_itf.rdata[0]),
+        .imem_resp      (mem_itf.resp [0])
     );
 
-    // assign random_mem_itf.wmask[0] = '0;
-    // assign random_mem_itf.wdata[0] = 'x;
+    // For random testing
+    assign mem_itf.wmask[0] = '0;
+    assign mem_itf.wdata[0] = 'x;
+    assign mem_itf.wmask[1] = '0;
+    assign mem_itf.addr[1] = 'x;
+    assign mem_itf.rmask[1] = '0;
 
     `include "rvfi_reference.svh"
 
