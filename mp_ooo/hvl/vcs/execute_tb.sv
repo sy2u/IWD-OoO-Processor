@@ -399,6 +399,185 @@ module execute_tb;
         id_int_rs_itf_i.valid <= 1'b0;
     endtask : test_consecutive_with_complicated_dependency
 
+    task test_full_with_dependency(); 
+        // 0: x2 = x1 + 1: (x1 invalid) 
+        // 1: x3 = x1 + 1:   (x1 invalid)
+        // 2: x4 = x1 + 1:   (x1 invalid)
+        // 3: x5 = x1 + 1:   (x1 invalid)
+        // 4: x6 = x1 + 1:   (x1 invalid)
+        // 5: x7 = x1 + 1:   (x1 invalid)
+        // 6: x8 = x1 + 1:   (x1 invalid)
+        // 7: x1 = x0 + 1    (x0 invalid)
+        // 8: x9 = x1 + 1    (x1 invalid)
+        // 9: x10 = x1 + 1   (x1 invalid, x0 valid)
+        // 10: x11 = x1 + 1  (x1 invalid)
+        // 11: x12 = x1 + 1  (x1 valid)
+
+        // result:
+        // cycle 0: #6 x1 = 1, #0 (x2) issued
+        // cycle 1: all x1 set to valid, so #1 (x3) issued, #0 (x2) in fu, 
+        // cycle 2: #0 x2 = 2, #1 (x3) in fu
+        // cycle 3: #1 x3 = 2, all x2 set to valid, so #2 (x4) issued
+        // cycle 4: all x3 is set to valid, so #4 (x5) issued, #2 (x4) in fu
+        // cycle 5: #2 x4 = 4, #3 (x7) issued, #4 (x5) in fu
+        // cycle 6: #4 (x5) = 0, all x4 is set to valid, so #5 (x6) issued, #3 (x7) in fu
+        // cycle 7: #3 x7 = 6, #5 (x6) in fu
+        // cycle 8: #5 x6 = 4
+
+        // 0: x2 = x1 + 1: (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd0; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd2;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+
+        // 1: x3 = x1 + 1:   (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd1;
+        id_int_rs_itf_i.uop.rd_phy <= 6'd3;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        repeat (1) @(posedge clk);
+
+        // 2: x4 = x1 + 1:   (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd2; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd4;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        // 3: x5 = x1 + 1:   (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd3; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd5;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        // 4: x6 = x1 + 1:   (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd4; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd6;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        // 5: x7 = x1 + 1:   (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd5; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd7;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        // 6: x8 = x1 + 1:   (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd6; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd8;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        // 7: x1 = x0 + 1    (x0 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd7; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd1;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd0;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        // 8: x9 = x1 + 1    (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd8; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd9;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        // 9: x10 = x1 + 1    (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd9; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd10;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+
+        cdb_itfs[1].valid <= 1'b1;
+        cdb_itfs[1].rob_id <= 'x;
+        cdb_itfs[1].rd_phy <= 6'd0;
+        cdb_itfs[1].rd_arch <= 6'd0;
+        cdb_itfs[1].rd_value <= 32'd0;
+        repeat (1) @(posedge clk);
+        // 10: x11 = x1 + 1    (x1 invalid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd10; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd11;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b0;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        // 11: x12 = x1 + 1    (x1 valid)
+        id_int_rs_itf_i.uop.rob_id <= 5'd11; 
+        id_int_rs_itf_i.uop.rd_phy <= 6'd12;
+        id_int_rs_itf_i.uop.rs1_phy <= 6'd1;
+        id_int_rs_itf_i.uop.imm <= 32'd1;
+        id_int_rs_itf_i.uop.fu_opcode <= ALU_ADD;
+        id_int_rs_itf_i.uop.op1_sel <= OP1_RS1;
+        id_int_rs_itf_i.uop.op2_sel <= OP2_IMM;
+        id_int_rs_itf_i.uop.rs1_valid <= 1'b1;
+        id_int_rs_itf_i.uop.rs2_valid <= 1'b0;
+        id_int_rs_itf_i.valid <= 1'b1;
+        repeat (1) @(posedge clk);
+        id_int_rs_itf_i.valid <= 1'b0;
+    endtask : test_full_with_dependency
+
     initial begin
         $fsdbDumpfile("dump.fsdb");
         $fsdbDumpvars(0, "+all");
@@ -408,8 +587,9 @@ module execute_tb;
         // test_consecutive_no_dependency();
         // test_consecutive_with_simple_dependency();
         // test_consecutive_with_simple_dependency2();
-        test_consecutive_with_complicated_dependency();
-	repeat (20) @(posedge clk);
+        // test_consecutive_with_complicated_dependency();
+        test_full_with_dependency();
+	repeat (30) @(posedge clk);
 	$finish;
         
     end
