@@ -11,6 +11,12 @@ import cpu_params::*;
 
     // I cache connected to arbiter
     cacheline_itf.master        icache_itf
+
+    // Randomized testing
+    // output  logic   [31:0]      imem_addr,
+    // output  logic   [3:0]       imem_rmask,
+    // input   logic   [31:0]      imem_rdata,
+    // input   logic               imem_resp
 );
 
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
@@ -22,8 +28,7 @@ import cpu_params::*;
 
     logic   [31:0]          pc_next;
     logic   [31:0]          pc;
-    logic                   icache_read;
-    logic   [31:0]          icache_rdata[IF_WIDTH];
+    logic   [31:0]          insts[IF_WIDTH];
 
     logic                   prev_rst;
 
@@ -59,14 +64,20 @@ import cpu_params::*;
 
         .pc_next                (pc_next),
         .pc                     (pc),
-        .insts                  (icache_rdata),
+        .insts                  (insts),
 
         .icache_itf             (icache_itf)
+
+        // For randomized testing
+        // .imem_addr              (imem_addr),
+        // .imem_rmask             (imem_rmask),
+        // .imem_rdata             (imem_rdata),
+        // .imem_resp              (imem_resp)
     );
 
     assign if1_ready = to_fifo.ready;
     assign to_fifo.valid = if1_valid;
-    assign to_fifo.data.inst[0] = icache_rdata[0];
+    assign to_fifo.data.inst[0] = insts[0];
     assign to_fifo.data.pc[0] = pc;
     assign to_fifo.data.valid[0] = 1'b1;
 

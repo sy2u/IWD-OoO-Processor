@@ -24,6 +24,12 @@ module if1_stage #(
 
     // memory side signals, dfp -> downward facing port
     cacheline_itf.master    icache_itf
+
+    // Randomized testing
+    // output  logic   [31:0]  imem_addr,
+    // output  logic   [3:0]   imem_rmask,
+    // input   logic   [31:0]  imem_rdata,
+    // input   logic           imem_resp
 );
 
     logic                   icache_valid;
@@ -80,6 +86,12 @@ module if1_stage #(
 
         .dfp            (icache_itf)
     );
+
+    // Randomized testing
+    // assign imem_addr = pc_next;
+    // assign imem_rmask = '1;
+    // assign icache_rdata[0] = imem_rdata;
+    // assign icache_resp = imem_resp;
 
     // Temporary buffer for output
     logic   [31:0]          temp_icache_rdata[IF_WIDTH];

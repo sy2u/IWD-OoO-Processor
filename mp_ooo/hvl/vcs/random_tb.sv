@@ -30,7 +30,9 @@ import rv32i_types::*; #(
             @(posedge itf.clk iff |itf.rmask[0]);
             itf.rdata[0] <= 'x;
             itf.resp[0] <= 1'b0;
-            repeat (2) @(posedge itf.clk);
+
+            // stall the processor for 2 cycles
+            // repeat (2) @(posedge itf.clk);
 
             gen.randomize() with {
                 instr.j_type.opcode == op_b_lui;
@@ -52,7 +54,9 @@ import rv32i_types::*; #(
             @(posedge itf.clk iff |itf.rmask[0]);
             itf.rdata[0] <= 'x;
             itf.resp[0] <= 1'b0;
-            repeat (2) @(posedge itf.clk);
+
+            // stall the processor for 2 cycles
+            // repeat (2) @(posedge itf.clk);
 
             // Always read out a valid instruction.
             gen.update_regs(reg_data);
@@ -74,15 +78,15 @@ import rv32i_types::*; #(
         end
     endtask : run_random_instrs
 
-    always_ff @(posedge itf.clk) begin
-        if (|itf.rmask[1] || |itf.wmask[1]) begin
-            itf.rdata[1] <= $urandom();
-            itf.resp[1] <= 1'b1;
-        end else begin
-            itf.rdata[1] <= 'x;
-            itf.resp[1] <= 1'b0;
-        end
-    end
+    // always_ff @(posedge itf.clk) begin
+    //     if (|itf.rmask[1] || |itf.wmask[1]) begin
+    //         itf.rdata[1] <= $urandom();
+    //         itf.resp[1] <= 1'b1;
+    //     end else begin
+    //         itf.rdata[1] <= 'x;
+    //         itf.resp[1] <= 1'b0;
+    //     end
+    // end
 
     always @(posedge itf.clk iff !itf.rst) begin
         if ($isunknown(itf.rmask[0]) || $isunknown(itf.wmask[0])) begin

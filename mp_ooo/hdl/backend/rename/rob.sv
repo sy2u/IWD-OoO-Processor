@@ -43,6 +43,7 @@ import rvfi_types::*;
 
     rvfi_dbg_t              rvfi_itf;
     rvfi_dbg_t              rvfi_array [ROB_DEPTH];
+    logic   [63:0]          rvfi_order;
 
 
     // same logic with fifo queue
@@ -75,7 +76,7 @@ import rvfi_types::*;
             head_ptr_reg <= '0;
             tail_ptr_reg <= '0;
 
-            rvfi_itf.order <= 64'h0;
+            rvfi_order <= 64'h0;
         end else begin
             head_ptr_reg <= head_ptr_reg;
             tail_ptr_reg <= tail_ptr_reg;
@@ -96,7 +97,7 @@ import rvfi_types::*;
             if (pop) begin                              // pop out
                 head_ptr_reg <= head_ptr_reg + ROB_IDX'(1);
                 ready_array[head_ptr] <= '0;
-                rvfi_itf.order <= rvfi_itf.order + 1;
+                rvfi_order <= rvfi_order + 1;
             end
 
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
@@ -137,6 +138,7 @@ import rvfi_types::*;
 
     rvfi_dbg_t rvfi_head;
     assign rvfi_head = rvfi_array[head_ptr];
+    assign rvfi_itf.order = rvfi_order;
     assign rvfi_itf.inst = rvfi_head.inst;
     assign rvfi_itf.rs1_addr = rvfi_head.rs1_addr;
     assign rvfi_itf.rs2_addr = rvfi_head.rs2_addr;

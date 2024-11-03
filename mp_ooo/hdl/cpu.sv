@@ -14,6 +14,11 @@ import rv32i_types::*;
     input   logic   [31:0]      bmem_raddr,
     input   logic   [63:0]      bmem_rdata,
     input   logic               bmem_rvalid
+
+    // output  logic   [31:0]      imem_addr,
+    // output  logic   [3:0]       imem_rmask,
+    // input   logic   [31:0]      imem_rdata,
+    // input   logic               imem_resp
 );
 
     cacheline_itf               cacheline_itf_i();
@@ -32,6 +37,12 @@ import rv32i_types::*;
         .to_fifo                (frontend_fifo_itf_i),
 
         .icache_itf             (cacheline_itf_i)
+
+        // For randomize testing
+        // .imem_addr              (imem_addr),
+        // .imem_rmask             (imem_rmask),
+        // .imem_rdata             (imem_rdata),
+        // .imem_resp              (imem_resp)
     );
 
     cache_adapter cache_adapter_i(

@@ -96,14 +96,4 @@ import cpu_params::*;
         .cdb                    (cdb_itfs)
     );
 
-    // Temporary signals for INTM
-    // assign cdb_itfs[1].valid = 1'b0;
-    // assign cdb_itfs[1].rob_id = 'x;
-    // assign cdb_itfs[1].rd_phy = 'x;
-    // assign cdb_itfs[1].rd_arch = 'x;
-    // assign cdb_itfs[1].rd_value = 'x;
-
-    // assign rs_prf_itfs[1].rs1_phy   = '0;
-    // assign rs_prf_itfs[1].rs2_phy   = '0;
-
 endmodule
