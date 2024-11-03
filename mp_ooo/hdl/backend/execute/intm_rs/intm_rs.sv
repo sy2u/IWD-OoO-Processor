@@ -27,7 +27,7 @@ import int_rs_types::*;
 
     // rs array, store uop+available
     uop_t intm_rs_array     [INTRS_DEPTH];
-    logic int_rs_available  [INTRS_DEPTH];
+    logic intm_rs_available [INTRS_DEPTH];
 
     // pointer to top of the array (like a fifo queue)
     logic [INTRS_IDX-1:0] int_rs_top;
@@ -49,7 +49,7 @@ import int_rs_types::*;
         if (rst) begin 
             int_rs_top <= '0;
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                int_rs_available[i]         <= 1'b1;
+                intm_rs_available[i]         <= 1'b1;
                 intm_rs_array[i]            <= '{default: 'x};
             end
         end else begin 
@@ -57,7 +57,7 @@ import int_rs_types::*;
             // push renamed instruction
             if (int_rs_push_en) begin 
                 // set rs to unavailable
-                int_rs_available[int_rs_push_idx]       <= 1'b0;
+                intm_rs_available[int_rs_push_idx]      <= 1'b0;
                 intm_rs_array[int_rs_push_idx]          <= from_id.uop;
             end
 
@@ -66,7 +66,7 @@ import int_rs_types::*;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
                     // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
                     // set rs1/rs2 to valid
-                    if (cdb_rs[k].valid && !int_rs_available[i]) begin 
+                    if (cdb_rs[k].valid && !intm_rs_available[i]) begin 
                         if (intm_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
                             intm_rs_array[i].rs1_valid <= 1'b1;
                         end
@@ -80,7 +80,7 @@ import int_rs_types::*;
             // pop issued instruction
             if (fu_md_valid) begin 
                 // set rs to available
-                int_rs_available[intm_rs_issue_idx] <= 1'b1;
+                intm_rs_available[intm_rs_issue_idx] <= 1'b1;
                 // update top pointer
                 int_rs_top <= intm_rs_issue_idx + 1'd1;
             end
@@ -94,7 +94,7 @@ import int_rs_types::*;
         int_rs_push_idx = '0;
         if (from_id.valid && from_id.ready) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                if (int_rs_available[(INTRS_IDX)'(i+int_rs_top)]) begin 
+                if (intm_rs_available[(INTRS_IDX)'(i+int_rs_top)]) begin 
                     int_rs_push_idx = (INTRS_IDX)'(i+int_rs_top);
                     int_rs_push_en = 1'b1;
                     break;
@@ -111,7 +111,7 @@ import int_rs_types::*;
         src1_valid       = '0;
         src2_valid       = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (!int_rs_available[(INTRS_IDX)'(i+int_rs_top)]) begin 
+            if (!intm_rs_available[(INTRS_IDX)'(i+int_rs_top)]) begin 
                 src1_valid = intm_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs1_valid;
                 src2_valid = intm_rs_array[(INTRS_IDX)'(i+int_rs_top)].rs2_valid;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
@@ -135,7 +135,7 @@ import int_rs_types::*;
     always_comb begin 
         from_id.ready = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (int_rs_available[i]) begin 
+            if (intm_rs_available[i]) begin 
                 from_id.ready = '1;
                 break;
             end
@@ -155,14 +155,8 @@ import int_rs_types::*;
 
     // update intm_rs_reg
     always_comb begin
-        // intm_rs_in_valid       = '0;
-        intm_rs_in.rob_id      = '0;
-        intm_rs_in.rd_phy      = '0;
-        intm_rs_in.rd_arch     = '0;
-        intm_rs_in.fu_opcode   = '0;
-        intm_rs_in.rs1_value   = '0;
-        intm_rs_in.rs2_value   = '0;
-        intm_rs_in_valid       = intm_rs_issue_en && fu_md_ready;
+        intm_rs_in  = '0;
+        intm_rs_in_valid = intm_rs_issue_en && fu_md_ready;
         if (intm_rs_issue_en && fu_md_ready) begin  
             intm_rs_in.rob_id      = intm_rs_array[intm_rs_issue_idx].rob_id;
             intm_rs_in.rd_phy      = intm_rs_array[intm_rs_issue_idx].rd_phy;
