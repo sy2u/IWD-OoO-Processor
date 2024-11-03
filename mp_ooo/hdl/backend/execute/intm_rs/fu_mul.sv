@@ -16,7 +16,7 @@ import int_rs_types::*;
     output  logic               nxt_valid,
     input   logic               nxt_ready,
 
-    input   intm_rs_reg_t       intm_rs_reg,
+    input   intm_rs_reg_t       intm_rs_in,
 
     cdb_itf.fu                  cdb
 );
@@ -37,19 +37,14 @@ import int_rs_types::*;
     logic [A_WIDTH+B_WIDTH-1:0] product;
 
     //---------------------------------------------------------------------------------
-    // Wrap up as Pipelined Register:
+    // Wrap up as Pipelined Register: From Prev
     //---------------------------------------------------------------------------------
 
-    logic                       issue;
-    logic [DATA_WIDTH-1:0]      outcome;
-    logic [DATA_WIDTH:0]        au, bu, as, bs; // msb for sign extension
-
     logic                       reg_valid;
+    intm_rs_reg_t               intm_rs_reg;
 
     // handshake control
-    assign nxt_valid = reg_valid && complete;
     assign prv_ready = ~reg_valid || (nxt_valid && nxt_ready);
-    assign issue = prv_ready && prv_valid;
 
     always_ff @( posedge clk ) begin
         if( rst || flush ) begin
@@ -66,15 +61,27 @@ import int_rs_types::*;
         end else begin
             if ( start ) begin
                 start <= '0;
-            end else if( issue ) begin
+            end else if( prv_ready && prv_valid ) begin
                 start <= '1;
             end
+        end
+    end
+
+    // load meta data
+    always_ff @( posedge clk ) begin
+        if( rst ) begin
+            intm_rs_reg <= '0;
+        end else if( prv_ready && prv_valid )begin
+            intm_rs_reg <= intm_rs_in;
         end
     end
 
     //---------------------------------------------------------------------------------
     // IP Control:
     //---------------------------------------------------------------------------------
+
+    logic [DATA_WIDTH-1:0]      outcome;
+    logic [DATA_WIDTH:0]        au, bu, as, bs; // msb for sign extension
 
     // mult: multiplier and multiplicand are interchanged
     assign  au = {1'b0, intm_rs_reg.rs1_value};
@@ -129,32 +136,22 @@ import int_rs_types::*;
                 .complete(complete), .product(product) );
 
     //---------------------------------------------------------------------------------
-    // Boardcast to CDB:
+    // Wrap up as Pipelined Register: To Next
     //---------------------------------------------------------------------------------
+
     fu_reg_t                    fu_mul_reg;
-    logic                       fu_mul_reg_valid, fu_mul_reg_ready;
-    logic                       pending;
+    logic                       cdb_valid, cdb_ready;
+    
+    assign cdb_ready = 1'b1;
+    assign nxt_valid = reg_valid && complete;
 
-    always_ff @( posedge clk ) begin
-        if( rst ) begin
-            pending <= '0;
-        end else begin
-            if ( start ) begin
-                pending <= '1;
-            end else if( pending && prv_valid && fu_mul_reg_ready ) begin
-                pending <= '0;
-            end
-        end
-    end
-
-    assign fu_mul_reg_ready = 1'b1;
     always_ff @(posedge clk) begin 
         if (rst) begin 
-            fu_mul_reg_valid <= 1'b0;
-            fu_mul_reg       <= '0;
+            cdb_valid <= 1'b0;
+            fu_mul_reg <= '0;
         end else begin 
-            fu_mul_reg_valid <= fu_mul_reg_ready && prv_valid && pending;
-            if (prv_valid && fu_mul_reg_ready) begin 
+            cdb_valid <= nxt_valid && cdb_ready;
+            if (nxt_valid && cdb_ready) begin 
                 fu_mul_reg.rob_id       <= intm_rs_reg.rob_id;
                 fu_mul_reg.rd_arch      <= intm_rs_reg.rd_arch;
                 fu_mul_reg.rd_phy       <= intm_rs_reg.rd_phy;
@@ -165,11 +162,15 @@ import int_rs_types::*;
         end
     end
 
+    //---------------------------------------------------------------------------------
+    // Boardcast to CDB:
+    //---------------------------------------------------------------------------------
+
+    assign cdb.valid            = cdb_valid;
     assign cdb.rob_id           = fu_mul_reg.rob_id;
     assign cdb.rd_phy           = fu_mul_reg.rd_phy;
     assign cdb.rd_arch          = fu_mul_reg.rd_arch;
     assign cdb.rd_value         = fu_mul_reg.rd_value;
-    assign cdb.valid            = fu_mul_reg_valid;
     assign cdb.rs1_value_dbg    = fu_mul_reg.rs1_value_dbg;
     assign cdb.rs2_value_dbg    = fu_mul_reg.rs2_value_dbg;
 

@@ -49,37 +49,16 @@ import int_rs_types::*;
         if (rst) begin 
             int_rs_top <= '0;
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                int_rs_available[i]           <= 1'b1;
-                intm_rs_array    [i].fu_opcode <= '0;
-
-                intm_rs_array    [i].rd_phy    <= '0;
-                intm_rs_array    [i].rd_arch   <= '0;
-
-                intm_rs_array    [i].rs1_phy   <= '0;
-                intm_rs_array    [i].rs1_valid <= '0;
-                intm_rs_array    [i].rs2_phy   <= '0;
-                intm_rs_array    [i].rs2_valid <= '0;
-
-                intm_rs_array    [i].rob_id    <= '0;
+                int_rs_available[i]         <= 1'b1;
+                intm_rs_array[i]            <= '{default: 'x};
             end
         end else begin 
             // issue > snoop cdb > push
             // push renamed instruction
             if (int_rs_push_en) begin 
                 // set rs to unavailable
-                int_rs_available[int_rs_push_idx]           <= 1'b0;
-
-                intm_rs_array    [int_rs_push_idx].fu_opcode <= from_id.uop.fu_opcode;
-
-                intm_rs_array    [int_rs_push_idx].rd_phy    <= from_id.uop.rd_phy;
-                intm_rs_array    [int_rs_push_idx].rd_arch   <= from_id.uop.rd_arch;
-
-                intm_rs_array    [int_rs_push_idx].rs1_phy   <= from_id.uop.rs1_phy;
-                intm_rs_array    [int_rs_push_idx].rs1_valid <= from_id.uop.rs1_valid;
-                intm_rs_array    [int_rs_push_idx].rs2_phy   <= from_id.uop.rs2_phy;
-                intm_rs_array    [int_rs_push_idx].rs2_valid <= from_id.uop.rs2_valid;
-
-                intm_rs_array    [int_rs_push_idx].rob_id     <= from_id.uop.rob_id;
+                int_rs_available[int_rs_push_idx]       <= 1'b0;
+                intm_rs_array[int_rs_push_idx]          <= from_id.uop;
             end
 
             // snoop CDB to update rs1/rs2 valid
@@ -171,30 +150,26 @@ import int_rs_types::*;
     assign to_prf.rs1_phy = intm_rs_array[intm_rs_issue_idx].rs1_phy;
     assign to_prf.rs2_phy = intm_rs_array[intm_rs_issue_idx].rs2_phy;
 
-    intm_rs_reg_t   intm_rs_reg;
-    logic           intm_rs_reg_valid;
+    intm_rs_reg_t   intm_rs_in;
+    logic           intm_rs_in_valid;
 
     // update intm_rs_reg
-    always_ff @(posedge clk) begin 
-        if (rst) begin 
-            intm_rs_reg_valid        <= '0;
-
-            intm_rs_reg.rob_id       <= '0;
-            intm_rs_reg.rd_phy       <= '0;
-            intm_rs_reg.rd_arch      <= '0;
-            intm_rs_reg.fu_opcode    <= '0;
-            intm_rs_reg.rs1_value    <= '0;
-            intm_rs_reg.rs2_value    <= '0;
-        end else begin
-            intm_rs_reg_valid           <= intm_rs_issue_en && fu_md_ready;
-            if (intm_rs_issue_en && fu_md_ready) begin 
-                intm_rs_reg.rob_id      <= intm_rs_array[intm_rs_issue_idx].rob_id;
-                intm_rs_reg.rd_phy      <= intm_rs_array[intm_rs_issue_idx].rd_phy;
-                intm_rs_reg.rd_arch     <= intm_rs_array[intm_rs_issue_idx].rd_arch;
-                intm_rs_reg.fu_opcode   <= intm_rs_array[intm_rs_issue_idx].fu_opcode;
-                intm_rs_reg.rs1_value   <= to_prf.rs1_value;
-                intm_rs_reg.rs2_value   <= to_prf.rs2_value;
-            end
+    always_comb begin
+        // intm_rs_in_valid       = '0;
+        intm_rs_in.rob_id      = '0;
+        intm_rs_in.rd_phy      = '0;
+        intm_rs_in.rd_arch     = '0;
+        intm_rs_in.fu_opcode   = '0;
+        intm_rs_in.rs1_value   = '0;
+        intm_rs_in.rs2_value   = '0;
+        intm_rs_in_valid       = intm_rs_issue_en && fu_md_ready;
+        if (intm_rs_issue_en && fu_md_ready) begin  
+            intm_rs_in.rob_id      = intm_rs_array[intm_rs_issue_idx].rob_id;
+            intm_rs_in.rd_phy      = intm_rs_array[intm_rs_issue_idx].rd_phy;
+            intm_rs_in.rd_arch     = intm_rs_array[intm_rs_issue_idx].rd_arch;
+            intm_rs_in.fu_opcode   = intm_rs_array[intm_rs_issue_idx].fu_opcode;
+            intm_rs_in.rs1_value   = to_prf.rs1_value;
+            intm_rs_in.rs2_value   = to_prf.rs2_value;
         end
     end
     
@@ -205,11 +180,11 @@ import int_rs_types::*;
         .clk(clk),
         .rst(rst),
         .flush('0),
-        .prv_valid(intm_rs_reg_valid),
+        .prv_valid(intm_rs_in_valid),
         .prv_ready(fu_md_ready),
         .nxt_valid(fu_md_valid),
         .nxt_ready('1), // RS is basically ff, always ready
-        .intm_rs_reg(intm_rs_reg),
+        .intm_rs_in(intm_rs_in),
         .cdb(fu_cdb_out)
     );
 

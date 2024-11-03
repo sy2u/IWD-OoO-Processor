@@ -39,7 +39,7 @@ module fu_md_tb;
     // Instantiate the DUT
     //---------------------------------------------------------------------------------
 
-    fu_md dut(
+    fu_mul dut(
         .clk(clk),
         .rst(rst),
         .flush(flush),
@@ -47,7 +47,7 @@ module fu_md_tb;
         .prv_ready(prv_ready),
         .nxt_valid(nxt_valid),
         .nxt_ready(nxt_ready),
-        .intm_rs_reg(intm_rs_reg),
+        .intm_rs_in(intm_rs_reg),
         .cdb(cdb)
     );
 
