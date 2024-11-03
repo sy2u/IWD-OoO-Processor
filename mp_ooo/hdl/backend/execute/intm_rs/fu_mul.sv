@@ -144,7 +144,6 @@ import int_rs_types::*;
     
     assign cdb_ready = 1'b1;
     assign nxt_valid = reg_valid && complete;
-    // assign cdb_valid = rst ? 1'b0 : nxt_valid && cdb_ready;
 
     always_ff @(posedge clk) begin 
         if (rst) begin 
@@ -174,13 +173,5 @@ import int_rs_types::*;
     assign cdb.rd_value         = fu_mul_reg.rd_value;
     assign cdb.rs1_value_dbg    = fu_mul_reg.rs1_value_dbg;
     assign cdb.rs2_value_dbg    = fu_mul_reg.rs2_value_dbg;
-
-    // assign cdb.valid            = cdb_valid;
-    // assign cdb.rob_id           = (nxt_valid && cdb_ready) ? intm_rs_reg.rob_id : fu_mul_reg.rob_id;
-    // assign cdb.rd_phy           = (nxt_valid && cdb_ready) ? intm_rs_reg.rd_phy : fu_mul_reg.rd_phy;
-    // assign cdb.rd_arch          = (nxt_valid && cdb_ready) ? intm_rs_reg.rd_arch: fu_mul_reg.rd_arch;
-    // assign cdb.rd_value         = (nxt_valid && cdb_ready) ? outcome : fu_mul_reg.rd_value;
-    // assign cdb.rs1_value_dbg    = (nxt_valid && cdb_ready) ? intm_rs_reg.rs1_value : fu_mul_reg.rs1_value_dbg;
-    // assign cdb.rs2_value_dbg    = (nxt_valid && cdb_ready) ? intm_rs_reg.rs2_value : fu_mul_reg.rs2_value_dbg;
 
 endmodule

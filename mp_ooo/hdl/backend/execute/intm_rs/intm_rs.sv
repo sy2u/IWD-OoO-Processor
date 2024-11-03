@@ -43,6 +43,9 @@ import int_rs_types::*;
     logic                 src2_valid;
     logic                 fu_md_ready, fu_md_valid;
 
+    intm_rs_reg_t   intm_rs_in;
+    logic           intm_rs_in_valid;
+
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
@@ -78,7 +81,7 @@ import int_rs_types::*;
             end
 
             // pop issued instruction
-            if (fu_md_valid) begin 
+            if (intm_rs_in_valid && fu_md_ready) begin 
                 // set rs to available
                 intm_rs_available[intm_rs_issue_idx] <= 1'b1;
                 // update top pointer
@@ -122,10 +125,9 @@ import int_rs_types::*;
                         src2_valid = 1'b1;
                     end
                 end
-                if (src1_valid && src2_valid) begin 
+                if (src1_valid && src2_valid) begin
                     intm_rs_issue_en = '1;
                     intm_rs_issue_idx = (INTRS_IDX)'(i+int_rs_top);
-                    break;
                 end
             end
         end
@@ -150,14 +152,11 @@ import int_rs_types::*;
     assign to_prf.rs1_phy = intm_rs_array[intm_rs_issue_idx].rs1_phy;
     assign to_prf.rs2_phy = intm_rs_array[intm_rs_issue_idx].rs2_phy;
 
-    intm_rs_reg_t   intm_rs_in;
-    logic           intm_rs_in_valid;
-
-    // update intm_rs_reg
+    // update intm_rs_in
     always_comb begin
         intm_rs_in  = '0;
-        intm_rs_in_valid = intm_rs_issue_en && fu_md_ready;
-        if (intm_rs_issue_en && fu_md_ready) begin  
+        intm_rs_in_valid = intm_rs_issue_en;
+        if (intm_rs_issue_en) begin  
             intm_rs_in.rob_id      = intm_rs_array[intm_rs_issue_idx].rob_id;
             intm_rs_in.rd_phy      = intm_rs_array[intm_rs_issue_idx].rd_phy;
             intm_rs_in.rd_arch     = intm_rs_array[intm_rs_issue_idx].rd_arch;
