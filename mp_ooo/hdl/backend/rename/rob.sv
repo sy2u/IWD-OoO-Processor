@@ -75,8 +75,7 @@ import rvfi_types::*;
             head_ptr_reg <= '0;
             tail_ptr_reg <= '0;
 
-            rvfi_itf <= '0;
-            rvfi_itf.order <= '1;
+            rvfi_itf.order <= 64'h0;
         end else begin
             head_ptr_reg <= head_ptr_reg;
             tail_ptr_reg <= tail_ptr_reg;
@@ -85,7 +84,6 @@ import rvfi_types::*;
             ready_array <= ready_array;
 
             rvfi_array <= rvfi_array;
-            rvfi_itf <= rvfi_itf;
 
             if (from_id.valid && ~full) begin           // push in
                 tail_ptr_reg <= tail_ptr_reg + ROB_IDX'(1);
@@ -98,9 +96,7 @@ import rvfi_types::*;
             if (pop) begin                              // pop out
                 head_ptr_reg <= head_ptr_reg + ROB_IDX'(1);
                 ready_array[head_ptr] <= '0;
-                rvfi_itf <= rvfi_array[head_ptr];
                 rvfi_itf.order <= rvfi_itf.order + 1;
-                rvfi_itf.pc_wdata <= rvfi_array[head_ptr].pc_rdata + 4;     // TODO: not supporting branching yet
             end
 
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
@@ -134,5 +130,28 @@ import rvfi_types::*;
             to_rrf.rd_arch = arf_idx_array[head_ptr];
         end
     end
+
+    //////////////////////////
+    //          RVFI        //
+    //////////////////////////
+
+    rvfi_dbg_t rvfi_head;
+    assign rvfi_head = rvfi_array[head_ptr];
+    assign rvfi_itf.inst = rvfi_head.inst;
+    assign rvfi_itf.rs1_addr = rvfi_head.rs1_addr;
+    assign rvfi_itf.rs2_addr = rvfi_head.rs2_addr;
+    assign rvfi_itf.rs1_rdata = rvfi_head.rs1_rdata;
+    assign rvfi_itf.rs2_rdata = rvfi_head.rs2_rdata;
+    assign rvfi_itf.rd_addr = rvfi_head.rd_addr;
+    assign rvfi_itf.rd_wdata = rvfi_head.rd_wdata;
+    assign rvfi_itf.frd_addr = rvfi_head.frd_addr;
+    assign rvfi_itf.frd_wdata = rvfi_head.frd_wdata;
+    assign rvfi_itf.pc_rdata = rvfi_head.pc_rdata;
+    assign rvfi_itf.pc_wdata = rvfi_head.pc_rdata + 4;
+    assign rvfi_itf.mem_addr = rvfi_head.mem_addr;
+    assign rvfi_itf.mem_rmask = rvfi_head.mem_rmask;
+    assign rvfi_itf.mem_wmask = rvfi_head.mem_wmask;
+    assign rvfi_itf.mem_rdata = rvfi_head.mem_rdata;
+    assign rvfi_itf.mem_wdata = rvfi_head.mem_wdata;
 
 endmodule
