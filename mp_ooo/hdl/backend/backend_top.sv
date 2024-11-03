@@ -77,12 +77,23 @@ import cpu_params::*;
         .fu_cdb_out             (cdb_itfs[0])
     );
 
+    intm_rs intm_rs_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_id                (id_int_rs_itf_i),
+        .to_prf                 (rs_prf_itfs[1]),
+        .cdb                    (cdb_itfs),
+        .fu_cdb_out             (cdb_itfs[1])
+    );
+
     prf prf_i(
         .clk                    (clk),
         .rst                    (rst),
         .from_rs                (rs_prf_itfs),
         .cdb                    (cdb_itfs)
     );
+
     // Temporary signals for INTM
     assign cdb_itfs[1].valid = 1'b0;
     assign cdb_itfs[1].rob_id = 'x;
