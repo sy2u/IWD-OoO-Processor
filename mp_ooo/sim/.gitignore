@@ -3,3 +3,6 @@ vcs
 verdi
 verilator
 spike
+
+vcs_warn.config
+xprop.config

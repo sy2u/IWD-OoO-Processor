@@ -294,6 +294,16 @@ import cpu_params::*;
         logic   [31:0]          rs1_value_dbg;
         logic   [31:0]          rs2_value_dbg;
     } fu_cdb_reg_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [3:0]           fu_opcode;  
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+    } intm_rs_reg_t;
+    
 endpackage
 
 package rat_types;

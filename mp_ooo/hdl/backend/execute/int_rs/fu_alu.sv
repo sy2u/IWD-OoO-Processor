@@ -12,12 +12,13 @@ import int_rs_types::*;
 );
 
 
-    fu_alu_reg_t fu_alu_reg_out;
-    logic        fu_alu_valid;
+    fu_alu_reg_t     fu_alu_reg_out;
+    logic            fu_alu_valid;
 
-    logic        cdb_ready;
-    logic        cdb_valid;
-    fu_cdb_reg_t cdb_reg;
+    logic            cdb_ready;
+    logic            cdb_valid;
+    fu_cdb_reg_t     cdb_reg;
+
     ////////////////
     // FU_ALU_REG //
     ////////////////

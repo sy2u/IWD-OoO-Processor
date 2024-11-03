@@ -92,3 +92,37 @@ interactive_spike: $(ELF)
 .PHONY: clean
 clean:
 	rm -rf bin vcs verdi verilator spike
+
+
+# unit tests
+
+TB_TOP      ?= fu_md_tb
+
+.PHONY: run_vcs_unit_test
+run_vcs_unit_test: vcs/$(TB_TOP)
+	rm -f vcs/dump.fsdb
+	cd vcs && ./$(TB_TOP) -l simulation.log -exitstatus
+
+vcs/rat_tb: $(VCS_SRCS) $(HDRS)
+	mkdir -p vcs
+	python3 check_sus.py
+	python3 ../bin/rvfi_reference.py
+	cd vcs && vcs $(VCS_SRCS) $(VCS_FLAGS) -l compile.log -top rat_tb -o rat_tb
+	bash check_compile_error.sh
+	cat vcs/xprop.log
+
+vcs/rrf_tb: $(VCS_SRCS) $(HDRS)
+	mkdir -p vcs
+	python3 check_sus.py
+	python3 ../bin/rvfi_reference.py
+	cd vcs && vcs $(VCS_SRCS) $(VCS_FLAGS) -l compile.log -top rrf_tb -o rrf_tb
+	bash check_compile_error.sh
+	cat vcs/xprop.log
+
+vcs/fu_md_tb: $(VCS_SRCS) $(HDRS)
+	mkdir -p vcs
+	python3 check_sus.py
+	python3 ../bin/rvfi_reference.py
+	cd vcs && vcs $(VCS_SRCS) $(VCS_FLAGS) -l compile.log -top fu_md_tb -o fu_md_tb
+	bash check_compile_error.sh
+	cat vcs/xprop.log
