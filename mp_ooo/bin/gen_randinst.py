@@ -77,7 +77,7 @@ def generate_instruction():
         'ori', 'xori', 'slti', 'sltiu', 'lui', 'auipc', 
         # 'sb', 'sh', 'sw', 'lb', 'lh', 'lw', 'lbu', 'lhu'
         'mul', 'mulh', 'mulhu', 'mulhsu', 
-        # 'div', 'divu', 'rem', 'remu'
+        'div', 'divu', 'rem', 'remu'
     ])
     
     if instr_type in ['add', 'sub', 'sll', 'srl', 'sra', 'and', 'or', 'xor', 'slt', 'sltu']:
@@ -106,5 +106,5 @@ def generate_asm_program(num_instructions):
     return '\n'.join(program)
 
 # Generate a random assembly program with 10 instructions plus the magic instruction
-asm_program = generate_asm_program(10000)
+asm_program = generate_asm_program(100000)
 print(asm_program)

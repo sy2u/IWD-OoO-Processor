@@ -169,16 +169,28 @@ import int_rs_types::*;
     //---------------------------------------------------------------------------------
     // Instantiation:
     //---------------------------------------------------------------------------------
-    fu_mul fu_mul_i(
+    fu_md fu_md_i(
         .clk(clk),
         .rst(rst),
         .flush('0),
         .prv_valid(intm_rs_in_valid),
         .prv_ready(fu_md_ready),
         .nxt_valid(fu_md_valid),
-        .nxt_ready('1), // RS is basically ff, always ready
+        .nxt_ready('1),
         .intm_rs_in(intm_rs_in),
         .cdb(fu_cdb_out)
     );
+
+    // fu_mul fu_mul_i(
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .flush('0),
+    //     .prv_valid(intm_rs_in_valid),
+    //     .prv_ready(fu_md_ready),
+    //     .nxt_valid(fu_md_valid),
+    //     .nxt_ready('1), // RS is basically ff, always ready
+    //     .intm_rs_in(intm_rs_in),
+    //     .cdb(fu_cdb_out)
+    // );
 
 endmodule
