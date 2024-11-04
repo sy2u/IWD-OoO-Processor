@@ -18,8 +18,6 @@ import rvfi_types::*;
         logic   [31:0]          rs2_value_dbg;
     } cdb_rob_t;
 
-    genvar k;           // TODO: need figure out how to use genvar and generate
-
     logic                   ready_array [ROB_DEPTH];
     logic   [PRF_IDX-1:0]   prf_idx_array [ROB_DEPTH];
     logic   [ARF_IDX-1:0]   arf_idx_array [ROB_DEPTH];
@@ -56,7 +54,7 @@ import rvfi_types::*;
     assign pop = (empty) ? 1'b0 : ready_array[head_ptr];
 
     // create local CDB interface instances
-    generate for (k = 0; k < CDB_WIDTH; k++) begin : cdb_assign
+    generate for (genvar k = 0; k < CDB_WIDTH; k++) begin : cdb_assign
         assign cdb_rob[k].rob_id = cdb[k].rob_id;
         assign cdb_rob[k].valid = cdb[k].valid;
         assign cdb_rob[k].rd_value = cdb[k].rd_value;

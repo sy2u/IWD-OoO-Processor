@@ -4,18 +4,18 @@ import fetch_types::*;
 
     logic                   valid;
     logic                   ready;
-    fetch_packet_t          data;
+    fetch_packet_t          packet;
 
     modport fifo (
         output              valid,
         input               ready,
-        output              data
+        output              packet
     );
 
     modport backend (
         input               valid,
         output              ready,
-        input               data
+        input               packet
     );
 
 endinterface

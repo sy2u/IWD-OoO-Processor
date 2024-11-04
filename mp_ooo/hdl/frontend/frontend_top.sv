@@ -26,9 +26,9 @@ import cpu_params::*;
 
     // Stage IF0 = Access ICache
 
-    logic   [31:0]          pc_next;
-    logic   [31:0]          pc;
-    logic   [31:0]          insts[IF_WIDTH];
+    logic   [31:0]                  pc_next;
+    logic   [31:0]                  pc;
+    logic   [IF_WIDTH-1:0]  [31:0]  insts;
 
     logic                   prev_rst;
 
@@ -77,8 +77,8 @@ import cpu_params::*;
 
     assign if1_ready = to_fifo.ready;
     assign to_fifo.valid = if1_valid;
-    assign to_fifo.data.inst[0] = insts[0];
-    assign to_fifo.data.pc[0] = pc;
-    assign to_fifo.data.valid[0] = 1'b1;
+    assign to_fifo.packet.inst = insts;
+    assign to_fifo.packet.pc = pc;
+    assign to_fifo.packet.valid = '1;
 
 endmodule

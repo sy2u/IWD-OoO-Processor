@@ -19,8 +19,8 @@ module if1_stage #(
     input   logic   [31:0]  pc_next,
 
     // Datapath output
-    output  logic   [31:0]  pc,
-    output  logic   [31:0]  insts[IF_WIDTH],
+    output  logic   [31:0]                  pc,
+    output  logic   [IF_WIDTH-1:0]  [31:0]  insts,
 
     // memory side signals, dfp -> downward facing port
     cacheline_itf.master    icache_itf
@@ -32,11 +32,11 @@ module if1_stage #(
     // input   logic           imem_resp
 );
 
-    logic                   icache_valid;
-    logic                   icache_resp;
-    logic                   icache_pending;
-    logic   [31:0]          icache_rdata[IF_WIDTH];
-    logic                   icache_unresponsive;
+    logic                           icache_valid;
+    logic                           icache_resp;
+    logic                           icache_pending;
+    logic   [IF_WIDTH-1:0]  [31:0]  icache_rdata;
+    logic                           icache_unresponsive;
 
     assign prv_ready = ~icache_valid || (nxt_valid && nxt_ready) || flush;
 
@@ -94,7 +94,7 @@ module if1_stage #(
     // assign icache_resp = imem_resp;
 
     // Temporary buffer for output
-    logic   [31:0]          temp_icache_rdata[IF_WIDTH];
+    logic   [IF_WIDTH-1:0]  [31:0]  temp_icache_rdata;
 
     always_ff @(posedge clk) begin
         if (icache_resp) begin

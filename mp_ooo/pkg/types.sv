@@ -150,7 +150,7 @@ import cpu_params::*;
 
     typedef struct packed {
         logic   [IF_WIDTH-1:0]  [31:0]  inst;
-        logic   [IF_WIDTH-1:0]  [31:0]  pc;
+        logic                   [31:0]  pc;
         logic   [IF_WIDTH-1:0]          valid;
     } fetch_packet_t;
 
@@ -216,7 +216,7 @@ import cpu_params::*;
         logic   [31:0]          inst;
 
         rs_type_t               rs_type;    // Reservation Station type
-        // logic   [1:0]           fu_type;    // Functional Unit type
+        fu_type_t               fu_type;    // Functional Unit type
         logic   [3:0]           fu_opcode;  // FU opcode
         op1_sel_t               op1_sel;    // Operand 1 select
         op2_sel_t               op2_sel;    // Operand 2 select

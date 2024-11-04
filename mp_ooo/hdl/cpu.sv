@@ -68,13 +68,9 @@ import rv32i_types::*;
         .clk            (clk),
         .rst            (rst || backend_flush),
 
-        .in_valid       (frontend_fifo_itf_i.valid),
-        .in_ready       (frontend_fifo_itf_i.ready),
-        .in_packet      (frontend_fifo_itf_i.data),
+        .in             (frontend_fifo_itf_i),
 
-        .out_valid      (fifo_backend_itf_i.valid),
-        .out_ready      (fifo_backend_itf_i.ready),
-        .out_packet     (fifo_backend_itf_i.data)
+        .out            (fifo_backend_itf_i)
     );
 
     backend_top backend_i(

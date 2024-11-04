@@ -7,13 +7,9 @@ import fetch_types::*; #(
     input   logic               clk,
     input   logic               rst,
 
-    input   logic               in_valid,
-    output  logic               in_ready,
-    input   fetch_packet_t      in_packet,
+    frontend_fifo_itf.fifo      in,
 
-    output  logic               out_valid,
-    input   logic               out_ready,
-    output  fetch_packet_t      out_packet
+    fifo_backend_itf.fifo       out
 );
 
     localparam                  ADDR_IDX = $clog2(DEPTH);
@@ -27,12 +23,12 @@ import fetch_types::*; #(
     logic                       empty;
     fetch_packet_t              deq_data;
 
-    assign enq_en = in_valid;
-    assign in_ready = ~full;
-    assign enq_data = in_packet;
-    assign deq_en = out_ready;
-    assign out_valid = ~empty;
-    assign out_packet = deq_data;
+    assign enq_en = in.valid;
+    assign in.ready = ~full;
+    assign enq_data = in.packet;
+    assign deq_en = out.ready;
+    assign out.valid = ~empty;
+    assign out.packet = deq_data;
 
     logic   [ADDR_IDX:0]    wr_ptr;
     logic   [ADDR_IDX-1:0]  wr_ptr_actual;

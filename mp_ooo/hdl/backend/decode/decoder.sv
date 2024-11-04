@@ -6,7 +6,7 @@ import rv32i_types::*;
     input   logic   [31:0]          inst,
 
     output  rs_type_t               rs_type,
-    // output  logic   [1:0]           fu_type,
+    output  fu_type_t               fu_type,
     output  logic   [3:0]           fu_opcode,
     output  op1_sel_t               op1_sel,
     output  op2_sel_t               op2_sel,
@@ -33,7 +33,7 @@ import rv32i_types::*;
 
     always_comb begin
         rs_type = RS_X;
-        // fu_type = 'x;
+        fu_type = FU_X;
         fu_opcode = 'x;
         op1_sel = OP1_X;
         op2_sel = OP2_X;
@@ -41,14 +41,14 @@ import rv32i_types::*;
         unique case (opcode)
             op_b_lui    : begin
                 rs_type = RS_INT;
-                // fu_type = FU_ALU;
+                fu_type = FU_ALU;
                 op1_sel = OP1_ZERO;
                 op2_sel = OP2_IMM;
                 fu_opcode = ALU_ADD;
             end
             op_b_auipc  : begin
                 rs_type = RS_INT;
-                // fu_type = FU_ALU;
+                fu_type = FU_ALU;
                 op1_sel = OP1_PC;
                 op2_sel = OP2_IMM;
                 fu_opcode = ALU_ADD;
@@ -65,7 +65,7 @@ import rv32i_types::*;
             // end
             op_b_imm    : begin
                 rs_type = RS_INT;
-                // fu_type = FU_ALU;
+                fu_type = FU_ALU;
                 op1_sel = OP1_RS1;
                 op2_sel = OP2_IMM;
                 unique case (funct3)
@@ -88,11 +88,11 @@ import rv32i_types::*;
                 op2_sel = OP2_RS2;
                 if (funct7 == muldiv) begin
                     rs_type = RS_INTM;
-                    // fu_type = FU_MD;
+                    fu_type = FU_MDU;
                     fu_opcode = {1'b0, funct3};
                 end else begin
                     rs_type = RS_INT;
-                    // fu_type = FU_ALU;
+                    fu_type = FU_ALU;
                     unique case (funct3)
                         arith_f3_slt: begin
                             fu_opcode = ALU_SLT;

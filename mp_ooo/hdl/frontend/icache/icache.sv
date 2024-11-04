@@ -11,11 +11,11 @@ import icache_types::*; #(
     input   logic           rst,
 
     // cpu side signals, ufp -> upward facing port
-    input   logic   [31:0]  ufp_addr,
-    input   logic           ufp_read,
-    output  logic   [31:0]  ufp_rdata[IF_WIDTH],
-    output  logic           ufp_resp,
-    input   logic           kill, // kill all processing misses
+    input   logic   [31:0]                  ufp_addr,
+    input   logic                           ufp_read,
+    output  logic   [IF_WIDTH-1:0]  [31:0]  ufp_rdata,
+    output  logic                           ufp_resp,
+    input   logic                           kill, // kill all pending misses
 
     // memory side signals, dfp -> downward facing port
     cacheline_itf.master    dfp
@@ -195,11 +195,9 @@ import icache_types::*; #(
 
     assign dfp.wdata = 'x;
 
-    always_comb begin
-        for (int i = 0; i < IF_WIDTH; i++) begin
-            ufp_rdata[i] = data_dout0[hit_way][(8 * stage_reg.offset + unsigned'(32 * i)) +: 32];
-        end
-    end
+    generate for (genvar i = 0; i < IF_WIDTH; i++) begin : ufp_rdata_assign
+        assign ufp_rdata[i] = data_dout0[hit_way][(8 * stage_reg.offset + unsigned'(32 * i)) +: 32];
+    end endgenerate
 
     assign ufp_resp = stage_reg.read && ~stall;
 
