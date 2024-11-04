@@ -34,7 +34,6 @@ import uop_types::*;
     logic   [ARF_IDX-1:0]       rd_arch[ID_WIDTH];
     logic   [ARF_IDX-1:0]       rs1_arch[ID_WIDTH];
     logic   [ARF_IDX-1:0]       rs2_arch[ID_WIDTH];
-    logic                       inst_invalid[ID_WIDTH];
 
     //////////////////////////
     //     Decode Stage     //
@@ -52,8 +51,7 @@ import uop_types::*;
             .imm                    (imm[i]),
             .rd_arch                (rd_arch[i]),
             .rs1_arch               (rs1_arch[i]),
-            .rs2_arch               (rs2_arch[i]),
-            .inst_invalid           (inst_invalid[i])
+            .rs2_arch               (rs2_arch[i])
         );
 
         assign uop[i].pc = from_fifo.packet.pc;
@@ -77,7 +75,7 @@ import uop_types::*;
     // Pop from free list if we do need destination register
     logic rs_ready;
     assign rs_ready = (to_int_rs.ready && (rs_type[0] == RS_INT)) || (to_intm_rs.ready && (rs_type[0] == RS_INTM));
-    assign to_fl.valid = from_fifo.valid && to_rob.ready && rs_ready && (rd_arch[0] != '0)  && ~inst_invalid[0];
+    assign to_fl.valid = from_fifo.valid && to_rob.ready && rs_ready && (rd_arch[0] != '0);
 
     // Read from RAT
     assign to_rat.read_arch[0] = rs1_arch[0];
@@ -88,13 +86,13 @@ import uop_types::*;
     assign uop[0].rs2_valid = to_rat.read_valid[1];
 
     // Write to RAT if we do need destination register
-    assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && rs_ready && (rd_arch[0] != '0) && ~inst_invalid[0];
+    assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && rs_ready && (rd_arch[0] != '0);
     assign to_rat.write_arch = uop[0].rd_arch;
     assign to_rat.write_phy = to_fl.free_idx;
     assign uop[0].rd_phy = (rd_arch[0] != '0) ? to_fl.free_idx : '0;
 
     // Notify ROB
-    assign to_rob.valid = from_fifo.valid && to_fl.ready && rs_ready && ~inst_invalid[0];
+    assign to_rob.valid = from_fifo.valid && to_fl.ready && rs_ready;
     assign to_rob.inst_valid[0] = from_fifo.packet.valid[0];
     assign to_rob.rd_phy[0] = uop[0].rd_phy;
     assign to_rob.rd_arch[0] = uop[0].rd_arch;
@@ -106,15 +104,15 @@ import uop_types::*;
     //////////////////////////
 
     // Dispatch to INT Reservation Stations
-    assign to_int_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready && (rs_type[0] == RS_INT) && ~inst_invalid[0];
+    assign to_int_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready && (rs_type[0] == RS_INT);
     assign to_int_rs.uop = uop[0];
 
     // Dispatch to INTM Reservation Stations
-    assign to_intm_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready && (rs_type[0] == RS_INTM) && ~inst_invalid[0];
+    assign to_intm_rs.valid = from_fifo.valid && to_fl.ready && to_rob.ready && (rs_type[0] == RS_INTM);
     assign to_intm_rs.uop = uop[0];
 
     // Backpressure Ready signal
-    assign from_fifo.ready = to_fl.ready && to_rob.ready && rs_ready && ~inst_invalid[0];
+    assign from_fifo.ready = to_fl.ready && to_rob.ready && rs_ready;
 
     //////////////////////////
     //          RVFI        //
