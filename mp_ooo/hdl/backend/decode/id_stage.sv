@@ -93,10 +93,12 @@ import uop_types::*;
 
     // Notify ROB
     assign to_rob.valid = from_fifo.valid && to_fl.ready && rs_ready;
-    assign to_rob.inst_valid[0] = from_fifo.packet.valid[0];
-    assign to_rob.rd_phy[0] = uop[0].rd_phy;
-    assign to_rob.rd_arch[0] = uop[0].rd_arch;
-    assign uop[0].rob_id = to_rob.rob_id[0];
+    generate for (genvar i = 0; i < ID_WIDTH; i++) begin
+        assign to_rob.inst_valid[i] = from_fifo.packet.valid[i];
+        assign to_rob.rd_phy[i] = uop[i].rd_phy;
+        assign to_rob.rd_arch[i] = uop[i].rd_arch;
+        assign uop[i].rob_id = to_rob.rob_id[i];
+    end endgenerate
 
 
     //////////////////////////
