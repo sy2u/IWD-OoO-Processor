@@ -48,13 +48,15 @@ import rvfi_types::*;
 
     logic                   valid;
     logic                   ready;
-    logic   [ROB_IDX-1:0]   rob_id;
-    logic   [PRF_IDX-1:0]   rd_phy;
-    logic   [ARF_IDX-1:0]   rd_arch;
-    rvfi_dbg_t              rvfi_dbg;
+    logic                   inst_valid  [ID_WIDTH];
+    logic   [ROB_IDX-1:0]   rob_id      [ID_WIDTH];
+    logic   [PRF_IDX-1:0]   rd_phy      [ID_WIDTH];
+    logic   [ARF_IDX-1:0]   rd_arch     [ID_WIDTH];
+    rvfi_dbg_t              rvfi_dbg    [ID_WIDTH];
 
     modport id (
         output              valid,
+        output              inst_valid,
         input               ready,
         input               rob_id,
         output              rd_phy,
@@ -64,6 +66,7 @@ import rvfi_types::*;
 
     modport rob (
         input               valid,
+        input               inst_valid,
         output              ready,
         output              rob_id,
         input               rd_phy,
@@ -127,9 +130,9 @@ endinterface
 interface rob_rrf_itf();
 import cpu_params::*;
 
-    logic                   valid;
-    logic   [PRF_IDX-1:0]   rd_phy;
-    logic   [ARF_IDX-1:0]   rd_arch;
+    logic                   valid   [ID_WIDTH];
+    logic   [PRF_IDX-1:0]   rd_phy  [ID_WIDTH];
+    logic   [ARF_IDX-1:0]   rd_arch [ID_WIDTH];
 
     modport rob (
         output              valid,
@@ -148,8 +151,8 @@ endinterface
 interface rrf_fl_itf();
 import cpu_params::*;
 
-    logic                   valid;
-    logic   [PRF_IDX-1:0]   stale_idx;
+    logic                   valid       [ID_WIDTH];
+    logic   [PRF_IDX-1:0]   stale_idx   [ID_WIDTH];
 
     modport rrf (
         output              valid,

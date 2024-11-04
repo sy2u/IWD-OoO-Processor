@@ -16,17 +16,22 @@ import cpu_params::*;
                 mem[i] <= {1'b0, ARF_IDX'(i)};  // sync with rat
             end
         end else begin
-            if( from_rob.valid && (from_rob.rd_arch!='0) ) 
-                mem[from_rob.rd_arch] <= from_rob.rd_phy;
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                if (from_rob.valid[i] && (from_rob.rd_arch[i]!='0)) begin
+                    mem[from_rob.rd_arch[i]] <= from_rob.rd_phy[i];
+                end
+            end
         end
     end
-    
+
     always_comb begin
-        to_fl.valid = '0;
-        to_fl.stale_idx = 'x;
-        if( from_rob.valid && (from_rob.rd_arch!='0) ) begin
-            to_fl.valid = '1;
-            to_fl.stale_idx = mem[from_rob.rd_arch];
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            to_fl.valid[i] = '0;
+            to_fl.stale_idx[i] = 'x;
+            if( from_rob.valid[i] && (from_rob.rd_arch[i] != '0) ) begin
+                to_fl.valid[i] = '1;
+                to_fl.stale_idx[i] = mem[from_rob.rd_arch[i]];
+            end
         end
     end
 

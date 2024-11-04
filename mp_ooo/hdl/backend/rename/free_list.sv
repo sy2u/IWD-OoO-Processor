@@ -23,9 +23,11 @@ import cpu_params::*;
                 free_list[i] <= (PRF_IDX)'(ARF_DEPTH + unsigned'(i));
             end
         end else begin
-            if (from_rrf.valid) begin
-                free_list[wr_ptr] <= from_rrf.stale_idx;
-                wr_ptr <= (FREELIST_IDX)'(wr_ptr + 1);
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                if (from_rrf.valid[i]) begin
+                    free_list[wr_ptr] <= from_rrf.stale_idx[i];
+                    wr_ptr <= (FREELIST_IDX)'(wr_ptr + 1);
+                end
             end
             if (from_id.ready && from_id.valid) begin
                 rd_ptr <= (FREELIST_IDX)'(rd_ptr + 1);

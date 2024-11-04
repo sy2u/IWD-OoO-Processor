@@ -95,9 +95,10 @@ import uop_types::*;
 
     // Notify ROB
     assign to_rob.valid = from_fifo.valid && to_fl.ready && rs_ready && ~inst_invalid[0];
-    assign to_rob.rd_phy = uop[0].rd_phy;
-    assign to_rob.rd_arch = uop[0].rd_arch;
-    assign uop[0].rob_id = to_rob.rob_id;
+    assign to_rob.inst_valid[0] = from_fifo.packet.valid[0];
+    assign to_rob.rd_phy[0] = uop[0].rd_phy;
+    assign to_rob.rd_arch[0] = uop[0].rd_arch;
+    assign uop[0].rob_id = to_rob.rob_id[0];
 
 
     //////////////////////////
@@ -118,23 +119,24 @@ import uop_types::*;
     //////////////////////////
     //          RVFI        //
     //////////////////////////
-
-    assign to_rob.rvfi_dbg.order = 'x;
-    assign to_rob.rvfi_dbg.inst = uop[0].inst;
-    assign to_rob.rvfi_dbg.rs1_addr = uop[0].rs1_arch;
-    assign to_rob.rvfi_dbg.rs2_addr = uop[0].rs2_arch;
-    assign to_rob.rvfi_dbg.rs1_rdata = 'x;
-    assign to_rob.rvfi_dbg.rs2_rdata = 'x;
-    assign to_rob.rvfi_dbg.rd_addr = uop[0].rd_arch;
-    assign to_rob.rvfi_dbg.rd_wdata = 'x;
-    assign to_rob.rvfi_dbg.frd_addr = 'x;
-    assign to_rob.rvfi_dbg.frd_wdata = 'x;
-    assign to_rob.rvfi_dbg.pc_rdata = uop[0].pc;
-    assign to_rob.rvfi_dbg.pc_wdata = 'x;
-    assign to_rob.rvfi_dbg.mem_addr = 'x;
-    assign to_rob.rvfi_dbg.mem_rmask = 'x;
-    assign to_rob.rvfi_dbg.mem_wmask = 'x;
-    assign to_rob.rvfi_dbg.mem_rdata = 'x;
-    assign to_rob.rvfi_dbg.mem_wdata = 'x;
+    generate for (genvar i = 0; i < ID_WIDTH; i++) begin
+        assign to_rob.rvfi_dbg[i].order = 'x;
+        assign to_rob.rvfi_dbg[i].inst = uop[i].inst;
+        assign to_rob.rvfi_dbg[i].rs1_addr = uop[i].rs1_arch;
+        assign to_rob.rvfi_dbg[i].rs2_addr = uop[i].rs2_arch;
+        assign to_rob.rvfi_dbg[i].rs1_rdata = 'x;
+        assign to_rob.rvfi_dbg[i].rs2_rdata = 'x;
+        assign to_rob.rvfi_dbg[i].rd_addr = uop[i].rd_arch;
+        assign to_rob.rvfi_dbg[i].rd_wdata = 'x;
+        assign to_rob.rvfi_dbg[i].frd_addr = 'x;
+        assign to_rob.rvfi_dbg[i].frd_wdata = 'x;
+        assign to_rob.rvfi_dbg[i].pc_rdata = uop[i].pc;
+        assign to_rob.rvfi_dbg[i].pc_wdata = 'x;
+        assign to_rob.rvfi_dbg[i].mem_addr = 'x;
+        assign to_rob.rvfi_dbg[i].mem_rmask = 'x;
+        assign to_rob.rvfi_dbg[i].mem_wmask = 'x;
+        assign to_rob.rvfi_dbg[i].mem_rdata = 'x;
+        assign to_rob.rvfi_dbg[i].mem_wdata = 'x;
+    end endgenerate
 
 endmodule

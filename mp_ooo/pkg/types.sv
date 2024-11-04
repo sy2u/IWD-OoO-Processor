@@ -5,7 +5,7 @@ package cpu_params;
     localparam  unsigned    ID_WIDTH    = 1;
 
     localparam  unsigned    ROB_DEPTH   = 32;
-    localparam  unsigned    ROB_IDX     = $clog2(ROB_DEPTH);
+    localparam  unsigned    ROB_IDX     = $clog2(ROB_DEPTH * ID_WIDTH);
 
     localparam  unsigned    PRF_DEPTH   = 64;
     localparam  unsigned    PRF_IDX     = $clog2(PRF_DEPTH);
@@ -17,9 +17,7 @@ package cpu_params;
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
 
-    localparam  unsigned    CDB_WIDTH   = 2; // currently only ALU
-
-    
+    localparam  unsigned    CDB_WIDTH   = 2; // currently only ALU and MDU
 
 endpackage
 
@@ -325,6 +323,7 @@ package rvfi_types;
 import cpu_params::*;
 
     typedef struct packed {
+        logic                   commit;
         logic   [63:0]          order;
         logic   [31:0]          inst;
         logic   [4:0]           rs1_addr;
