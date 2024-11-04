@@ -27,8 +27,6 @@ import int_rs_types::*;
     uop_t int_rs_array      [INTRS_DEPTH];
     logic int_rs_available  [INTRS_DEPTH];
 
-    // pointer to top of the array (like a fifo queue)
-    logic [INTRS_IDX-1:0] int_rs_top;
 
     // push logic
     logic                 int_rs_push_en;
@@ -44,7 +42,6 @@ import int_rs_types::*;
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
         if (rst) begin 
-            int_rs_top <= '0;
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 int_rs_available[i] <= 1'b1;
                 int_rs_array[i]     <= '{default: 'x};
@@ -78,8 +75,6 @@ import int_rs_types::*;
             if (int_rs_issue_en) begin 
                 // set rs to available
                 int_rs_available[int_rs_issue_idx] <= 1'b1;
-                // update top pointer
-                int_rs_top <= int_rs_issue_idx + 1'd1;
             end
         end
     end
@@ -91,8 +86,8 @@ import int_rs_types::*;
         int_rs_push_idx = '0;
         if (from_id.valid && from_id.ready) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                if (int_rs_available[(INTRS_IDX)'(unsigned'(i) + int_rs_top)]) begin 
-                    int_rs_push_idx = (INTRS_IDX)'(unsigned'(i) + int_rs_top);
+                if (int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
+                    int_rs_push_idx = (INTRS_IDX)'(unsigned'(i));
                     int_rs_push_en = 1'b1;
                     break;
                 end
@@ -108,13 +103,13 @@ import int_rs_types::*;
         src1_valid       = '0;
         src2_valid       = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (!int_rs_available[(INTRS_IDX)'(unsigned'(i) + int_rs_top)]) begin 
-                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].op1_sel)
+            if (!int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
+                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op1_sel)
                     OP1_ZERO, OP1_PC: src1_valid = '1;
                     OP1_RS1: begin 
-                        src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].rs1_valid;
+                        src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
                         for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].rs1_phy)) begin 
+                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
                                 src1_valid = 1'b1;
                             end
                         end
@@ -122,12 +117,12 @@ import int_rs_types::*;
                     default: src1_valid = '0;
                 endcase
 
-                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].op2_sel)
+                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op2_sel)
                     OP2_ZERO, OP2_IMM: src2_valid = '1;
                     OP2_RS2: begin 
-                        src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].rs2_valid;
+                        src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
                         for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i) + int_rs_top)].rs2_phy)) begin 
+                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
                                 src2_valid = 1'b1;
                             end
                         end
@@ -137,7 +132,7 @@ import int_rs_types::*;
 
                 if (src1_valid && src2_valid) begin 
                     int_rs_issue_en = '1;
-                    int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i) + int_rs_top);
+                    int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i));
                     break;
                 end
             end
