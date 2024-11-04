@@ -20,7 +20,7 @@ import fetch_types::*;
 
 endinterface
 
-interface id_int_rs_itf();
+interface ds_int_rs_itf();
 import cpu_params::*;
 import uop_types::*;
 
@@ -28,7 +28,7 @@ import uop_types::*;
     logic                   ready;
     uop_t                   uop;
 
-    modport id (
+    modport ds (
         output              valid,
         input               ready,
         output              uop

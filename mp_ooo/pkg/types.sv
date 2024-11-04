@@ -210,6 +210,8 @@ import cpu_params::*;
     // Micro-op, the huge meta info that gets passed around the pipeline
     // EDA tools will optimize away anything that is not used in that stage
     typedef struct packed {
+        logic                   valid;      // Used during rename & dispatch
+
         logic   [31:0]          pc;
         logic   [31:0]          inst;
 
