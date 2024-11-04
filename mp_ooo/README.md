@@ -36,7 +36,7 @@ date.
 
 Students can also score up to 10 points of extra credit by making additional
 advanced features - more about this will be detailed in the Advanced Features
-section. The maximum possible grade on this MP will be *110 points*.
+section. You can also receive +2 extra credit points on CP2 for Verilator tooling. The maximum possible grade on this MP will be *112 points*.
 
 ## Overview
 
@@ -100,7 +100,7 @@ design competition.
 
 Below is a schedule for `mp_ooo`.
 
-![schedule](./docs/images/ooo_schedule.png)
+![schedule](./docs/images/ooo_timeline.jpg)
 
 As you can see, `mp_ooo` is a fast-paced MP with heavy dependencies between
 checkpoints. It is in your best interest to start early and stay synced with
@@ -145,7 +145,9 @@ time when debugging CP3.
 
 ## Checkpoint 2 (15 points)
 
-**_Due 11/4, 11:59PM_**
+~**_Due 11/4, 11:59PM_**~
+
+**_Due 11/5, 11:59PM_**
 
 By the end of this checkpoint, your processor will be able to execute all
 immediate and register instructions in the RV32I spec. In addition, you will be
@@ -154,9 +156,8 @@ RISC-V M extension.
 
 In addition, from this checkpoint onwards we will be introducing a toolflow
 based on Verilator. Verilator is a cycle-level simulator that runs
-(significantly) faster than VCS, and will be used to help us run benchmarks
-quickly as part of the competition.  You can learn more about this toolflow in
-[VERILATOR.md](./docs/VERILATOR.md).
+(significantly) faster than VCS. You can learn more about this toolflow in
+[VERILATOR.md](./docs/VERILATOR.md). Verilator is **optional** and now worth extra credit in CP2.
 
 You will need to handle the DIV-0 edgecase - please look at the RV32 ISA spec to
 understand the expected behavior here.
@@ -172,7 +173,8 @@ understand the expected behavior here.
   instructions required for this CP [2]
 - Demonstrate that your processor is able to execute instructions out-of-order
   (via `testcode/ooo_test.s`) [2]
-- Show that your processor is compliant with Verilator's and the Spyglass linter [2]
+- Show that your processor is compliant with Spyglass linter [2]
+- Show that your processor is compliant with Verilator linter [+2 Extra Credit]
 
 *There will be no provided tests outside of ooo_test.s* - if you are unable to
 correctly modify the random testbench, the onus of creating comprehensive tests
@@ -194,8 +196,7 @@ deliverable will be completing a successful run on the leaderboard by 11/15. As
 the leaderboard will only begin running on 11/12, we highly recommend you
 construct your own tests prior to this date.
 
-Note that your processor must be compatible with *both* Verilator's lint and the
-standard Spyglass lint in order to appear on leaderboard.
+Note that your processor must be compatible with Spyglass Lint & must be synthesizable (which includes meeting timing).
 
 # Final Submission: Competition + Advanced Features (50)
 

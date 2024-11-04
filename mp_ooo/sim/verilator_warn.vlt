@@ -1,6 +1,6 @@
 `verilator_config
-lint_off -rule WIDTHEXPAND -file "*/rvfimon.v"
-lint_off -rule WIDTHTRUNC  -file "*/rvfimon.v"
+lint_off -rule WIDTHEXPAND  -file "*/rvfimon.v"
+lint_off -rule WIDTHTRUNC   -file "*/rvfimon.v"
 lint_off -rule WIDTHTRUNC   -file "*/DW_div_*.inc"
 lint_off -rule WIDTHTRUNC   -file "*/DW_div_*.v"
 lint_off -rule WIDTHTRUNC   -file "*/DW_mult_*.inc"

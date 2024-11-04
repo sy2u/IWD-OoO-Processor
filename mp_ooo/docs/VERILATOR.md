@@ -41,11 +41,11 @@ VCS. Constrained randomization and UVM, both things that are very important in
 the verification industry, only started having basic Verilator support earlier
 this year. There are also certain HDL constructs you write that may be flattened
 correctly in VCS, but not in Verilator. This is primarily due to Verilator being
-a less mature technology when compared to VCS. In this course we are using
-Verilator as a supplement to VCS for two big reasons:
+a less mature technology when compared to VCS. In this course we optionally offer using
+Verilator as a supplement to VCS due to to reasons:
 
-- Faster debug times when dealing with something like Coremark
-- Faster benchmark times for long programs in the competition
+- Faster debug times when dealing with something like Coremark.
+- More feasible & faster design space exploration.
 
 Overall Verilator is a very promising simulation tool with many big companies
 backing it. Hopefully after `mp_ooo`, you see some of the reasons why that is
@@ -163,7 +163,6 @@ periodically!
 
 Ventilator is a great tool to use for additional benchmarking and some basic
 debug in large program runs, but it can by no means be used as a singular or
-exhaustive verification tool. ***You will not receive any credit come
-competition time if you pass benchmarks on Verilator, but not on VCS***.
+exhaustive verification tool. 
 
 If you have any feedback or feature requests, please submit them to Campuswire.
