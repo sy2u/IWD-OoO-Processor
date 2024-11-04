@@ -25,11 +25,11 @@ import uop_types::*;
 
 );
     uop_t                       uop;
-    logic   [1:0]               rs_type;
-    // logic   [1:0]               fu_type;
+    rs_type_t                   rs_type;
+    // fu_type_t                   fu_type;
     logic   [3:0]               fu_opcode;
-    logic   [1:0]               op1_sel;
-    logic   [1:0]               op2_sel;
+    op1_sel_t                   op1_sel;
+    op2_sel_t                   op2_sel;
     logic   [31:0]              imm;
     logic   [ARF_IDX-1:0]       rd_arch;
     logic   [ARF_IDX-1:0]       rs1_arch;

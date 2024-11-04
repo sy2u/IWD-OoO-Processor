@@ -5,11 +5,11 @@ import rv32i_types::*;
 (
     input   logic   [31:0]          inst,
 
-    output  logic   [1:0]           rs_type,
+    output  rs_type_t               rs_type,
     // output  logic   [1:0]           fu_type,
     output  logic   [3:0]           fu_opcode,
-    output  logic   [1:0]           op1_sel,
-    output  logic   [1:0]           op2_sel,
+    output  op1_sel_t               op1_sel,
+    output  op2_sel_t               op2_sel,
     output  logic   [31:0]          imm,
     output  logic   [ARF_IDX-1:0]   rd_arch,
     output  logic   [ARF_IDX-1:0]   rs1_arch,
@@ -32,11 +32,11 @@ import rv32i_types::*;
     assign inst_invalid = (opcode == '0);
 
     always_comb begin
-        rs_type = 'x;
+        rs_type = RS_X;
         // fu_type = 'x;
         fu_opcode = 'x;
-        op1_sel = 'x;
-        op2_sel = 'x;
+        op1_sel = OP1_X;
+        op2_sel = OP2_X;
 
         unique case (opcode)
             op_b_lui    : begin

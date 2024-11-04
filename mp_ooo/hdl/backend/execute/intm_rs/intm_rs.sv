@@ -53,7 +53,6 @@ import int_rs_types::*;
             int_rs_top <= '0;
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 intm_rs_available[i]         <= 1'b1;
-                intm_rs_array[i]            <= '{default: 'x};
             end
         end else begin 
             // issue > snoop cdb > push

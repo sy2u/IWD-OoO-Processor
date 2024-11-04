@@ -44,7 +44,6 @@ import int_rs_types::*;
         if (rst) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 int_rs_available[i] <= 1'b1;
-                int_rs_array[i]     <= '{default: 'x};
             end
         end else begin 
             // issue > snoop cdb > push

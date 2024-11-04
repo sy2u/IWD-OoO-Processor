@@ -160,49 +160,53 @@ package uop_types;
 import cpu_params::*;
 
     typedef enum logic [1:0] {
+        OP1_X       = 2'bxx,
         OP1_RS1     = 2'b00,
         OP1_ZERO    = 2'b01,
         OP1_PC      = 2'b10
     } op1_sel_t;
 
     typedef enum logic [1:0] {
+        OP2_X       = 2'bxx,
         OP2_RS2     = 2'b00,
         OP2_ZERO    = 2'b01,
         OP2_IMM     = 2'b10
     } op2_sel_t;
 
     typedef enum logic [1:0] {
+        RS_X        = 2'bxx,
         RS_INT      = 2'b00,
         RS_INTM     = 2'b01
     } rs_type_t;
 
     typedef enum logic [1:0] {
+        FU_X        = 2'bxx,
         FU_ALU      = 2'b00,
-        FU_MD       = 2'b01
+        FU_MDU      = 2'b01
     } fu_type_t;
 
     typedef enum logic [3:0] {
-        ALU_ADD,
-        ALU_SLL,
-        ALU_SRA,
-        ALU_SUB,
-        ALU_XOR,
-        ALU_SRL,
-        ALU_OR,
-        ALU_AND,
-        ALU_SLT,
-        ALU_SLTU
+        ALU_ADD     = 4'b0000,
+        ALU_SLL     = 4'b0001,
+        ALU_SRA     = 4'b0010,
+        ALU_SUB     = 4'b0011,
+        ALU_XOR     = 4'b0100,
+        ALU_SRL     = 4'b0101,
+        ALU_OR      = 4'b0110,
+        ALU_AND     = 4'b0111,
+        ALU_SLT     = 4'b1000,
+        ALU_SLTU    = 4'b1001
     } aluopc_t;
 
     typedef enum logic [3:0] {
-        MD_MUL,
-        MD_MULH,
-        MD_MULHSU,
-        MD_MULHU,
-        MD_DIV,
-        MD_DIVU,
-        MD_REM,
-        MD_REMU
+        MD_MUL      = 4'b000,
+        MD_MULH     = 4'b001,
+        MD_MULHSU   = 4'b010,
+        MD_MULHU    = 4'b011,
+        MD_DIV      = 4'b100,
+        MD_DIVU     = 4'b101,
+        MD_REM      = 4'b110,
+        MD_REMU     = 4'b111
     } mdopc_t;
 
     // Micro-op, the huge meta info that gets passed around the pipeline
@@ -211,11 +215,11 @@ import cpu_params::*;
         logic   [31:0]          pc;
         logic   [31:0]          inst;
 
-        logic   [1:0]           rs_type;    // Reservation Station type
+        rs_type_t               rs_type;    // Reservation Station type
         // logic   [1:0]           fu_type;    // Functional Unit type
         logic   [3:0]           fu_opcode;  // FU opcode
-        logic   [1:0]           op1_sel;    // Operand 1 select
-        logic   [1:0]           op2_sel;    // Operand 2 select
+        op1_sel_t               op1_sel;    // Operand 1 select
+        op2_sel_t               op2_sel;    // Operand 2 select
 
         logic   [PRF_IDX-1:0]   rd_phy;     // Destination register (physical)
         logic   [PRF_IDX-1:0]   rs1_phy;    // Source register 1 (physical)
