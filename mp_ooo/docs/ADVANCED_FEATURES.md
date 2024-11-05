@@ -17,6 +17,8 @@
 - You can receive points for at most 2 different types of predictors
 - Branch predictors that implement their tables using flip flops
   instead of SRAMs will only receive half points.
+- After you receive your 20 base advanced feature points, you can receive up to 10 points of additional extra credit.
+  - These do not need to be integrated, but you will receive a 50% penalty for any non-integrated features. See README for more details.
 
 ## All Advanced Features
 
@@ -54,11 +56,10 @@ for originality.
 
 ### Branch Predictors (Half Points if structures implemented as FFs instead of SRAM):
 
-- TAGE [6]
+- TAGE [8]
 - Perceptron [6]
 - GShare/GSelect [4]
-- Two-Level Predictor (Local History Table & Pattern History Table)
-  [4]
+- Two-Level Predictor (Local History Table & Pattern History Table) [4]
 - Enhancements:
   - _BTB (Branch Target Buffer)_ [2 if implemented alongside a
     predictor]
@@ -75,7 +76,7 @@ for originality.
 
 - Superscalar (2-way) [12]
   - Superscalar (N-Way) [3]
-- Early Branch Recovery [14]
+- Early Branch Recovery (requires checkpointing & branch stack masking) [12]
 - Fire and Forget [16]
 
 ### Performance Analysis, Visualization, & Verification:
