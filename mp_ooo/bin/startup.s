@@ -61,3 +61,15 @@ _fini:
     nop
     .endr
     .cfi_endproc
+
+.globl _sbrk
+_sbrk:
+    lw t0, _heap_ptr
+    add a0, a0, t0
+    sw a0, _heap_ptr, t1
+    mv a0, t0
+    ret
+
+.section ".data.sbrk"
+_heap_ptr:
+    .word __global_pointer$

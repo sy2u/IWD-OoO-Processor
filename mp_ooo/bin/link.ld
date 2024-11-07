@@ -56,6 +56,8 @@ SECTIONS
     . = ALIGN(4096);
   }
 
+  __global_pointer$ = .;
+
   _end = .;
 
   /DISCARD/ :

@@ -21,7 +21,8 @@ module dram_w_burst_frfcfs_controller
     parameter int DRAM_PARAM_CA_WIDTH           = 3,    // in bits
     parameter int DRAM_PARAM_BUS_WIDTH          = 64,   // in bits
     parameter int DRAM_PARAM_BURST_LEN          = 4,    // in bursts
-    parameter int DRAM_PARAM_QUEUE_SIZE         = 16    // in requests
+    parameter int DRAM_PARAM_IN_QUEUE_SIZE      = 16,   // in requests
+    parameter int DRAM_PARAM_OUT_QUEUE_SIZE     = 16    // in requests
 )(
     mem_itf_banked.mem itf
 );
@@ -73,6 +74,7 @@ module dram_w_burst_frfcfs_controller
         bit                                         read;
         bit     [DRAM_PARAM_TOTAL_ADDR_WIDTH-1:0]   addr;
         logic   [DRAM_PARAM_ACCESS_WIDTH-1:0]       wdata;
+        longint                                     qtime;
     } in_queue_t;
 
     typedef struct packed {
@@ -101,10 +103,10 @@ module dram_w_burst_frfcfs_controller
 
     logic [DRAM_PARAM_ACCESS_WIDTH-1:0] internal_memory_array [logic [DRAM_PARAM_ACCESS_ADDR_WIDTH-1:0]];
 
-    in_queue_t  in_queue [DRAM_PARAM_QUEUE_SIZE-1:0];
-    in_queue_t  in_queue_next [DRAM_PARAM_QUEUE_SIZE-1:0];
-    out_queue_t out_queue [(DRAM_PARAM_QUEUE_SIZE*DRAM_PARAM_NUM_BANKS)-1:0];
-    out_queue_t out_queue_next [(DRAM_PARAM_QUEUE_SIZE*DRAM_PARAM_NUM_BANKS)-1:0];
+    in_queue_t  in_queue [DRAM_PARAM_IN_QUEUE_SIZE-1:0];
+    in_queue_t  in_queue_next [DRAM_PARAM_IN_QUEUE_SIZE-1:0];
+    out_queue_t out_queue [DRAM_PARAM_OUT_QUEUE_SIZE-1:0];
+    out_queue_t out_queue_next [DRAM_PARAM_OUT_QUEUE_SIZE-1:0];
 
     int in_queue_tail;
     int in_queue_tail_next;
@@ -122,9 +124,13 @@ module dram_w_burst_frfcfs_controller
     int tRRD_counter;
     int tRRD_counter_next;
 
+    longint cycle_counter;
+
     int bank_req_idx [DRAM_PARAM_NUM_BANKS-1:0];
     int bank_activate_arb;
-    bit [DRAM_PARAM_QUEUE_SIZE-1:0] in_queue_dequeue;
+    bit [DRAM_PARAM_IN_QUEUE_SIZE-1:0] in_queue_dequeue;
+    longint bank_pre_out_queue_age [DRAM_PARAM_NUM_BANKS-1:0];
+    bit [DRAM_PARAM_NUM_BANKS-1:0] bank_out_arb;
 
     bit [DRAM_PARAM_NUM_BANKS-1:0] bank_dequeue;
     logic [DRAM_PARAM_ACCESS_WIDTH-1:0] internal_memory_read_shim [DRAM_PARAM_NUM_BANKS];
@@ -150,7 +156,7 @@ module dram_w_burst_frfcfs_controller
 
     always_ff @(posedge itf.clk) begin
         if (itf.rst) begin
-            automatic bank_state_t bank_state_rst = '{DRAM_BANK_IDLE, -1, 0, 0, 0, 0, 0, 0, '{'x, 'x, 'x}};
+            automatic bank_state_t bank_state_rst = '{DRAM_BANK_IDLE, -1, 0, 0, 0, 0, 0, 0, '{'x, 'x, 'x, 'x}};
             in_queue <= '{default: '0};
             out_queue <= '{default: '0};
             in_queue_tail <= 0;
@@ -159,6 +165,7 @@ module dram_w_burst_frfcfs_controller
             out_burst_counter <= 0;
             bank_state <= '{default: bank_state_rst};
             tRRD_counter <= 0;
+            cycle_counter <= longint'(0);
         end else begin
             in_queue <= in_queue_next;
             out_queue <= out_queue_next;
@@ -168,11 +175,12 @@ module dram_w_burst_frfcfs_controller
             out_burst_counter <= out_burst_counter_next;
             bank_state <= bank_state_next;
             tRRD_counter <= tRRD_counter_next;
+            cycle_counter <= cycle_counter + 1;
         end
     end
 
     always_comb begin
-        itf.ready = in_queue_tail < DRAM_PARAM_QUEUE_SIZE;
+        itf.ready = in_queue_tail < DRAM_PARAM_IN_QUEUE_SIZE;
         in_queue_next = in_queue;
         out_queue_next = out_queue;
         in_queue_tail_next = in_queue_tail;
@@ -188,6 +196,7 @@ module dram_w_burst_frfcfs_controller
             bank_state_next[i].tCL_counter  = (bank_state[i].tCL_counter  != 0) ? bank_state[i].tCL_counter  - 1 : 0;
             bank_state_next[i].tWR_counter  = (bank_state[i].tWR_counter  != 0) ? bank_state[i].tWR_counter  - 1 : 0;
             bank_req_idx[i] = -1;
+            bank_pre_out_queue_age[i] = 64'h7fff_ffff_ffff_ffff;
         end
         tRRD_counter_next = (tRRD_counter != 0) ? tRRD_counter - 1 : 0;
         itf.raddr = 'x;
@@ -195,18 +204,21 @@ module dram_w_burst_frfcfs_controller
         itf.rvalid = 1'b0;
         bank_activate_arb = -1;
         in_queue_dequeue = '0;
+        bank_out_arb = '0;
         bank_dequeue = '0;
         if ((itf.read || itf.write) && itf.ready) begin
             if (itf.read) begin
                 in_queue_next[in_queue_tail_next].read  = 1'b1;
                 in_queue_next[in_queue_tail_next].addr  = itf.addr;
                 in_queue_next[in_queue_tail_next].wdata = 'x;
+                in_queue_next[in_queue_tail_next].qtime = cycle_counter;
                 in_queue_tail_next = in_queue_tail_next + 1;
             end
             if (itf.write) begin
                 in_queue_next[in_queue_tail_next].read  = 1'b0;
                 in_queue_next[in_queue_tail_next].addr  = itf.addr;
                 in_queue_next[in_queue_tail_next].wdata[in_burst_counter*DRAM_PARAM_BUS_WIDTH+:DRAM_PARAM_BUS_WIDTH] = itf.wdata;
+                in_queue_next[in_queue_tail_next].qtime = cycle_counter;
                 if (in_burst_counter < 3) begin
                     in_burst_counter_next = in_burst_counter_next + 1;
                 end else begin
@@ -243,6 +255,41 @@ module dram_w_burst_frfcfs_controller
                                 if (bank_req_idx[bank] < bank_req_idx[bank_activate_arb]) begin
                                     bank_activate_arb = bank;
                                 end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        for (int bank = 0; bank < DRAM_PARAM_NUM_BANKS; bank++) begin
+            if (bank_state[bank].state == DRAM_BANK_COL) begin
+                if (bank_state[bank].req.read) begin
+                    if (bank_state_next[bank].tCL_counter == 0) begin
+                        bank_pre_out_queue_age[bank] = bank_state[bank].req.qtime;
+                    end
+                end
+            end
+        end
+        bank_pre_out_queue_age.rsort();
+        for (int i = 0; i < DRAM_PARAM_OUT_QUEUE_SIZE - out_queue_tail_next; i++) begin
+            if (bank_pre_out_queue_age[i] == 64'h7fff_ffff_ffff_ffff) begin
+                break;
+            end
+            for (int bank = 0; bank < DRAM_PARAM_NUM_BANKS; bank++) begin
+                if (bank_state[bank].state == DRAM_BANK_COL) begin
+                    if (bank_state[bank].req.read) begin
+                        if (bank_state_next[bank].tCL_counter == 0) begin
+                            if (bank_state[bank].req.qtime == bank_pre_out_queue_age[i]) begin
+                                out_queue_next[out_queue_tail_next].raddr = bank_state[bank].req.addr;
+                                out_queue_next[out_queue_tail_next].rdata = internal_memory_read_shim[bank];
+                                if (BRAM_0_ON_X != 0) begin
+                                    automatic bit [DRAM_PARAM_ACCESS_WIDTH-1:0] rdata_tmp;
+                                    rdata_tmp = out_queue_next[out_queue_tail_next].rdata;
+                                    out_queue_next[out_queue_tail_next].rdata = rdata_tmp;
+                                end
+                                out_queue_tail_next = out_queue_tail_next + 1;
+                                bank_out_arb[bank] = 1'b1;
+                                break;
                             end
                         end
                     end
@@ -298,15 +345,9 @@ module dram_w_burst_frfcfs_controller
             DRAM_BANK_COL: begin
                 if (bank_state[bank].req.read) begin
                     if (bank_state_next[bank].tCL_counter == 0) begin
-                        bank_state_next[bank].state = DRAM_BANK_IDLE;
-                        out_queue_next[out_queue_tail_next].raddr = bank_state[bank].req.addr;
-                        out_queue_next[out_queue_tail_next].rdata = internal_memory_read_shim[bank];
-                        if (BRAM_0_ON_X != 0) begin
-                            automatic bit [DRAM_PARAM_ACCESS_WIDTH-1:0] rdata_tmp;
-                            rdata_tmp = out_queue_next[out_queue_tail_next].rdata;
-                            out_queue_next[out_queue_tail_next].rdata = rdata_tmp;
+                        if (bank_out_arb[bank]) begin
+                            bank_state_next[bank].state = DRAM_BANK_IDLE;
                         end
-                        out_queue_tail_next = out_queue_tail_next + 1;
                     end
                 end else begin
                     if (bank_state_next[bank].tWR_counter == 0) begin
@@ -316,12 +357,12 @@ module dram_w_burst_frfcfs_controller
             end
             endcase
         end
-        for (int i = 0, int j = 0; i < DRAM_PARAM_QUEUE_SIZE; i++, j++) begin
-            if (in_queue_dequeue[i]) begin
+        for (int i = 0, int j = 0; i < DRAM_PARAM_IN_QUEUE_SIZE; i++, j++) begin
+            while (j < DRAM_PARAM_IN_QUEUE_SIZE && in_queue_dequeue[j]) begin
                 j = j + 1;
                 in_queue_tail_next = in_queue_tail_next - 1;
             end
-            if (j >= DRAM_PARAM_QUEUE_SIZE) begin
+            if (j >= DRAM_PARAM_IN_QUEUE_SIZE) begin
                 in_queue_next[i] = '0;
             end else begin
                 in_queue_next[i] = in_queue_next[j];
@@ -336,10 +377,10 @@ module dram_w_burst_frfcfs_controller
             end else begin
                 out_burst_counter_next = 0;
                 out_queue_tail_next = out_queue_tail_next - 1;
-                for (int i = 0; i < (DRAM_PARAM_QUEUE_SIZE*DRAM_PARAM_NUM_BANKS)-1; i++) begin
+                for (int i = 0; i < DRAM_PARAM_OUT_QUEUE_SIZE-1; i++) begin
                     out_queue_next[i] = out_queue_next[i+1];
                 end
-                out_queue_next[(DRAM_PARAM_QUEUE_SIZE*DRAM_PARAM_NUM_BANKS)-1] = '0;
+                out_queue_next[DRAM_PARAM_OUT_QUEUE_SIZE-1] = '0;
             end
         end
     end

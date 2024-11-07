@@ -8,6 +8,7 @@ more details and documentation, visit the `docs` folder. Inside, you will find:
   and their associated point values.
 - [WHAT_IS_AN_OOO.md](./docs/WHAT_IS_AN_OOO.md): Basic overview of an OoO
   processor.
+- [TEST_CASES.md](./docs/TEST_CASES.md): Basic overview of the test cases.
 
 # Introduction
 
@@ -191,15 +192,30 @@ entirety of the RV32IM spec (barring the exceptions outlined
 [here](#Introduction)). You will also integrate data caches and instruction
 caches with your processor, and add necessary arbiting logic for the DRAM model.
 
-Ideally, you are able to complete this checkpoint by 11/11. Your graded
-deliverable will be completing a successful run on the leaderboard by 11/15. As
-the leaderboard will only begin running on 11/12, we highly recommend you
-construct your own tests prior to this date.
+Your primary deliverables for this checkpoint will be the following:
 
-Note that your processor must be compatible with Spyglass Lint & must be synthesizable (which includes meeting timing).
+- Integrate instruction caches and data caches with your core
+  - Add any necessary write/arbiter logic to the cacheline adapter
+- Support all memory instructions
+  - Memory instructions can be performed in order on ROB commit
+  - Recommended to support loads before ROB commit (refer to lab)
+- Support all control instructions (BR, JAL, JALR) and AUIPC if not yet
+  implemented
+  - Not required to support branch prediction yet, static not-taken is okay
+
+This will be the first checkpoint graded by an autograder, namely the
+leaderboard. In the meantime, you can use random/targeted tests,
+`coremark_im`, and any other released tests in order to test your processor. 
+Additionally, there will be no partial credit for this checkpoint - you will 
+need to fulfill all the leaderboard criteria listed below to get credit.
+
+Ideally, you are able to complete this checkpoint by 11/11. Your graded
+deliverable will be completing a successful run on the leaderboard by
+11/15. This is construed as a leaderboard run with a nonzero score. As the
+leaderboard will only begin running on 11/12, we highly recommend you construct
+your own tests prior to this date.
 
 # Final Submission: Competition + Advanced Features (50)
-
 ## Competition (20)
 
 This portion of your grade will be determined by how you fare in comparison to a
@@ -211,7 +227,25 @@ points.
 The initial benchmark suite and the related performance metrics will be
 announced on the first day of the leaderboard (*11/15*). We will add more
 programs to this suite over the following 3 weeks, and freeze the benchmark list
-on *11/29*. CoreMark is guaranteed to be one of your benchmarks.
+on *11/29*.
+
+### Leaderboard
+The leaderboard, like AG for past MPs, will run periodically and test a series
+of benchmarks on your processor. If all benchmarks are found to run correctly,
+then the Leaderboard will assign a nonzero score based on staff-picked metrics
+(will be revealed on Leaderboard release). Coremark is confirmed to be in this
+test suite, and you will receive copies of any additional "open" benchmarks when
+the leaderboard is first deployed.
+
+To show up on the leaderboard, your processor must:
+- Be connected to RVFI
+- Match Spike and RVFI on **all leaderboard test cases**
+- Be synthesizable and meet timing at the frequency you specify in options.json
+
+Note that not all leaderboard benchmarks will be public - staff will curate a
+series of "closed" benchmarks that will not be distributed as part of the
+`mp_ooo` release. However, you will be informed of their computational
+characteristics. Check out [TEST_CASES.md](./docs/TEST_CASES.md).
 
 ## Advanced Features (20)
 

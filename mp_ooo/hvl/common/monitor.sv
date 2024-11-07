@@ -214,9 +214,7 @@ module monitor #(
 
     `endif
 
-    `ifndef ECE411_NO_RVFI
-
-        logic [15:0] errcode;
+    `ifndef ECE411_NO_X_CHECK
 
         always @(posedge itf.clk iff !itf.rst) begin
             for (int unsigned channel = 0; channel < CHANNELS; channel++) begin
@@ -312,12 +310,11 @@ module monitor #(
             end
         end endgenerate
 
-        always @(posedge itf.clk) begin
-            if (errcode != 0) begin
-                $error("RVFI Monitor Error");
-                itf.error <= 1'b1;
-            end
-        end
+    `endif
+
+    `ifndef ECE411_NO_RVFI
+
+        logic [15:0] errcode;
 
         riscv_formal_monitor_rv32imc monitor(
             .clock              (itf.clk),
@@ -345,6 +342,13 @@ module monitor #(
             .rvfi_mem_extamo    (rvfi_mem_extamo),
             .errcode            (errcode)
         );
+
+        always @(posedge itf.clk) begin
+            if (errcode != 0) begin
+                $error("RVFI Monitor Error");
+                itf.error <= 1'b1;
+            end
+        end
 
     `endif
 
