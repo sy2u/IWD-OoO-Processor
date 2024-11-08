@@ -1,5 +1,5 @@
 module dcache 
-import mp_cache_types::*;
+import dcache_types::*;
 (
     input   logic           clk,
     input   logic           rst,
@@ -58,7 +58,7 @@ import mp_cache_types::*;
     logic   [SET_IDX-1:0]   next_set;
     logic   [SET_IDX-1:0]   sram_operating_set;
 
-    cache_stage_reg_t       stage_reg;
+    dcache_stage_reg_t      stage_reg;
 
     logic                   hit;
     logic   [WAY_BITS-1:0]  hit_way;

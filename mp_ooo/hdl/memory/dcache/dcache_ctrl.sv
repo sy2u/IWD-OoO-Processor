@@ -1,5 +1,5 @@
 module dcache_ctrl
-import mp_cache_types::*;
+import dcache_types::*;
 (
     input   logic           clk,
     input   logic           rst,
@@ -23,7 +23,7 @@ import mp_cache_types::*;
     input   logic           dfp_rvalid
 );
 
-    ppl_ctrl_fsm_state_t    state, next_state;
+    dcache_ctrl_fsm_state_t state, next_state;
 
     always_ff @(posedge clk) begin
         if (rst) begin

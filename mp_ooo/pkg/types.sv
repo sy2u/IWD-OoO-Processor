@@ -258,6 +258,24 @@ package icache_types;
 
 endpackage
 
+package dcache_types;
+
+    typedef struct packed {
+        logic           read;
+        logic   [4:0]   offset;
+        logic   [3:0]   set_i;
+        logic   [22:0]  tag;
+    } dcache_stage_reg_t;
+
+    typedef enum logic [1:0] {
+        PASS_THRU       = 2'b00, // Any other states where miss does not happen
+        ALLOCATE        = 2'b01, // Allocate new cache line
+        ALLOCATE_STALL  = 2'b10, // One additional stall after allocate
+        WB              = 2'b11  // Writeback dirty cache line
+    } dcache_ctrl_fsm_state_t;
+
+endpackage
+
 package int_rs_types;
 import cpu_params::*;
 
