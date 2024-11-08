@@ -53,7 +53,7 @@ import uop_types::*;
         );
 
         assign uops[i].valid = from_fifo.packet.valid[i];
-        assign uops[i].pc = from_fifo.packet.pc;
+        assign uops[i].pc = from_fifo.packet.pc + unsigned'(i) * 4;
         assign uops[i].inst = from_fifo.packet.inst[i];
         assign uops[i].rs_type = rs_type[i];
         assign uops[i].fu_type = fu_type[i];
@@ -64,6 +64,8 @@ import uop_types::*;
         assign uops[i].rd_arch = rd_arch[i];
         assign uops[i].rs1_arch = rs1_arch[i];
         assign uops[i].rs2_arch = rs2_arch[i];
+        assign uops[i].predict_taken = from_fifo.packet.predict_taken[i];
+        assign uops[i].predict_target = from_fifo.packet.predict_target[i];
     end endgenerate
 
 

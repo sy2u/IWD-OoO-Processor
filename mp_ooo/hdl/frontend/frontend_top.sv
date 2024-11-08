@@ -78,6 +78,10 @@ import cpu_params::*;
     assign if1_ready = to_fifo.ready;
     assign to_fifo.valid = if1_valid;
     assign to_fifo.packet.inst = insts;
+    assign to_fifo.packet.predict_taken = '0;
+    generate for (genvar i = 0; i < IF_WIDTH; i++) begin
+        assign to_fifo.packet.predict_target[i] = pc + unsigned'(i) * 4 + 4;
+    end endgenerate
     assign to_fifo.packet.pc = pc;
     assign to_fifo.packet.valid = '1;
 

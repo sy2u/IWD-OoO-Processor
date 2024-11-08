@@ -148,6 +148,8 @@ import cpu_params::*;
 
     typedef struct packed {
         logic   [IF_WIDTH-1:0]  [31:0]  inst;
+        logic   [IF_WIDTH-1:0]          predict_taken;
+        logic   [IF_WIDTH-1:0]  [31:0]  predict_target;
         logic                   [31:0]  pc;
         logic   [IF_WIDTH-1:0]          valid;
     } fetch_packet_t;
@@ -226,12 +228,15 @@ import cpu_params::*;
         logic   [PRF_IDX-1:0]   rs2_phy;    // Source register 2 (physical)
         logic                   rs1_valid;  // Source register 1 valid (not busy)
         logic                   rs2_valid;  // Source register 2 valid (not busy)
-        logic   [31:0]          imm; // Packed immediate
+        logic   [31:0]          imm;        // Immediate
         logic   [ROB_IDX-1:0]   rob_id;     // ROB ID
 
         logic   [ARF_IDX-1:0]   rd_arch;    // Destination register (architectural)
         logic   [ARF_IDX-1:0]   rs1_arch;   // Source register 1 (architectural)
         logic   [ARF_IDX-1:0]   rs2_arch;   // Source register 2 (architectural)
+
+        logic                   predict_taken; // Branch prediction
+        logic   [31:0]          predict_target; // Branch prediction target
     } uop_t;
 
 endpackage
