@@ -24,6 +24,7 @@ import uop_types::*;
     rob_rrf_itf                 rob_rrf_itf_i();
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
+    br_cdb_itf                  br_cdb_itf();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
 
     logic                       dispatch_valid;
@@ -109,6 +110,17 @@ import uop_types::*;
         .to_prf                 (rs_prf_itfs[1]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[1])
+    );
+
+    br_rs br_rs_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_ds                (ds_int_rs_itf_i),
+        .to_prf                 (rs_prf_itfs[2]),
+        .cdb                    (cdb_itfs),
+        .fu_cdb_out             (cdb_itfs[2]),
+        .br_cdb_out             (br_cdb_itf)
     );
 
     prf prf_i(

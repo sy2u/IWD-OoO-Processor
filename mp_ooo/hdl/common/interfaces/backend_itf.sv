@@ -214,6 +214,22 @@ import cpu_params::*;
 
 endinterface
 
+interface br_cdb_itf();
+import cpu_params::*;
+
+    logic   [ROB_IDX-1:0]   rob_id;
+    logic                   miss_predict;
+    logic   [31:0]          target_address;
+    logic                   valid;
+
+    modport fu (
+        output              rob_id,
+        output              miss_predict,
+        output              target_address,
+        output              valid
+    );
+
+endinterface
 
 interface rs_prf_itf();
 import cpu_params::*;

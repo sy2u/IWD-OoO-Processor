@@ -17,7 +17,7 @@ package cpu_params;
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
 
-    localparam  unsigned    CDB_WIDTH   = 2; // currently only ALU and MDU
+    localparam  unsigned    CDB_WIDTH   = 3; // currently ALU and MDU and BR
 
 endpackage
 
@@ -209,6 +209,17 @@ import cpu_params::*;
         MD_REMU     = 4'b111
     } mdopc_t;
 
+    typedef enum logic [3:0] {
+        BR_BEQ      = 4'b000,
+        BR_BNE      = 4'b001,
+        BR_BLT      = 4'b010,
+        BR_BGE      = 4'b011,
+        BR_BLTU     = 4'b100,
+        BR_BGEU     = 4'b101,
+        BR_JAL      = 4'b110,
+        BR_JALR     = 4'b111
+    } bropc_t;
+
     // Micro-op, the huge meta info that gets passed around the pipeline
     // EDA tools will optimize away anything that is not used in that stage
     typedef struct packed {
@@ -312,6 +323,24 @@ import cpu_params::*;
         logic   [31:0]          rs2_value;
 
     } fu_alu_reg_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+
+        logic   [3:0]           fu_opcode;  
+
+        logic   [31:0]          pc;
+        logic   [31:0]          imm;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+
+        logic                   predict_taken; // Branch prediction
+        logic   [31:0]          predict_target; // Branch prediction target
+
+    } fu_br_reg_t;
+
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
