@@ -11,10 +11,10 @@ import uop_types::*;
     input   uop_t               uops[ID_WIDTH],
 
     // INT Reservation Stations
-    ds_int_rs_itf.ds            to_int_rs,
+    ds_rs_itf.ds                to_int_rs,
 
     // INTM Reservation Stations
-    ds_int_rs_itf.ds            to_intm_rs
+    ds_rs_itf.ds                to_intm_rs
 );
 
     //////////////////////////
