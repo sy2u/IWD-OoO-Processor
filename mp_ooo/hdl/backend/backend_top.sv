@@ -119,4 +119,20 @@ import uop_types::*;
         .cdb                    (cdb_itfs)
     );
 
+    assign cdb_itfs[2].rob_id = 'x;
+    assign cdb_itfs[2].rd_phy = 'x;
+    assign cdb_itfs[2].rd_arch = 'x;
+    assign cdb_itfs[2].rd_value = 'x;
+    assign cdb_itfs[2].rs1_value_dbg = 'x;
+    assign cdb_itfs[2].rs2_value_dbg = 'x;
+    assign cdb_itfs[2].valid = '0;
+
+    assign cdb_itfs[3].rob_id = 'x;
+    assign cdb_itfs[3].rd_phy = 'x;
+    assign cdb_itfs[3].rd_arch = 'x;
+    assign cdb_itfs[3].rd_value = 'x;
+    assign cdb_itfs[3].rs1_value_dbg = 'x;
+    assign cdb_itfs[3].rs2_value_dbg = 'x;
+    assign cdb_itfs[3].valid = '0;
+
 endmodule
