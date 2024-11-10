@@ -13,6 +13,8 @@ package cpu_params;
     localparam unsigned     INTRS_DEPTH = 8;
     localparam unsigned     INTRS_IDX   = $clog2(INTRS_DEPTH);    
 
+    localparam  unsigned    LSQ_DEPTH   = 8;
+
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
@@ -186,7 +188,7 @@ import cpu_params::*;
         FU_ALU      = 2'b00,
         FU_MDU      = 2'b01,
         FU_BR       = 2'b10,
-        FU_MEM      = 2'b11
+        FU_AGU      = 2'b11
     } fu_type_t;
 
     typedef enum logic [3:0] {
@@ -302,13 +304,8 @@ package dcache_types;
 
 endpackage
 
-package int_rs_types;
+package prf_types;
 import cpu_params::*;
-
-    typedef struct packed {
-        logic   [PRF_IDX-1:0]   rd_phy;
-        logic                   valid;
-    } cdb_rs_t;
 
     typedef struct packed {
         logic   [PRF_IDX-1:0]   rd_phy;
@@ -322,6 +319,16 @@ import cpu_params::*;
         logic   [31:0]          rs1_value;
         logic   [31:0]          rs2_value;
     } rs_prf_itf_t;
+
+endpackage
+
+package int_rs_types;
+import cpu_params::*;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic                   valid;
+    } cdb_rs_t;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
@@ -357,6 +364,49 @@ import cpu_params::*;
         logic   [31:0]          rs2_value;
     } intm_rs_reg_t;
     
+endpackage
+
+package lsu_types;
+import cpu_params::*;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic                   valid;
+    } cdb_rs_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+
+        logic   [3:0]           fu_opcode;  
+        logic   [1:0]           op1_sel;    
+        logic   [1:0]           op2_sel;    
+
+        logic   [31:0]          pc;
+        logic   [31:0]          imm;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+    } fu_agu_reg_t;
+
+    // typedef struct packed {
+    //     logic   [ROB_IDX-1:0]   rob_id;
+    //     logic   [ARF_IDX-1:0]   rd_arch;
+    //     logic   [PRF_IDX-1:0]   rd_phy;
+    //     logic   [31:0]          rd_value;
+    //     logic   [31:0]          rs1_value_dbg;
+    //     logic   [31:0]          rs2_value_dbg;
+    // } fu_cdb_reg_t;
+
+    // typedef struct packed {
+    //     logic   [ROB_IDX-1:0]   rob_id;
+    //     logic   [ARF_IDX-1:0]   rd_arch;
+    //     logic   [PRF_IDX-1:0]   rd_phy;
+    //     logic   [3:0]           fu_opcode;  
+    //     logic   [31:0]          rs1_value;
+    //     logic   [31:0]          rs2_value;
+    // } intm_rs_reg_t;
+
 endpackage
 
 package rat_types;

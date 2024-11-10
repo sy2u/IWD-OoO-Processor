@@ -21,6 +21,7 @@ import uop_types::*;
     id_rob_itf                  id_rob_itf_i();
     ds_rs_itf                   ds_int_rs_itf_i();
     ds_rs_itf                   ds_intm_rs_itf_i();
+    ds_rs_itf                   ds_br_rs_itf_i();
     ds_rs_itf                   ds_mem_rs_itf_i();
     rob_rrf_itf                 rob_rrf_itf_i();
     rrf_fl_itf                  rrf_fl_itf_i();
@@ -89,7 +90,9 @@ import uop_types::*;
         .uops                   (uops),
 
         .to_int_rs              (ds_int_rs_itf_i),
-        .to_intm_rs             (ds_intm_rs_itf_i)
+        .to_intm_rs             (ds_intm_rs_itf_i),
+        .to_br_rs               (ds_br_rs_itf_i),
+        .to_mem_rs              (ds_mem_rs_itf_i)
     );
 
     int_rs int_rs_i(
@@ -112,6 +115,16 @@ import uop_types::*;
         .fu_cdb_out             (cdb_itfs[1])
     );
 
+    lsu_top lsu_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_ds                (ds_mem_rs_itf_i),
+        .to_prf                 (rs_prf_itfs[3]),
+        .cdb                    (cdb_itfs),
+        .fu_cdb_out             (cdb_itfs[3])
+    );
+
     prf prf_i(
         .clk                    (clk),
         .rst                    (rst),
@@ -119,6 +132,7 @@ import uop_types::*;
         .cdb                    (cdb_itfs)
     );
 
+    // Emulate BR CDB
     assign cdb_itfs[2].rob_id = 'x;
     assign cdb_itfs[2].rd_phy = 'x;
     assign cdb_itfs[2].rd_arch = 'x;
@@ -126,13 +140,5 @@ import uop_types::*;
     assign cdb_itfs[2].rs1_value_dbg = 'x;
     assign cdb_itfs[2].rs2_value_dbg = 'x;
     assign cdb_itfs[2].valid = '0;
-
-    assign cdb_itfs[3].rob_id = 'x;
-    assign cdb_itfs[3].rd_phy = 'x;
-    assign cdb_itfs[3].rd_arch = 'x;
-    assign cdb_itfs[3].rd_value = 'x;
-    assign cdb_itfs[3].rs1_value_dbg = 'x;
-    assign cdb_itfs[3].rs2_value_dbg = 'x;
-    assign cdb_itfs[3].valid = '0;
 
 endmodule

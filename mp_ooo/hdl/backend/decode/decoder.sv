@@ -68,12 +68,12 @@ import rv32i_types::*;
             end
             op_b_load   : begin
                 rs_type = RS_MEM;
-                fu_type = FU_MEM;
+                fu_type = FU_AGU;
                 fu_opcode = {1'b0, funct3};
             end
             op_b_store  : begin
                 rs_type = RS_MEM;
-                fu_type = FU_MEM;
+                fu_type = FU_AGU;
                 fu_opcode = {1'b1, funct3};
             end
             op_b_imm    : begin
