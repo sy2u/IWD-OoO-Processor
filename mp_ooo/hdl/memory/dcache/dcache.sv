@@ -68,7 +68,7 @@ import dcache_types::*;
     assign ufp_set = ufp_addr[SET_IDX+OFFSET_IDX-1:OFFSET_IDX];
     assign ufp_tag = ufp_addr[TAG_IDX+SET_IDX+OFFSET_IDX-1:SET_IDX+OFFSET_IDX];
 
-    assign sram_operating_set = (write_hit || stall) ? stage_reg.set : ufp_set;
+    assign sram_operating_set = (write_hit || stall) ? stage_reg.set_i : ufp_set;
 
     generate for (genvar i = 0; i < NUM_WAYS; i++) begin : arrays
         mp_cache_data_array data_array (
@@ -114,7 +114,7 @@ import dcache_types::*;
         .dout0      (plru_dout0),
         .csb1       (plru_csb1),
         .web1       (plru_web1),
-        .addr1      (stage_reg.set),
+        .addr1      (stage_reg.set_i),
         .din1       (plru_din1)
     );
 
@@ -176,7 +176,7 @@ import dcache_types::*;
             stage_reg.wmask <= ufp_wmask;
             stage_reg.wdata <= ufp_wdata;
             stage_reg.offset <= ufp_offset;
-            stage_reg.set <= ufp_set;
+            stage_reg.set_i <= ufp_set;
             stage_reg.tag <= ufp_tag;
         end
     end
@@ -261,8 +261,8 @@ import dcache_types::*;
     // ========================================================================
 
     assign dfp.addr = (dfp.write) ? 
-                    {tag_dout0[replace_way][22:0],  stage_reg.set,  {OFFSET_IDX{1'b0}}} : 
-                    {stage_reg.tag,                 stage_reg.set,  {OFFSET_IDX{1'b0}}};
+                    {tag_dout0[replace_way][22:0],  stage_reg.set_i,  {OFFSET_IDX{1'b0}}} : 
+                    {stage_reg.tag,                 stage_reg.set_i,  {OFFSET_IDX{1'b0}}};
     assign dfp.wdata = data_dout0[replace_way];
 
     assign ufp_rdata = data_dout0[hit_way][8 * stage_reg.offset +: 32];

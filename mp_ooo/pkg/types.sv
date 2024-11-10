@@ -289,7 +289,9 @@ endpackage
 package dcache_types;
 
     typedef struct packed {
-        logic           read;
+        logic   [3:0]   rmask;
+        logic   [3:0]   wmask;
+        logic   [31:0]  wdata;
         logic   [4:0]   offset;
         logic   [3:0]   set_i;
         logic   [22:0]  tag;
