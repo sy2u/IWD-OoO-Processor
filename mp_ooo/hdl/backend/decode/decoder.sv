@@ -25,9 +25,9 @@ import rv32i_types::*;
     assign funct7 = inst[31:25];
 
     // If a register is not used, it's set to r0
-    assign rd_arch = (opcode inside {op_b_lui, op_b_auipc, op_b_imm, op_b_reg}) ? inst[11:7] : '0;
-    assign rs1_arch = (opcode inside {op_b_imm, op_b_reg}) ? inst[19:15] : '0;
-    assign rs2_arch = (opcode == op_b_reg) ? inst[24:20] : '0;
+    assign rd_arch = (opcode inside {op_b_lui, op_b_auipc, op_b_imm, op_b_reg, op_b_jal, op_b_jalr, op_b_load}) ? inst[11:7] : '0;
+    assign rs1_arch = (opcode inside {op_b_imm, op_b_reg, op_b_jalr, op_b_br, op_b_load, op_b_store}) ? inst[19:15] : '0;
+    assign rs2_arch = (opcode inside {op_b_reg, op_b_br, op_b_store}) ? inst[24:20] : '0;
 
     always_comb begin
         rs_type = RS_INT;
@@ -51,16 +51,31 @@ import rv32i_types::*;
                 op2_sel = OP2_IMM;
                 fu_opcode = ALU_ADD;
             end
-            // op_b_jal    : begin
-            // end
-            // op_b_jalr   : begin
-            // end
-            // op_b_br     : begin
-            // end
-            // op_b_load   : begin
-            // end
-            // op_b_store  : begin
-            // end
+            op_b_jal    : begin
+                rs_type = RS_BR;
+                fu_type = FU_BR;
+                fu_opcode = BR_JAL;
+            end
+            op_b_jalr   : begin
+                rs_type = RS_BR;
+                fu_type = FU_BR;
+                fu_opcode = BR_JALR;
+            end
+            op_b_br     : begin
+                rs_type = RS_BR;
+                fu_type = FU_BR;
+                fu_opcode = {1'b0, funct3};
+            end
+            op_b_load   : begin
+                rs_type = RS_MEM;
+                fu_type = FU_MEM;
+                fu_opcode = {1'b0, funct3};
+            end
+            op_b_store  : begin
+                rs_type = RS_MEM;
+                fu_type = FU_MEM;
+                fu_opcode = {1'b1, funct3};
+            end
             op_b_imm    : begin
                 rs_type = RS_INT;
                 fu_type = FU_ALU;

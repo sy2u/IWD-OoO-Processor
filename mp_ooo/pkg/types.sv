@@ -17,7 +17,7 @@ package cpu_params;
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
 
-    localparam  unsigned    CDB_WIDTH   = 2; // currently only ALU and MDU
+    localparam  unsigned    CDB_WIDTH   = 4;
 
 endpackage
 
@@ -176,13 +176,17 @@ import cpu_params::*;
     typedef enum logic [1:0] {
         RS_X        = 2'bxx,
         RS_INT      = 2'b00,
-        RS_INTM     = 2'b01
+        RS_INTM     = 2'b01,
+        RS_BR       = 2'b10,
+        RS_MEM      = 2'b11
     } rs_type_t;
 
     typedef enum logic [1:0] {
         FU_X        = 2'bxx,
         FU_ALU      = 2'b00,
-        FU_MDU      = 2'b01
+        FU_MDU      = 2'b01,
+        FU_BR       = 2'b10,
+        FU_MEM      = 2'b11
     } fu_type_t;
 
     typedef enum logic [3:0] {
@@ -208,6 +212,28 @@ import cpu_params::*;
         MD_REM      = 4'b110,
         MD_REMU     = 4'b111
     } mdopc_t;
+
+    typedef enum logic [3:0] {
+        BR_BEQ      = 4'b0000,
+        BR_BNE      = 4'b0001,
+        BR_BLT      = 4'b0100,
+        BR_BGE      = 4'b0101,
+        BR_BLTU     = 4'b0110,
+        BR_BGEU     = 4'b0111,
+        BR_JAL      = 4'b1000,
+        BR_JALR     = 4'b1001
+    } bropc_t;
+
+    typedef enum logic [3:0] {
+        MEM_LB      = 4'b0000,
+        MEM_LH      = 4'b0001,
+        MEM_LW      = 4'b0010,
+        MEM_LBU     = 4'b0011,
+        MEM_LHU     = 4'b0100,
+        MEM_SB      = 4'b1000,
+        MEM_SH      = 4'b1001,
+        MEM_SW      = 4'b1010
+    } memopc_t;
 
     // Micro-op, the huge meta info that gets passed around the pipeline
     // EDA tools will optimize away anything that is not used in that stage

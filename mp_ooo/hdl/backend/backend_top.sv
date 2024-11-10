@@ -21,6 +21,7 @@ import uop_types::*;
     id_rob_itf                  id_rob_itf_i();
     ds_int_rs_itf               ds_int_rs_itf_i();
     ds_int_rs_itf               ds_intm_rs_itf_i();
+    ds_int_rs_itf               ds_mem_rs_itf_i();
     rob_rrf_itf                 rob_rrf_itf_i();
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
