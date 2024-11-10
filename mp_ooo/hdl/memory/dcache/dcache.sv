@@ -13,14 +13,7 @@ import dcache_types::*;
     output  logic           ufp_resp,
 
     // memory side signals, dfp -> downward facing port
-    output  logic   [31:0]  dfp_addr,
-    output  logic           dfp_read,
-    output  logic           dfp_write,
-    output  logic   [255:0] dfp_wdata,
-    input   logic           dfp_ready,
-    input   logic   [31:0]  dfp_raddr,
-    input   logic   [255:0] dfp_rdata,
-    input   logic           dfp_rvalid
+    cacheline_itf.master    dfp
 );
             localparam      OFFSET_IDX  = 5;
             localparam      SET_IDX     = 4;
@@ -151,12 +144,12 @@ import dcache_types::*;
         .write_hit_rec  (write_hit_rec),
         .write_hit      (write_hit),
 
-        .dfp_addr       (dfp_addr),
-        .dfp_read       (dfp_read),
-        .dfp_write      (dfp_write),
-        .dfp_ready      (dfp_ready),
-        .dfp_raddr      (dfp_raddr),
-        .dfp_rvalid     (dfp_rvalid)
+        .dfp_addr       (dfp.addr),
+        .dfp_read       (dfp.read),
+        .dfp_write      (dfp.write),
+        .dfp_ready      (dfp.ready),
+        .dfp_raddr      (dfp.raddr),
+        .dfp_rvalid     (dfp.rvalid)
     );
 
     plru_update #(
@@ -252,7 +245,7 @@ import dcache_types::*;
             end
         end else if (allocate_done) begin
             data_wmask0 = '1;
-            data_din0 = dfp_rdata;
+            data_din0 = dfp.rdata;
         end else begin
             // Leave don't care for EDA optimization
             data_wmask0 = 'x;
@@ -267,10 +260,10 @@ import dcache_types::*;
     // PROCESS stage
     // ========================================================================
 
-    assign dfp_addr = (dfp_write) ? 
+    assign dfp.addr = (dfp.write) ? 
                     {tag_dout0[replace_way][22:0],  stage_reg.set,  {OFFSET_IDX{1'b0}}} : 
                     {stage_reg.tag,                 stage_reg.set,  {OFFSET_IDX{1'b0}}};
-    assign dfp_wdata = data_dout0[replace_way];
+    assign dfp.wdata = data_dout0[replace_way];
 
     assign ufp_rdata = data_dout0[hit_way][8 * stage_reg.offset +: 32];
     assign ufp_resp = ((|stage_reg.rmask || |stage_reg.wmask) && ~stall);
