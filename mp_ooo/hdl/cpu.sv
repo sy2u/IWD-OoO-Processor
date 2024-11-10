@@ -22,6 +22,8 @@ import rv32i_types::*;
 );
 
     cacheline_itf               cacheline_itf_i();
+    cacheline_itf               icache_itf_i();
+    cacheline_itf               dcache_itf_i();
     frontend_fifo_itf           frontend_fifo_itf_i();
     fifo_backend_itf            fifo_backend_itf_i();
     logic                       backend_flush;
@@ -36,7 +38,7 @@ import rv32i_types::*;
 
         .to_fifo                (frontend_fifo_itf_i),
 
-        .icache_itf             (cacheline_itf_i)
+        .icache_itf             (icache_itf_i)
 
         // For randomize testing
         // .imem_addr              (imem_addr),
@@ -49,7 +51,7 @@ import rv32i_types::*;
         .clk            (clk),
         .rst            (rst),
 
-        .ufp            (cacheline_itf_i),
+        .ufp            (icache_itf_i),
 
         .dfp_addr       (bmem_addr),
         .dfp_read       (bmem_read),
@@ -78,6 +80,7 @@ import rv32i_types::*;
         .rst                    (rst),
 
         .from_fifo              (fifo_backend_itf_i),
+        .dcache_itf             (dcache_itf_i),
 
         .backend_flush          (backend_flush),
         .backend_redirect_pc    (backend_redirect_pc)

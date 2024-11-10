@@ -9,7 +9,8 @@ import lsu_types::*;
     ds_rs_itf.rs                from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
-    cdb_itf.fu                  fu_cdb_out
+    cdb_itf.fu                  fu_cdb_out,
+    cacheline_itf.master        dcache_itf
 
     // Flush signals
     // input   logic               backend_flush
@@ -18,6 +19,7 @@ import lsu_types::*;
     // Distribute signal from dispatch to RS and LSQ
     ds_rs_itf                   ds_mem_rs_i();
     ds_rs_itf                   ds_lsq_i();
+    agu_lsq_itf                 agu_lsq_i();
     assign ds_mem_rs_i.valid = from_ds.valid;
     assign ds_mem_rs_i.uop   = from_ds.uop;
     assign ds_lsq_i.valid    = from_ds.valid;
@@ -30,7 +32,8 @@ import lsu_types::*;
 
         .from_ds                (ds_mem_rs_i),
         .to_prf                 (to_prf),
-        .cdb                    (cdb)
+        .cdb                    (cdb),
+        .to_lsq                 (agu_lsq_i)
     );
 
     lsq lsq_i(
@@ -38,7 +41,15 @@ import lsu_types::*;
         .rst                    (rst),
 
         .from_ds                (ds_lsq_i),
+        .from_agu               (agu_lsq_i),
         .fu_cdb_out             (fu_cdb_out)
     );
+
+    // dcache dcache_i(
+    //     .clk                    (clk),
+    //     .rst                    (rst),
+
+    //     .dfp                    (dcache_itf)
+    // );
 
 endmodule

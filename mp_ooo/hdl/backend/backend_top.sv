@@ -7,6 +7,7 @@ import uop_types::*;
 
     // Instruction Queue
     fifo_backend_itf.backend    from_fifo,
+    cacheline_itf.master        dcache_itf,
 
     // Flush signals
     output  logic               backend_flush,
@@ -122,7 +123,8 @@ import uop_types::*;
         .from_ds                (ds_mem_rs_itf_i),
         .to_prf                 (rs_prf_itfs[3]),
         .cdb                    (cdb_itfs),
-        .fu_cdb_out             (cdb_itfs[3])
+        .fu_cdb_out             (cdb_itfs[3]),
+        .dcache_itf             (dcache_itf)
     );
 
     prf prf_i(

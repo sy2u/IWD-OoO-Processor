@@ -238,3 +238,22 @@ import cpu_params::*;
     );
 
 endinterface
+
+interface agu_lsq_itf();
+import cpu_params::*;
+import lsu_types::*;
+
+    logic                   valid;
+    agu_lsq_t               data;
+
+    modport agu (
+        output              valid,
+        output              data
+    );
+
+    modport lsq (
+        input               valid,
+        input               data
+    );
+
+endinterface

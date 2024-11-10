@@ -7,6 +7,7 @@ import lsu_types::*;
     input   logic               rst,
 
     ds_rs_itf.rs                from_ds,
+    agu_lsq_itf.lsq             from_agu,
     cdb_itf.fu                  fu_cdb_out
 
     // Flush signals
