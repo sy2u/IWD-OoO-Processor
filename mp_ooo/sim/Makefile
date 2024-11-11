@@ -48,7 +48,7 @@ vcs/br_rs_tb: $(VCS_SRCS) $(HDRS)
 	bash check_compile_error.sh
 
 .PHONY: run_vcs_br_rs_tb
-run_vcs_execute_tb: vcs/br_rs_tb
+run_vcs_br_rs_tb: vcs/br_rs_tb
 	rm -f vcs/dump.fsdb
 	cd vcs && ./br_rs_tb -l simulation.log -exitstatus
 

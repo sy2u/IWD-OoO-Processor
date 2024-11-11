@@ -16,7 +16,7 @@ module br_rs_tb;
     ds_rs_itf                   ds_br_rs_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
-
+    br_cdb_itf			br_cdb_itf();
     br_rs br_rs_i(
         .clk                    (clk),
         .rst                    (rst),
@@ -63,8 +63,6 @@ module br_rs_tb;
 
         ds_br_rs_itf_i.uop.pc <= 'x;
         ds_br_rs_itf_i.uop.fu_opcode <= 'x;
-        ds_br_rs_itf_i.uop.op1_sel <= 'x;
-        ds_br_rs_itf_i.uop.op2_sel <= 'x;
         ds_br_rs_itf_i.uop.rd_phy <= 'x;
         ds_br_rs_itf_i.uop.rs1_phy <= 'x;
         ds_br_rs_itf_i.uop.rs2_phy <= 'x;
