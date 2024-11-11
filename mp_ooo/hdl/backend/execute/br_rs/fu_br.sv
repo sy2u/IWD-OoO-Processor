@@ -75,7 +75,7 @@ import int_rs_types::*;
             BR_BEQ  : branch_taken = (au == bu);
             BR_BNE  : branch_taken = (au != bu);
             BR_BLT  : branch_taken = (as <  bs);
-            BR_BGE  : branch_taken = (as >  bs);
+            BR_BGE  : branch_taken = (as >= bs);
             BR_BLTU : branch_taken = (au <  bu);
             BR_BGEU : branch_taken = (au >= bu);
             BR_JAL  : branch_taken = 1'b1;
