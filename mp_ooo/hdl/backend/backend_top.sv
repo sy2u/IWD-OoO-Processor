@@ -121,12 +121,12 @@ import uop_types::*;
         .clk                    (clk),
         .rst                    (rst),
 
-        .from_ds                (ds_int_rs_itf_i),
+        .from_ds                (ds_br_rs_itf_i),
         .to_prf                 (rs_prf_itfs[2]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[2]),
         .br_cdb_out             (br_cdb_itf)
-    )
+    );
     
     lsu_top lsu_i(
         .clk                    (clk),
@@ -147,12 +147,12 @@ import uop_types::*;
     );
 
     // Emulate BR CDB
-    assign cdb_itfs[2].rob_id = 'x;
-    assign cdb_itfs[2].rd_phy = 'x;
-    assign cdb_itfs[2].rd_arch = 'x;
-    assign cdb_itfs[2].rd_value = 'x;
-    assign cdb_itfs[2].rs1_value_dbg = 'x;
-    assign cdb_itfs[2].rs2_value_dbg = 'x;
-    assign cdb_itfs[2].valid = '0;
+    // assign cdb_itfs[2].rob_id = 'x;
+    // assign cdb_itfs[2].rd_phy = 'x;
+    // assign cdb_itfs[2].rd_arch = 'x;
+    // assign cdb_itfs[2].rd_value = 'x;
+    // assign cdb_itfs[2].rs1_value_dbg = 'x;
+    // assign cdb_itfs[2].rs2_value_dbg = 'x;
+    // assign cdb_itfs[2].valid = '0;
 
 endmodule

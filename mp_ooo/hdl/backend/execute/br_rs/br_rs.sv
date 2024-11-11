@@ -6,10 +6,10 @@ import int_rs_types::*;
     input   logic               clk,
     input   logic               rst,
 
-    ds_int_rs_itf.int_rs        from_ds,
+    ds_rs_itf.rs        	from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
-    cdb_itf.fu                  fu_cdb_out
+    cdb_itf.fu                  fu_cdb_out,
     br_cdb_itf.fu               br_cdb_out
 );
     ///////////////////////////
@@ -140,16 +140,15 @@ import int_rs_types::*;
     end
 
     // full logic, set rs.ready to 0 if rs is full
-    // always_comb begin 
-    //     from_ds.ready = '0;
-    //     for (int i = 0; i < INTRS_DEPTH; i++) begin 
-    //         if (int_rs_available[i]) begin 
-    //             from_ds.ready = '1;
-    //             break;
-    //         end
-    //     end
-    // end
-    assign from_ds.ready = |int_rs_available;
+    always_comb begin 
+    	from_ds.ready = '0;
+        for (int i = 0; i < INTRS_DEPTH; i++) begin 
+            if (int_rs_available[i]) begin 
+                from_ds.ready = '1;
+            end
+        end
+    end
+    // assign from_ds.ready = |int_rs_available;
 
     // communicate with prf
     assign to_prf.rs1_phy = int_rs_array[int_rs_issue_idx].rs1_phy;

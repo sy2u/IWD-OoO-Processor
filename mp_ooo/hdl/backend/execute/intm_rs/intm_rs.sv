@@ -133,16 +133,16 @@ import int_rs_types::*;
     end
 
     // full logic, set rs.ready to 0 if rs is full
-    // always_comb begin 
-    //     from_ds.ready = '0;
-    //     for (int i = 0; i < INTRS_DEPTH; i++) begin 
-    //         if (intm_rs_available[i]) begin 
-    //             from_ds.ready = '1;
-    //             break;
-    //         end
-    //     end
-    // end
-    assign from_ds.ready = |intm_rs_available;
+    always_comb begin 
+        from_ds.ready = '0;
+        for (int i = 0; i < INTRS_DEPTH; i++) begin 
+            if (intm_rs_available[i]) begin 
+                from_ds.ready = '1;
+                break;
+            end
+        end
+    end
+    // assign from_ds.ready = |intm_rs_available;
     
     //---------------------------------------------------------------------------------
     // INTM_RS Reg:

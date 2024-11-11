@@ -50,7 +50,7 @@ import int_rs_types::*;
 
     // calculate target address
     logic   [31:0]  target_address;
-    assign target_address = (fu_br_reg_out.fu_opcode == BR_JALR) ? ((fu_br_reg_out.rs1 + fu_br_reg_out.imm) & 32'hfffffffe) : fu_br_reg_out.pc + fu_br_reg_out.imm;
+    assign target_address = (fu_br_reg_out.fu_opcode == BR_JALR) ? ((fu_br_reg_out.rs1_value + fu_br_reg_out.imm) & 32'hfffffffe) : fu_br_reg_out.pc + fu_br_reg_out.imm;
 
     // calculate branch taken
     logic   [31:0]  a;
