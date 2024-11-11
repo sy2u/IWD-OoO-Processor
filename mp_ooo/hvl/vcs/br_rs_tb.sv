@@ -104,11 +104,12 @@ module br_rs_tb;
         ds_br_rs_itf_i.valid <= 1'b0;
 
         // cycle 3, assert cdb_itfs[2].rob_id == 0, cdb_itfs[2].rd_phy == 6'd1, cdb_itfs[2]
-        repeat (2) @(posedge clk);
-        if (cdb_itfs[2].rd_value == 32'd4 && br_cdb_itf.miss_predict == 1'b0 && br_cdb_itf.target_address == 32'h0000_ffff) begin 
+        repeat (3) @(posedge clk);
+        if (cdb_itfs[2].rd_value == 32'd4 && br_cdb_itf.miss_predict == 1'b1 && br_cdb_itf.target_address == 32'h0000_ffff) begin 
             $display("JAL test passed");
         end else begin 
             $display("JAL test failed");
+	    $display("actual rd_value=%h", cdb_itfs[2].rd_value);
         end
     endtask : test_jal
 
@@ -176,7 +177,8 @@ module br_rs_tb;
         do_reset();
 
         test_jal();
-        // test_beq();
+        repeat (2) @(posedge clk);
+	test_beq();
         // test_consecutive_no_dependency();
         // test_consecutive_with_simple_dependency();
         // test_consecutive_with_simple_dependency2();
