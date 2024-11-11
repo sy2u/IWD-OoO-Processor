@@ -140,16 +140,16 @@ import int_rs_types::*;
     end
 
     // full logic, set rs.ready to 0 if rs is full
-    always_comb begin 
-        from_ds.ready = '0;
-        for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (int_rs_available[i]) begin 
-                from_ds.ready = '1;
-                break;
-            end
-        end
-    end
-    
+    // always_comb begin 
+    //     from_ds.ready = '0;
+    //     for (int i = 0; i < INTRS_DEPTH; i++) begin 
+    //         if (int_rs_available[i]) begin 
+    //             from_ds.ready = '1;
+    //             break;
+    //         end
+    //     end
+    // end
+    assign from_ds.ready = |int_rs_available;
 
     // communicate with prf
     assign to_prf.rs1_phy = int_rs_array[int_rs_issue_idx].rs1_phy;
