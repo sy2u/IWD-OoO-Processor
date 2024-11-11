@@ -2,7 +2,7 @@
 // A simple implementation of a pipeline register with valid/ready handshaking.
 
 module pipeline_reg #(
-            parameter               WIDTH   = 1
+            parameter   type        DATA_T = logic[1:0]
 )
 (
     input   logic                   clk,
@@ -19,14 +19,14 @@ module pipeline_reg #(
     input   logic                   nxt_ready,
 
     // Datapath input
-    input   logic   [WIDTH-1:0]     prv_data,
+    input   DATA_T                  prv_data,
 
     // Datapath output
-    output  logic   [WIDTH-1:0]     nxt_data
+    output  DATA_T                  nxt_data
 );
 
     logic                           reg_valid;
-    logic   [WIDTH-1:0]             reg_data;
+    DATA_T                          reg_data;
 
     assign nxt_valid = reg_valid;
     assign prv_ready = ~reg_valid || (nxt_valid && nxt_ready);

@@ -7,6 +7,7 @@ import uop_types::*;
 
     // Instruction Queue
     fifo_backend_itf.backend    from_fifo,
+    cacheline_itf.master        dcache_itf,
 
     // Flush signals
     output  logic               backend_flush,
@@ -19,8 +20,10 @@ import uop_types::*;
     id_rat_itf                  id_rat_itf_i();
     id_fl_itf                   id_fl_itf_i();
     id_rob_itf                  id_rob_itf_i();
-    ds_int_rs_itf               ds_int_rs_itf_i();
-    ds_int_rs_itf               ds_intm_rs_itf_i();
+    ds_rs_itf                   ds_int_rs_itf_i();
+    ds_rs_itf                   ds_intm_rs_itf_i();
+    ds_rs_itf                   ds_br_rs_itf_i();
+    ds_rs_itf                   ds_mem_rs_itf_i();
     rob_rrf_itf                 rob_rrf_itf_i();
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
@@ -89,7 +92,9 @@ import uop_types::*;
         .uops                   (uops),
 
         .to_int_rs              (ds_int_rs_itf_i),
-        .to_intm_rs             (ds_intm_rs_itf_i)
+        .to_intm_rs             (ds_intm_rs_itf_i),
+        .to_br_rs               (ds_br_rs_itf_i),
+        .to_mem_rs              (ds_mem_rs_itf_i)
     );
 
     int_rs int_rs_i(
@@ -121,6 +126,15 @@ import uop_types::*;
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[2]),
         .br_cdb_out             (br_cdb_itf)
+    lsu_top lsu_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_ds                (ds_mem_rs_itf_i),
+        .to_prf                 (rs_prf_itfs[3]),
+        .cdb                    (cdb_itfs),
+        .fu_cdb_out             (cdb_itfs[3]),
+        .dcache_itf             (dcache_itf)
     );
 
     prf prf_i(
@@ -129,5 +143,14 @@ import uop_types::*;
         .from_rs                (rs_prf_itfs),
         .cdb                    (cdb_itfs)
     );
+
+    // Emulate BR CDB
+    assign cdb_itfs[2].rob_id = 'x;
+    assign cdb_itfs[2].rd_phy = 'x;
+    assign cdb_itfs[2].rd_arch = 'x;
+    assign cdb_itfs[2].rd_value = 'x;
+    assign cdb_itfs[2].rs1_value_dbg = 'x;
+    assign cdb_itfs[2].rs2_value_dbg = 'x;
+    assign cdb_itfs[2].valid = '0;
 
 endmodule

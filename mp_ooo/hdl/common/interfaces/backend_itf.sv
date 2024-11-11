@@ -20,7 +20,7 @@ import fetch_types::*;
 
 endinterface
 
-interface ds_int_rs_itf();
+interface ds_rs_itf();
 import cpu_params::*;
 import uop_types::*;
 
@@ -34,7 +34,7 @@ import uop_types::*;
         output              uop
     );
 
-    modport int_rs (
+    modport rs (
         input               valid,
         output              ready,
         input               uop
@@ -251,6 +251,25 @@ import cpu_params::*;
         input               rs2_phy,
         output              rs1_value,
         output              rs2_value
+    );
+
+endinterface
+
+interface agu_lsq_itf();
+import cpu_params::*;
+import lsu_types::*;
+
+    logic                   valid;
+    agu_lsq_t               data;
+
+    modport agu (
+        output              valid,
+        output              data
+    );
+
+    modport lsq (
+        input               valid,
+        input               data
     );
 
 endinterface

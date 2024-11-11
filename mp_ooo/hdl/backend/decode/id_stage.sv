@@ -128,8 +128,8 @@ import uop_types::*;
         assign to_rob.rvfi_dbg[i].pc_rdata = uops[i].pc;
         assign to_rob.rvfi_dbg[i].pc_wdata = 'x;
         assign to_rob.rvfi_dbg[i].mem_addr = 'x;
-        assign to_rob.rvfi_dbg[i].mem_rmask = 'x;
-        assign to_rob.rvfi_dbg[i].mem_wmask = 'x;
+        assign to_rob.rvfi_dbg[i].mem_rmask = '0;
+        assign to_rob.rvfi_dbg[i].mem_wmask = '0;
         assign to_rob.rvfi_dbg[i].mem_rdata = 'x;
         assign to_rob.rvfi_dbg[i].mem_wdata = 'x;
     end endgenerate

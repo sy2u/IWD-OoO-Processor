@@ -11,10 +11,16 @@ import uop_types::*;
     input   uop_t               uops[ID_WIDTH],
 
     // INT Reservation Stations
-    ds_int_rs_itf.ds            to_int_rs,
+    ds_rs_itf.ds                to_int_rs,
 
     // INTM Reservation Stations
-    ds_int_rs_itf.ds            to_intm_rs
+    ds_rs_itf.ds                to_intm_rs,
+
+    // BR Reservation Stations
+    ds_rs_itf.ds                to_br_rs,
+
+    // MEM Reservation Stations
+    ds_rs_itf.ds                to_mem_rs
 );
 
     //////////////////////////
@@ -41,6 +47,12 @@ import uop_types::*;
                 RS_INTM: begin
                     to_intm_rs.valid = dispatch_valid[i]; // Dispatch to INTM Reservation Stations
                 end
+                RS_BR: begin
+                    to_br_rs.valid = dispatch_valid[i]; // Dispatch to BR Reservation Stations
+                end
+                RS_MEM: begin
+                    to_mem_rs.valid = dispatch_valid[i]; // Dispatch to MEM Reservation Stations
+                end
                 default: begin
                 end
             endcase
@@ -61,6 +73,12 @@ import uop_types::*;
                 end
                 RS_INTM: begin
                     dispatch_ready[i] = to_intm_rs.ready; // Collect ready signal from INTM Reservation Stations
+                end
+                RS_BR: begin
+                    dispatch_ready[i] = to_br_rs.ready; // Collect ready signal from BR Reservation Stations
+                end
+                RS_MEM: begin
+                    dispatch_ready[i] = to_mem_rs.ready; // Collect ready signal from MEM Reservation Stations
                 end
                 default: begin
                     dispatch_ready[i] = '0;

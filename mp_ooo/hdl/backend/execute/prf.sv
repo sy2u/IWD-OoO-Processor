@@ -1,6 +1,6 @@
 module prf
 import cpu_params::*;
-import int_rs_types::*;
+import prf_types::*;
 (
     input   logic               clk,
     input   logic               rst,
