@@ -50,7 +50,7 @@ import int_rs_types::*;
 
     // calculate target address
     logic   [31:0]  target_address;
-    assign target_address = (fu_br_reg_out.fu_opcode == BR_JALR) ? ((fu_br_reg_out.rs1_value + fu_br_reg_out.imm) & 32'hfffffffe) : fu_br_reg_out.pc + fu_br_reg_out.imm;
+    // assign target_address = (fu_br_reg_out.fu_opcode == BR_JALR) ? ((fu_br_reg_out.rs1_value + fu_br_reg_out.imm) & 32'hfffffffe) : fu_br_reg_out.pc + fu_br_reg_out.imm;
 
     // calculate branch taken
     logic   [31:0]  a;
@@ -83,8 +83,15 @@ import int_rs_types::*;
 	    default : branch_taken = 'x;
         endcase
     end
-
-    assign miss_predict = (branch_taken != fu_br_reg_out.predict_taken) || ((branch_taken == fu_br_reg_out.predict_taken) && (target_address != fu_br_reg_out.predict_target));
+    
+    always_comb begin 
+        if (branch_taken) begin 
+            target_address = (fu_br_reg_out.fu_opcode == BR_JALR) ? ((fu_br_reg_out.rs1_value + fu_br_reg_out.imm) & 32'hfffffffe) : fu_br_reg_out.pc + fu_br_reg_out.imm;
+        end else begin 
+            target_address = fu_br_reg_out.pc + 32'd4;
+        end
+    end
+    assign miss_predict = (branch_taken != fu_br_reg_out.predict_taken) || (target_address != fu_br_reg_out.predict_target);
 
     // calculate rd_value for jal & jalr
     logic   [31:0]  rd_value;
