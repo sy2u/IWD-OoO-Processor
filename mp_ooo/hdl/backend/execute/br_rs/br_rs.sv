@@ -6,7 +6,7 @@ import int_rs_types::*;
     input   logic               clk,
     input   logic               rst,
 
-    ds_rs_itf.rs        	from_ds,
+    ds_rs_itf.rs        	    from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
@@ -104,32 +104,21 @@ import int_rs_types::*;
         src2_valid       = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
             if (!int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
-                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op1_sel)
-                    OP1_ZERO, OP1_PC: src1_valid = '1;
-                    OP1_RS1: begin 
-                        src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
-                        for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                                src1_valid = 1'b1;
-                            end
-                        end
+                
+                src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
+                for (int k = 0; k < CDB_WIDTH; k++) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                        src1_valid = 1'b1;
                     end
-                    default: src1_valid = '0;
-                endcase
-
-                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op2_sel)
-                    OP2_ZERO, OP2_IMM: src2_valid = '1;
-                    OP2_RS2: begin 
-                        src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
-                        for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                                src2_valid = 1'b1;
-                            end
-                        end
+                end
+                    
+                src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
+                for (int k = 0; k < CDB_WIDTH; k++) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                        src2_valid = 1'b1;
                     end
-                    default: src2_valid = '0;
-                endcase
-
+                end
+                    
                 if (src1_valid && src2_valid) begin 
                     int_rs_issue_en = '1;
                     int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i));

@@ -41,6 +41,18 @@ run_vcs_top_tb: vcs/top_tb $(PROG)
 		+BRAM_0_ON_X_ECE411=$(shell python3 $(PWD)/../bin/get_options.py bmem_x) \
 		+MEMLST_ECE411="$(PWD)/bin/memory_32.lst"
 
+vcs/br_rs_tb: $(VCS_SRCS) $(HDRS)
+	mkdir -p vcs
+	python3 check_sus.py
+	cd vcs && vcs $(VCS_SRCS) $(VCS_FLAGS) -l compile.log -top br_rs_tb -o br_rs_tb
+	bash check_compile_error.sh
+
+.PHONY: run_vcs_br_rs_tb
+run_vcs_execute_tb: vcs/br_rs_tb
+	rm -f vcs/dump.fsdb
+	cd vcs && ./br_rs_tb -l simulation.log -exitstatus
+
+
 verilator/build/Vtop_tb: $(VER_SRCS) $(HDRS) $(VER_EX)
 	mkdir -p verilator
 	python3 check_sus.py
