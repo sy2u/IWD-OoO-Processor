@@ -126,6 +126,8 @@ import uop_types::*;
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[2]),
         .br_cdb_out             (br_cdb_itf)
+    )
+    
     lsu_top lsu_i(
         .clk                    (clk),
         .rst                    (rst),
