@@ -19,12 +19,13 @@ import lsu_types::*;
     // Distribute signal from dispatch to RS and LSQ
     ds_rs_itf                   ds_mem_rs_i();
     ds_rs_itf                   ds_lsq_i();
-    agu_lsq_itf                 agu_lsq_i();
     assign ds_mem_rs_i.valid = from_ds.valid;
     assign ds_mem_rs_i.uop   = from_ds.uop;
     assign ds_lsq_i.valid    = from_ds.valid;
     assign ds_lsq_i.uop      = from_ds.uop;
     assign from_ds.ready     = ds_mem_rs_i.ready && ds_lsq_i.ready;
+
+    agu_lsq_itf                 agu_lsq_i();
 
     mem_rs mem_rs_i(
         .clk                    (clk),
@@ -45,11 +46,11 @@ import lsu_types::*;
         .fu_cdb_out             (fu_cdb_out)
     );
 
-    // dcache dcache_i(
-    //     .clk                    (clk),
-    //     .rst                    (rst),
+    dcache dcache_i(
+        .clk                    (clk),
+        .rst                    (rst),
 
-    //     .dfp                    (dcache_itf)
-    // );
+        .dfp                    (dcache_itf)
+    );
 
 endmodule

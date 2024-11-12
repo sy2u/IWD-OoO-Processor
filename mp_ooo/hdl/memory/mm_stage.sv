@@ -1,4 +1,4 @@
-module fu_agu
+module mm_stage
 import cpu_params::*;
 import uop_types::*;
 import lsu_types::*;
@@ -10,9 +10,7 @@ import lsu_types::*;
     output  logic               prv_ready,
     input   agu_reg_t           agu_reg_in,
 
-    output  logic               nxt_valid,
-    // input   logic               nxt_ready,
-    output  agu_lsq_t           to_lsq
+    cdb_itf.fu                  cdb_out
 );
 
     agu_reg_t       agu_reg;

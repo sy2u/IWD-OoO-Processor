@@ -381,15 +381,26 @@ import cpu_params::*;
         logic   [3:0]           fu_opcode;
         logic   [31:0]          imm;
         logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
     } agu_reg_t;
 
     typedef struct packed {
-        logic                   valid;
         logic   [ROB_IDX-1:0]   rob_id;
         logic   [31:0]          addr;
-        logic   [3:0]           rmask;
-        logic   [3:0]           wmask;
+        logic   [31:0]          wdata;
+        logic   [3:0]           mask;
     } agu_lsq_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic                   ready;
+        logic                   is_store;
+        logic   [31:0]          addr;
+        logic   [3:0]           mask;
+        logic   [31:0]          wdata;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+    } lsq_entry_t;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
