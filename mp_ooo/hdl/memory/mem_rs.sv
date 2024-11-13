@@ -34,21 +34,20 @@ import lsu_types::*;
     // issue logic
     logic                 int_rs_issue_en;
     logic [INTRS_IDX-1:0] int_rs_issue_idx;
-    logic                 src2_valid;
 
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
         if (rst) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                mem_rs_valid[i] <= 1'b1;
+                mem_rs_valid[i] <= 1'b0;
             end
         end else begin 
             // issue > snoop cdb > push
             // push renamed instruction
             if (int_rs_push_en) begin 
                 // set rs to unavailable
-                mem_rs_valid[int_rs_push_idx]   <= 1'b0;
+                mem_rs_valid[int_rs_push_idx]   <= 1'b1;
                 mem_rs_arr[int_rs_push_idx]   <= from_ds.uop;
             end
 
@@ -66,7 +65,7 @@ import lsu_types::*;
             // pop issued instruction
             if (int_rs_issue_en) begin 
                 // set rs to available
-                mem_rs_valid[int_rs_issue_idx] <= 1'b1;
+                mem_rs_valid[int_rs_issue_idx] <= 1'b0;
             end
         end
     end
