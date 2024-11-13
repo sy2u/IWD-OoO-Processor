@@ -47,4 +47,6 @@ module pipeline_reg #(
         end
     end
 
+    assign nxt_data = reg_data;
+
 endmodule
