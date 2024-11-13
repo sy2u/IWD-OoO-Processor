@@ -57,15 +57,6 @@ import lsu_types::*;
     ///////////////////////
 
     always_ff @(posedge clk) begin
-        if (enqueue) begin
-            fifo[wr_ptr_actual].rob_id <= from_ds.uop.rob_id;
-            fifo[wr_ptr_actual].ready <= 1'b0;
-            fifo[wr_ptr_actual].is_store <= from_ds.uop.fu_opcode[3];
-            fifo[wr_ptr_actual].fu_opcode <= from_ds.uop.fu_opcode;
-            fifo[wr_ptr_actual].rd_arch <= from_ds.uop.rd_arch;
-            fifo[wr_ptr_actual].rd_phy <= from_ds.uop.rd_phy;
-        end
-
         if (from_agu.valid) begin
             for (int i = 0; i < LSQ_DEPTH; i++) begin
                 if (fifo[i].rob_id == from_agu.data.rob_id) begin
@@ -77,6 +68,15 @@ import lsu_types::*;
                     fifo[i].rs2_value_dbg <= from_agu.data.rs2_value_dbg;
                 end
             end
+        end
+
+        if (enqueue) begin
+            fifo[wr_ptr_actual].rob_id <= from_ds.uop.rob_id;
+            fifo[wr_ptr_actual].ready <= 1'b0;
+            fifo[wr_ptr_actual].is_store <= from_ds.uop.fu_opcode[3];
+            fifo[wr_ptr_actual].fu_opcode <= from_ds.uop.fu_opcode;
+            fifo[wr_ptr_actual].rd_arch <= from_ds.uop.rd_arch;
+            fifo[wr_ptr_actual].rd_phy <= from_ds.uop.rd_phy;
         end
     end
 
