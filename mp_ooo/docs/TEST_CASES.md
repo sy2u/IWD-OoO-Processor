@@ -20,3 +20,16 @@
 * Expresses good ILP
 * Many loads/stores, with high memory-level parallelism
   
+## Compression
+* Perfroms Huffman Compression on a random string from Mary Shelley's Frankenstein
+* Low data reuse
+* Large loops with data-dependent accesses. 
+* Link to full text of Frankenstein: https://www.gutenberg.org/ebooks/84
+  
+## RSA
+* Performs [PKCS-compliant](https://en.wikipedia.org/wiki/PKCS_1)
+  288-bit RSA key generation (using Miller-Rabin primality test),
+  encryption, and decryption
+* Also uses a bignum library to handle large integer computations
+* Utilizes arithmetic units heavily
+* Expresses good ILP

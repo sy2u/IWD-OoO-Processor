@@ -30,10 +30,8 @@ for originality.
 
 ### Memory Unit:
 
-- Split LSQ (load at head of load queue can be sent to memory if there
-  are no older stores) [4]
-  - _Loads can leave Load Queue and go to memory Out-of-Order with
-    respect to other loads_ [2]
+- Split LSQ (Loads can be out-of-ordered in between stores) [4]
+  - _Loads can be issued OoO w.r.t stores to a different address_ [2]
   - _Non-Committed Store Forwarding on Split LSQ_ [2]
     - _Non-Committed & Misaligned Store Forwarding on Split LSQ_ [1]
 

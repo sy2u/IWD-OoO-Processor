@@ -74,28 +74,31 @@ module top_tb;
     initial begin
         $fsdbDumpfile("dump.fsdb");
         $fsdbDumpvars(0, "+all");
+        if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
+            $fsdbDumpoff();
+        end
         rst = 1'b1;
         repeat (2) @(posedge clk);
         rst <= 1'b0;
     end
 
     always @(posedge clk) begin
-        for (int unsigned i=0; i < 8; ++i) begin
+        for (int unsigned i = 0; i < 8; ++i) begin
             if (mon_itf.halt[i]) begin
                 $finish;
             end
         end
         if (timeout == 0) begin
             $error("TB Error: Timed out");
-            $finish;
+            $fatal;
         end
         if (mon_itf.error != 0) begin
             repeat (5) @(posedge clk);
-            $finish;
+            $fatal;
         end
         if (mem_itf.error != 0) begin
             repeat (5) @(posedge clk);
-            $finish;
+            $fatal;
         end
         timeout <= timeout - 1;
     end

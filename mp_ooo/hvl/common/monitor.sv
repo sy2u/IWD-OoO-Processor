@@ -74,11 +74,10 @@ module monitor #(
     longint inst_count = longint'(0);
     longint cycle_count = longint'(0);
     longint start_time = longint'(0);
-    longint total_time = longint'(0);
-    bit done_print_ipc = 1'b0;
-    real ipc = real'(0);
+    bit ipc_printed = 1'b0;
+
     longint power_start_time = longint'(0);
-    bit done_print_power = 1'b0;
+    bit power_printed = 1'b0;
 
     always @(posedge itf.clk iff !itf.rst) begin
         cycle_count += longint'(1);
@@ -86,49 +85,51 @@ module monitor #(
             if (itf.valid[channel]) begin
                 inst_count += longint'(1);
                 if (itf.inst[channel] == 32'h00102013) begin
+                    $display("Monitor: Segment Start time is %t", $time);
                     inst_count = longint'(0);
                     cycle_count = longint'(0);
                     start_time = $time;
-                    power_start_time = $time;
-                    $display("Monitor: Segment Start time is %t", $time);
                 end
                 if (itf.inst[channel] == 32'h00202013) begin
+                    ipc_printed = 1'b1;
                     $display("Monitor: Segment Stop time is %t", $time);
-                    done_print_ipc = 1'b1;
-                    ipc = real'(inst_count) / cycle_count;
-                    total_time = $time - start_time;
-                    $display("Monitor: Segment IPC: %f", ipc);
-                    $display("Monitor: Segment Time: %t", total_time);
-                    if (!done_print_power) begin
-                        done_print_power = 1'b1;
-                        $fwrite(time_fd, "%0t\n", power_start_time);
-                        $fwrite(time_fd, "%0t", $time);
-                    end
+                    $display("Monitor: Segment IPC: %f", real'(inst_count) / cycle_count);
+                    $display("Monitor: Segment Time: %t", $time - start_time);
                 end
                 if (itf.inst[channel] == 32'h00302013) begin
                     $display("Monitor: Power Start time is %t", $time);
                     power_start_time = $time;
+                    if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
+                        `ifdef ECE411_VER_DUMP
+                            $dumpon();
+                        `else
+                            $fsdbDumpon();
+                        `endif
+                    end
                 end
                 if (itf.inst[channel] == 32'h00402013) begin
+                    power_printed = 1'b1;
                     $display("Monitor: Power Stop time is %t", $time);
-                    done_print_power = 1'b1;
                     $fwrite(time_fd, "%0t\n", power_start_time);
                     $fwrite(time_fd, "%0t", $time);
+                    if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
+                        `ifdef ECE411_VER_DUMP
+                            $dumpoff();
+                        `else
+                            $fsdbDumpoff();
+                        `endif
+                    end
                 end
             end
         end
     end
 
     final begin
-        if (!done_print_ipc) begin
-            done_print_ipc = 1'b1;
-            ipc = real'(inst_count) / cycle_count;
-            total_time = $time - start_time;
-            $display("Monitor: Total IPC: %f", ipc);
-            $display("Monitor: Total Time: %t", total_time);
+        if (!ipc_printed) begin
+            $display("Monitor: Total IPC: %f", real'(inst_count) / cycle_count);
+            $display("Monitor: Total Time: %t", $time - start_time);
         end
-        if (!done_print_power) begin
-            done_print_power = 1'b1;
+        if (!power_printed) begin
             $fwrite(time_fd, "%0t\n", power_start_time);
             $fwrite(time_fd, "%0t", $time);
         end
