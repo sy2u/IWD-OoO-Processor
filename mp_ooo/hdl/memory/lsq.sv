@@ -107,7 +107,7 @@ import lsu_types::*;
     assign dequeue = want_dequeue && dmem.resp; // simple dequeue condition
 
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
-    assign empty = (wr_ptr_actual == rd_ptr_actual);
+    assign empty = (wr_ptr == rd_ptr);
     assign from_ds.ready = ~full;
 
     /////////////////////////
