@@ -58,6 +58,9 @@ import lsu_types::*;
                         if (mem_rs_arr[i].rs1_phy == cdb_rs[k].rd_phy) begin 
                             mem_rs_arr[i].rs1_valid <= 1'b1;
                         end
+                        if (mem_rs_arr[i].rs2_phy == cdb_rs[k].rd_phy) begin 
+                            mem_rs_arr[i].rs2_valid <= 1'b1;
+                        end
                     end
                 end 
             end
