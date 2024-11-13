@@ -19,6 +19,9 @@ module top_tb;
     mem_itf_banked mem_itf(.*);
     dram_w_burst_frfcfs_controller mem(.itf(mem_itf));
 
+    mem_itf_banked dbg_mem_itf(.*);
+    dram_w_burst_frfcfs_controller dbg_mem(.itf(dbg_mem_itf));
+
     // For randomized testing
     // logic [31:0] regs_v[32];
     // assign regs_v = '{default: 32'h0};
@@ -40,6 +43,17 @@ module top_tb;
         .bmem_raddr (mem_itf.raddr ),
         .bmem_rdata (mem_itf.rdata ),
         .bmem_rvalid(mem_itf.rvalid)
+
+        // For debugging
+        ,
+        .dbg_bmem_addr  (dbg_mem_itf.addr  ),
+        .dbg_bmem_read  (dbg_mem_itf.read  ),
+        .dbg_bmem_write (dbg_mem_itf.write ),
+        .dbg_bmem_wdata (dbg_mem_itf.wdata ),
+        .dbg_bmem_ready (dbg_mem_itf.ready ),
+        .dbg_bmem_raddr (dbg_mem_itf.raddr ),
+        .dbg_bmem_rdata (dbg_mem_itf.rdata ),
+        .dbg_bmem_rvalid(dbg_mem_itf.rvalid)
 
         // For random testing
         // .imem_addr      (mem_itf.addr [0]),

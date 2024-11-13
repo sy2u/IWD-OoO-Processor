@@ -12,8 +12,6 @@ import uop_types::*;
     // Flush signals
     output  logic               backend_flush,
     output  logic   [31:0]      backend_redirect_pc
-
-    // , dmem_itf.cpu                magic_dmem
 );
 
     assign backend_flush = 1'b0;
@@ -134,8 +132,6 @@ import uop_types::*;
         .fu_cdb_out_dbg         (ls_cdb_itf),
         .dcache_itf             (dcache_itf),
         .rob_head               (rob_head)
-
-        // , .magic_dmem             (magic_dmem)
     );
 
     prf prf_i(

@@ -15,11 +15,22 @@ import rv32i_types::*;
     input   logic   [63:0]      bmem_rdata,
     input   logic               bmem_rvalid
 
+    // Debugging 
+    ,
+    output  logic   [31:0]      dbg_bmem_addr,
+    output  logic               dbg_bmem_read,
+    output  logic               dbg_bmem_write,
+    output  logic   [63:0]      dbg_bmem_wdata,
+    input   logic               dbg_bmem_ready,
+
+    input   logic   [31:0]      dbg_bmem_raddr,
+    input   logic   [63:0]      dbg_bmem_rdata,
+    input   logic               dbg_bmem_rvalid
+
     // output  logic   [31:0]      imem_addr,
     // output  logic   [3:0]       imem_rmask,
     // input   logic   [31:0]      imem_rdata,
     // input   logic               imem_resp
-    // , dmem_itf.cpu                magic_dmem
 );
 
     cacheline_itf               cacheline_itf_i();
@@ -64,6 +75,22 @@ import rv32i_types::*;
         .dfp_rvalid     (bmem_rvalid)
     );
 
+    cache_adapter dbg_cache_adapter_i(
+        .clk            (clk),
+        .rst            (rst),
+
+        .ufp            (dcache_itf_i),
+
+        .dfp_addr       (dbg_bmem_addr),
+        .dfp_read       (dbg_bmem_read),
+        .dfp_write      (dbg_bmem_write),
+        .dfp_wdata      (dbg_bmem_wdata),
+        .dfp_ready      (dbg_bmem_ready),
+        .dfp_raddr      (dbg_bmem_raddr),
+        .dfp_rdata      (dbg_bmem_rdata),
+        .dfp_rvalid     (dbg_bmem_rvalid)
+    );
+
     inst_queue #(
         .DEPTH          (16),
         .WIDTH          (32 * IF_WIDTH)
@@ -85,7 +112,6 @@ import rv32i_types::*;
 
         .backend_flush          (backend_flush),
         .backend_redirect_pc    (backend_redirect_pc)
-        // , .magic_dmem           (magic_dmem)
     );
 
 endmodule : cpu

@@ -13,7 +13,6 @@ import lsu_types::*;
     ls_cdb_itf.lsu              fu_cdb_out_dbg,
     cacheline_itf.master        dcache_itf,
     input   logic   [ROB_IDX-1:0]   rob_head
-    // ,dmem_itf.cpu                magic_dmem
 
     // Flush signals
     // input   logic               backend_flush
@@ -53,7 +52,6 @@ import lsu_types::*;
         .rob_head               (rob_head),
 
         .dmem                   (dmem_itf_i)
-        // .dmem                   (magic_dmem)
     );
 
     dcache dcache_i(
