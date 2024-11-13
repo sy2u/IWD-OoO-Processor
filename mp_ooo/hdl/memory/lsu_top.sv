@@ -60,6 +60,8 @@ import lsu_types::*;
         .clk                    (clk),
         .rst                    (rst),
 
+        .ufp                    (dmem_itf_i),
+
         .dfp                    (dcache_itf)
     );
 

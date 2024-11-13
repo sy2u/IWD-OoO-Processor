@@ -5,12 +5,8 @@ import dcache_types::*;
     input   logic           rst,
 
     // cpu side signals, ufp -> upward facing port
-    input   logic   [31:0]  ufp_addr,
-    input   logic   [3:0]   ufp_rmask,
-    input   logic   [3:0]   ufp_wmask,
-    output  logic   [31:0]  ufp_rdata,
-    input   logic   [31:0]  ufp_wdata,
-    output  logic           ufp_resp,
+
+    dmem_itf.cache          ufp,
 
     // memory side signals, dfp -> downward facing port
     cacheline_itf.master    dfp
@@ -64,9 +60,9 @@ import dcache_types::*;
     logic                   write_hit_rec;
     logic                   write_hit;
 
-    assign ufp_offset = ufp_addr[OFFSET_IDX-1:0];
-    assign ufp_set = ufp_addr[SET_IDX+OFFSET_IDX-1:OFFSET_IDX];
-    assign ufp_tag = ufp_addr[TAG_IDX+SET_IDX+OFFSET_IDX-1:SET_IDX+OFFSET_IDX];
+    assign ufp_offset = ufp.addr[OFFSET_IDX-1:0];
+    assign ufp_set = ufp.addr[SET_IDX+OFFSET_IDX-1:OFFSET_IDX];
+    assign ufp_tag = ufp.addr[TAG_IDX+SET_IDX+OFFSET_IDX-1:SET_IDX+OFFSET_IDX];
 
     assign sram_operating_set = (write_hit || stall) ? stage_reg.set_i : ufp_set;
 
@@ -172,9 +168,9 @@ import dcache_types::*;
             stage_reg.rmask <= '0;
             stage_reg.wmask <= '0;
         end else if (~stall) begin
-            stage_reg.rmask <= ufp_rmask;
-            stage_reg.wmask <= ufp_wmask;
-            stage_reg.wdata <= ufp_wdata;
+            stage_reg.rmask <= ufp.rmask;
+            stage_reg.wmask <= ufp.wmask;
+            stage_reg.wdata <= ufp.wdata;
             stage_reg.offset <= ufp_offset;
             stage_reg.set_i <= ufp_set;
             stage_reg.tag <= ufp_tag;
@@ -206,7 +202,7 @@ import dcache_types::*;
     end
 
     assign plru_csb0 = stall;
-    assign plru_csb1 = ~ufp_resp;
+    assign plru_csb1 = ~ufp.resp;
 
     // Write-Enable signals
     always_comb begin
@@ -265,8 +261,8 @@ import dcache_types::*;
                     {stage_reg.tag,                 stage_reg.set_i,  {OFFSET_IDX{1'b0}}};
     assign dfp.wdata = data_dout0[replace_way];
 
-    assign ufp_rdata = data_dout0[hit_way][8 * stage_reg.offset +: 32];
-    assign ufp_resp = ((|stage_reg.rmask || |stage_reg.wmask) && ~stall);
+    assign ufp.rdata = data_dout0[hit_way][8 * stage_reg.offset +: 32];
+    assign ufp.resp = ((|stage_reg.rmask || |stage_reg.wmask) && ~stall);
 
     assign replace_way_dirty = tag_dout0[replace_way][23] && valid_dout0[replace_way];
     assign hit_way_dirty = tag_dout0[hit_way][23] && valid_dout0[hit_way];
