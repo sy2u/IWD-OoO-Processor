@@ -71,7 +71,7 @@ import dcache_types::*;
     assign sram_operating_set = (write_hit || stall) ? stage_reg.set_i : ufp_set;
 
     generate for (genvar i = 0; i < NUM_WAYS; i++) begin : arrays
-        mp_cache_data_array data_array (
+        dcache_data_array data_array (
             .clk0       (clk),
             .csb0       (data_csb0[i]),
             .web0       (data_web0[i]),
@@ -80,7 +80,7 @@ import dcache_types::*;
             .din0       (data_din0),
             .dout0      (data_dout0[i])
         );
-        mp_cache_tag_array tag_array (
+        dcache_tag_array tag_array (
             .clk0       (clk),
             .csb0       (tag_csb0[i]),
             .web0       (tag_web0[i]),
