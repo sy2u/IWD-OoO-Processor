@@ -12,6 +12,8 @@ import uop_types::*;
     // Flush signals
     output  logic               backend_flush,
     output  logic   [31:0]      backend_redirect_pc
+
+    // , dmem_itf.cpu                magic_dmem
 );
 
     assign backend_flush = 1'b0;
@@ -27,6 +29,7 @@ import uop_types::*;
     rob_rrf_itf                 rob_rrf_itf_i();
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
+    ls_cdb_itf                  ls_cdb_itf();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
 
     logic                       dispatch_valid;
@@ -70,7 +73,8 @@ import uop_types::*;
 
         .from_id                (id_rob_itf_i),
         .to_rrf                 (rob_rrf_itf_i),
-        .cdb                    (cdb_itfs)
+        .cdb                    (cdb_itfs),
+        .ls_cdb_dbg             (ls_cdb_itf)
     );
 
     rrf rrf_i(
@@ -124,7 +128,10 @@ import uop_types::*;
         .to_prf                 (rs_prf_itfs[3]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[3]),
+        .fu_cdb_out_dbg         (ls_cdb_itf),
         .dcache_itf             (dcache_itf)
+
+        // , .magic_dmem             (magic_dmem)
     );
 
     prf prf_i(

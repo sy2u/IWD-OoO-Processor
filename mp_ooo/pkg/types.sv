@@ -230,8 +230,8 @@ import cpu_params::*;
         MEM_LB      = 4'b0000,
         MEM_LH      = 4'b0001,
         MEM_LW      = 4'b0010,
-        MEM_LBU     = 4'b0011,
-        MEM_LHU     = 4'b0100,
+        MEM_LBU     = 4'b0100,
+        MEM_LHU     = 4'b0101,
         MEM_SB      = 4'b1000,
         MEM_SH      = 4'b1001,
         MEM_SW      = 4'b1010
@@ -389,17 +389,22 @@ import cpu_params::*;
         logic   [31:0]          addr;
         logic   [31:0]          wdata;
         logic   [3:0]           mask;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
     } agu_lsq_t;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
         logic                   ready;
         logic                   is_store;
+        logic   [3:0]           fu_opcode;
         logic   [31:0]          addr;
         logic   [3:0]           mask;
         logic   [31:0]          wdata;
         logic   [ARF_IDX-1:0]   rd_arch;
         logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
     } lsq_entry_t;
 
     typedef struct packed {

@@ -10,7 +10,9 @@ import lsu_types::*;
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
+    ls_cdb_itf.lsu              fu_cdb_out_dbg,
     cacheline_itf.master        dcache_itf
+    // ,dmem_itf.cpu                magic_dmem
 
     // Flush signals
     // input   logic               backend_flush
@@ -37,20 +39,26 @@ import lsu_types::*;
         .to_lsq                 (agu_lsq_i)
     );
 
+    dmem_itf                    dmem_itf_i();
+
     lsq lsq_i(
         .clk                    (clk),
         .rst                    (rst),
 
         .from_ds                (ds_lsq_i),
         .from_agu               (agu_lsq_i),
-        .fu_cdb_out             (fu_cdb_out)
+        .cdb_out                (fu_cdb_out),
+        .cdb_out_dbg            (fu_cdb_out_dbg),
+
+        .dmem                   (dmem_itf_i)
+        // .dmem                   (magic_dmem)
     );
 
-    dcache dcache_i(
-        .clk                    (clk),
-        .rst                    (rst),
+    // dcache dcache_i(
+    //     .clk                    (clk),
+    //     .rst                    (rst),
 
-        .dfp                    (dcache_itf)
-    );
+    //     .dfp                    (dcache_itf)
+    // );
 
 endmodule

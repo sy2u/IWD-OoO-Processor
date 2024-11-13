@@ -19,6 +19,7 @@ import rv32i_types::*;
     // output  logic   [3:0]       imem_rmask,
     // input   logic   [31:0]      imem_rdata,
     // input   logic               imem_resp
+    // , dmem_itf.cpu                magic_dmem
 );
 
     cacheline_itf               cacheline_itf_i();
@@ -84,6 +85,7 @@ import rv32i_types::*;
 
         .backend_flush          (backend_flush),
         .backend_redirect_pc    (backend_redirect_pc)
+        // , .magic_dmem           (magic_dmem)
     );
 
 endmodule : cpu

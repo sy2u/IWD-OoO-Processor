@@ -7,7 +7,8 @@ import rvfi_types::*;
 
     id_rob_itf.rob              from_id,
     rob_rrf_itf.rob             to_rrf,
-    cdb_itf.rob                 cdb[CDB_WIDTH]
+    cdb_itf.rob                 cdb[CDB_WIDTH],
+    ls_cdb_itf.rob              ls_cdb_dbg
 );
 
     typedef struct packed {
@@ -109,6 +110,14 @@ import rvfi_types::*;
                     rvfi_array[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].rs1_rdata <= cdb_rob[i].rs1_value_dbg;
                     rvfi_array[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].rs2_rdata <= cdb_rob[i].rs2_value_dbg;
                 end
+            end
+
+            if (ls_cdb_dbg.valid) begin
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_addr <= ls_cdb_dbg.addr_dbg;
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_rmask <= ls_cdb_dbg.rmask_dbg;
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_wmask <= ls_cdb_dbg.wmask_dbg;
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_rdata <= ls_cdb_dbg.rdata_dbg;
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_wdata <= ls_cdb_dbg.wdata_dbg;
             end
         end
     end
