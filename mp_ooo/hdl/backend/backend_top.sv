@@ -14,8 +14,8 @@ import uop_types::*;
     output  logic   [31:0]      backend_redirect_pc
 );
 
-    assign backend_flush = 1'b0;
-    assign backend_redirect_pc = 'x;
+    // assign backend_flush = 1'b0;
+    // assign backend_redirect_pc = 'x;
 
     id_rat_itf                  id_rat_itf_i();
     id_fl_itf                   id_fl_itf_i();
@@ -27,7 +27,8 @@ import uop_types::*;
     rob_rrf_itf                 rob_rrf_itf_i();
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
-    br_cdb_itf                  br_cdb_itf();
+    br_cdb_itf                  br_cdb_itf_i();
+    cb_rob_itf                  cb_rob_itf_i();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
 
     logic                       dispatch_valid;
@@ -69,9 +70,20 @@ import uop_types::*;
         .clk                    (clk),
         .rst                    (rst),
 
+        .backend_flush          (backend_flush),
+        .backend_redirect_pc    (backend_redirect_pc),
         .from_id                (id_rob_itf_i),
         .to_rrf                 (rob_rrf_itf_i),
-        .cdb                    (cdb_itfs)
+        .cdb                    (cdb_itfs),
+        .from_cb                (cb_rob_itf_i)
+    );
+
+    control_buffer control_buffer_i(
+        .clk                    (clk),
+        .rst                    (rst),
+        .from_ds                (ds_br_rs_itf_i),
+        .br_cdb_in              (br_cdb_itf_i),
+        .to_rob                 (cb_rob_itf_i)          
     );
 
     rrf rrf_i(
@@ -125,7 +137,7 @@ import uop_types::*;
         .to_prf                 (rs_prf_itfs[2]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[2]),
-        .br_cdb_out             (br_cdb_itf)
+        .br_cdb_out             (br_cdb_itf_i)
     );
     
     lsu_top lsu_i(

@@ -15,6 +15,7 @@ package cpu_params;
 
     localparam  unsigned    LSQ_DEPTH   = 8;
 
+    localparam  unsigned    CB_DEPTH    = 8;
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);

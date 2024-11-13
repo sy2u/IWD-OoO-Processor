@@ -5,9 +5,12 @@ import rvfi_types::*;
     input   logic               clk,
     input   logic               rst,
 
+    output  logic               backend_flush,
+    output  logic   [31:0]      backend_redirect_pc,
     id_rob_itf.rob              from_id,
     rob_rrf_itf.rob             to_rrf,
-    cdb_itf.rob                 cdb[CDB_WIDTH]
+    cdb_itf.rob                 cdb[CDB_WIDTH],
+    cb_rob_itf.rob              from_cb
 );
 
     typedef struct packed {
@@ -41,6 +44,7 @@ import rvfi_types::*;
 
     cdb_rob_t               cdb_rob [CDB_WIDTH];
 
+    logic                   dequeue;
     rvfi_dbg_t              rvfi_itf    [ID_WIDTH];
     rvfi_dbg_t              rvfi_array  [ROB_DEPTH] [ID_WIDTH];
     logic   [63:0]          rvfi_order;
@@ -76,9 +80,10 @@ import rvfi_types::*;
 
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (rst || backend_flush) begin
             for (int i = 0; i < ROB_DEPTH; i++) begin
                 for (int j = 0; j < ID_WIDTH; j++) begin
+                    rob_arr[i][j].valid <= 1'b0;
                     rob_arr[i][j].ready <= 1'b0;
                 end
             end
@@ -126,6 +131,11 @@ import rvfi_types::*;
         assign to_rrf.rd_arch[i] = rob_arr[head_ptr][i].rd_arch;
     end endgenerate
 
+    // interface with control_buffer
+    assign dequeue = pop && (from_cb.rob_id / ID_WIDTH == head_ptr);
+    assign from_cb.dequeue = dequeue;
+    assign backend_flush = dequeue && from_cb.miss_predict;
+    assign backend_redirect_pc = from_cb.target_address; 
     //////////////////////////
     //          RVFI        //
     //////////////////////////
