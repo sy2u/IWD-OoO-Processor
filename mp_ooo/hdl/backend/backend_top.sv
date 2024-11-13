@@ -36,6 +36,8 @@ import uop_types::*;
     logic                       dispatch_ready;
     uop_t                       uops[ID_WIDTH];
 
+    logic   [ROB_IDX-1:0]       rob_head;
+
     id_stage id_stage_i(
         // .clk                    (clk),
         // .rst                    (rst),
@@ -74,7 +76,8 @@ import uop_types::*;
         .from_id                (id_rob_itf_i),
         .to_rrf                 (rob_rrf_itf_i),
         .cdb                    (cdb_itfs),
-        .ls_cdb_dbg             (ls_cdb_itf)
+        .ls_cdb_dbg             (ls_cdb_itf),
+        .rob_head               (rob_head)
     );
 
     rrf rrf_i(
@@ -129,7 +132,8 @@ import uop_types::*;
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[3]),
         .fu_cdb_out_dbg         (ls_cdb_itf),
-        .dcache_itf             (dcache_itf)
+        .dcache_itf             (dcache_itf),
+        .rob_head               (rob_head)
 
         // , .magic_dmem             (magic_dmem)
     );

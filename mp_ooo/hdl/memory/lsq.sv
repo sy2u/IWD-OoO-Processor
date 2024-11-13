@@ -10,6 +10,7 @@ import lsu_types::*;
     agu_lsq_itf.lsq             from_agu,
     cdb_itf.fu                  cdb_out,
     ls_cdb_itf.lsu              cdb_out_dbg,
+    input   logic   [ROB_IDX-1:0]   rob_head,
     dmem_itf.cpu                dmem
 
     // Flush signals
@@ -95,7 +96,7 @@ import lsu_types::*;
             want_dequeue = 1'b0;
         end else begin
             if (fifo[rd_ptr_actual].is_store) begin
-                want_dequeue = fifo[rd_ptr_actual].ready; // check ROB
+                want_dequeue = fifo[rd_ptr_actual].ready && (rob_head == fifo[rd_ptr_actual].rob_id); // check ROB
             end else begin
                 want_dequeue = fifo[rd_ptr_actual].ready;
             end

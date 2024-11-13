@@ -8,7 +8,8 @@ import rvfi_types::*;
     id_rob_itf.rob              from_id,
     rob_rrf_itf.rob             to_rrf,
     cdb_itf.rob                 cdb[CDB_WIDTH],
-    ls_cdb_itf.rob              ls_cdb_dbg
+    ls_cdb_itf.rob              ls_cdb_dbg,
+    output  logic   [ROB_IDX-1:0]   rob_head
 );
 
     typedef struct packed {
@@ -50,6 +51,8 @@ import rvfi_types::*;
     // same logic with fifo queue
     assign {head_ptr_flag, head_ptr} = head_ptr_reg;
     assign {tail_ptr_flag, tail_ptr} = tail_ptr_reg;
+
+    assign rob_head = head_ptr;
 
     // assign tail_ptr_next = tail_ptr_reg + ROB_IDX'(1);
     assign full = (tail_ptr == head_ptr) && (tail_ptr_flag != head_ptr_flag);
