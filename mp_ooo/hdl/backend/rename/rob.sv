@@ -166,7 +166,7 @@ import rvfi_types::*;
         assign rvfi_itf[i].frd_addr = rvfi_head[i].frd_addr;
         assign rvfi_itf[i].frd_wdata = rvfi_head[i].frd_wdata;
         assign rvfi_itf[i].pc_rdata = rvfi_head[i].pc_rdata;
-        assign rvfi_itf[i].pc_wdata = rvfi_head[i].pc_rdata + 4;
+        assign rvfi_itf[i].pc_wdata = backend_flush ? backend_redirect_pc : rvfi_head[i].pc_rdata + 4;
         assign rvfi_itf[i].mem_addr = rvfi_head[i].mem_addr;
         assign rvfi_itf[i].mem_rmask = rvfi_head[i].mem_rmask;
         assign rvfi_itf[i].mem_wmask = rvfi_head[i].mem_wmask;
