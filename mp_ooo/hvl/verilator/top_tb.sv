@@ -1,10 +1,13 @@
 module top_tb
 (
     input   logic   clk,
-    input   logic   rst,
-    output  logic   halt,
-    output  logic   error
+    input   logic   rst
 );
+
+    longint timeout;
+    initial begin
+        $value$plusargs("TIMEOUT_ECE411=%d", timeout);
+    end
 
     mem_itf_banked mem_itf(.*);
     dram_w_burst_frfcfs_controller mem(.itf(mem_itf));
@@ -28,12 +31,40 @@ module top_tb
 
     `include "rvfi_reference.svh"
 
-    always_comb begin
-        halt = 1'b0;
-        for (int unsigned i=0; i < 8; ++i) begin
-            halt = halt | mon_itf.halt[i];
+    initial begin
+        `ifdef ECE411_FST_DUMP
+            $dumpfile("dump.fst");
+        `endif
+        `ifdef ECE411_VCD_DUMP
+            $dumpfile("dump.vcd");
+        `endif
+        $dumpvars();
+        if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
+            $dumpoff();
         end
-        error = (mem_itf.error != 0) || (mon_itf.error != 0);
+    end
+
+    final begin
+        $dumpflush;
+    end
+
+    always @(posedge clk) begin
+        for (int unsigned i = 0; i < 8; ++i) begin
+            if (mon_itf.halt[i]) begin
+                $finish;
+            end
+        end
+        if (timeout == 0) begin
+            $error("TB Error: Timed out");
+            $fatal;
+        end
+        if (mon_itf.error != 0) begin
+            $fatal;
+        end
+        if (mem_itf.error != 0) begin
+            $fatal;
+        end
+        timeout <= timeout - 1;
     end
 
 endmodule

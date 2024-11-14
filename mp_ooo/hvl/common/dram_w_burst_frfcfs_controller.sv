@@ -103,10 +103,10 @@ module dram_w_burst_frfcfs_controller
 
     logic [DRAM_PARAM_ACCESS_WIDTH-1:0] internal_memory_array [logic [DRAM_PARAM_ACCESS_ADDR_WIDTH-1:0]];
 
-    in_queue_t  in_queue [DRAM_PARAM_IN_QUEUE_SIZE-1:0];
-    in_queue_t  in_queue_next [DRAM_PARAM_IN_QUEUE_SIZE-1:0];
-    out_queue_t out_queue [DRAM_PARAM_OUT_QUEUE_SIZE-1:0];
-    out_queue_t out_queue_next [DRAM_PARAM_OUT_QUEUE_SIZE-1:0];
+    in_queue_t  in_queue [DRAM_PARAM_IN_QUEUE_SIZE];
+    in_queue_t  in_queue_next [DRAM_PARAM_IN_QUEUE_SIZE];
+    out_queue_t out_queue [DRAM_PARAM_OUT_QUEUE_SIZE];
+    out_queue_t out_queue_next [DRAM_PARAM_OUT_QUEUE_SIZE];
 
     int in_queue_tail;
     int in_queue_tail_next;
@@ -126,10 +126,10 @@ module dram_w_burst_frfcfs_controller
 
     longint cycle_counter;
 
-    int bank_req_idx [DRAM_PARAM_NUM_BANKS-1:0];
+    int bank_req_idx [DRAM_PARAM_NUM_BANKS];
     int bank_activate_arb;
     bit [DRAM_PARAM_IN_QUEUE_SIZE-1:0] in_queue_dequeue;
-    longint bank_pre_out_queue_age [DRAM_PARAM_NUM_BANKS-1:0];
+    longint bank_pre_out_queue_age [DRAM_PARAM_NUM_BANKS];
     bit [DRAM_PARAM_NUM_BANKS-1:0] bank_out_arb;
 
     bit [DRAM_PARAM_NUM_BANKS-1:0] bank_dequeue;
@@ -270,7 +270,7 @@ module dram_w_burst_frfcfs_controller
                 end
             end
         end
-        bank_pre_out_queue_age.rsort();
+        bank_pre_out_queue_age.sort();
         for (int i = 0; i < DRAM_PARAM_OUT_QUEUE_SIZE - out_queue_tail_next; i++) begin
             if (bank_pre_out_queue_age[i] == 64'h7fff_ffff_ffff_ffff) begin
                 break;

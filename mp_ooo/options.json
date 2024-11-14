@@ -4,6 +4,7 @@
     "f_ext"       : false,
     "bmem_0_on_x" : false,
     "dw_ip"       : ["DW_mult_seq", "DW_div_seq"],
+    "verilator"   : false,
     "synth": {
         "compile_ultra" : true,
         "ungroup"       : true,
