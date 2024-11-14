@@ -29,7 +29,8 @@ import int_rs_types::*;
         .rst                    (rst),
         .from_ds                (ds_cb_itf_i),
         .br_cdb_in              (br_cdb_itf_i),
-        .to_rob                 (to_rob)          
+        .to_rob                 (to_rob),
+        .branch_ready           (from_ds.ready)          
     );
 
     br_rs br_rs_i(
@@ -40,6 +41,7 @@ import int_rs_types::*;
         .to_prf                 (to_prf),
         .cdb                    (cdb),
         .fu_cdb_out             (fu_cdb_out),
-        .br_cdb_out             (br_cdb_itf_i)
+        .br_cdb_out             (br_cdb_itf_i),
+        .branch_ready           (from_ds.ready)
     );
 endmodule

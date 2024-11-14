@@ -7,7 +7,8 @@ import uop_types::*;
 
     ds_rs_itf.rs                from_ds,
     br_cdb_itf.cb               br_cdb_in,
-    cb_rob_itf.cb               to_rob          
+    cb_rob_itf.cb               to_rob,
+    input   logic               branch_ready          
 );
 
     localparam              CB_IDX = $clog2(CB_DEPTH);
@@ -72,7 +73,7 @@ import uop_types::*;
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
     assign from_ds.ready = ~full;
 
-    assign enqueue = from_ds.valid && from_ds.ready;
+    assign enqueue = from_ds.valid && branch_ready;
     assign dequeue = to_rob.dequeue;
 
     // to rob
