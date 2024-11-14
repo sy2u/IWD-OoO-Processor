@@ -11,7 +11,9 @@ import lsu_types::*;
     cdb_itf.fu                  cdb_out,
     ls_cdb_itf.lsu              cdb_out_dbg,
     input   logic   [ROB_IDX-1:0]   rob_head,
-    dmem_itf.cpu                dmem
+    dmem_itf.cpu                dmem,
+
+    input   logic               lsu_ready
 
     // Flush signals
     // input   logic               backend_flush
@@ -90,7 +92,7 @@ import lsu_types::*;
     logic                   want_read;
     logic                   want_write;
 
-    assign enqueue = from_ds.valid && from_ds.ready;
+    assign enqueue = from_ds.valid && lsu_ready;
     always_comb begin
         if (empty) begin
             want_dequeue = 1'b0;

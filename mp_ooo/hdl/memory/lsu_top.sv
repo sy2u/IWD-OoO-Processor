@@ -33,6 +33,8 @@ import lsu_types::*;
         .clk                    (clk),
         .rst                    (rst || backend_flush),
 
+        .lsu_ready              (from_ds.ready),
+
         .from_ds                (ds_mem_rs_i),
         .to_prf                 (to_prf),
         .cdb                    (cdb),
@@ -50,6 +52,7 @@ import lsu_types::*;
         .cdb_out                (fu_cdb_out),
         .cdb_out_dbg            (fu_cdb_out_dbg),
         .rob_head               (rob_head),
+        .lsu_ready              (from_ds.ready),
 
         .dmem                   (dmem_itf_i)
     );

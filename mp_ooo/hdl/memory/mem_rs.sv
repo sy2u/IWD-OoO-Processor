@@ -6,6 +6,8 @@ import lsu_types::*;
     input   logic               clk,
     input   logic               rst,
 
+    input   logic               lsu_ready,
+
     ds_rs_itf.rs                from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
@@ -78,7 +80,7 @@ import lsu_types::*;
     always_comb begin
         int_rs_push_en  = '0;
         int_rs_push_idx = '0;
-        if (from_ds.valid && from_ds.ready) begin 
+        if (from_ds.valid && lsu_ready) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 if (!mem_rs_valid[(INTRS_IDX)'(unsigned'(i))]) begin 
                     int_rs_push_idx = (INTRS_IDX)'(unsigned'(i));
