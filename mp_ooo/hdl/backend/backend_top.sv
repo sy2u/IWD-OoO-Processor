@@ -116,7 +116,7 @@ import uop_types::*;
 
     int_rs int_rs_i(
         .clk                    (clk),
-        .rst                    (rst),
+        .rst                    (rst || backend_flush),
 
         .from_ds                (ds_int_rs_itf_i),
         .to_prf                 (rs_prf_itfs[0]),
@@ -126,7 +126,7 @@ import uop_types::*;
 
     intm_rs intm_rs_i(
         .clk                    (clk),
-        .rst                    (rst),
+        .rst                    (rst || backend_flush),
 
         .from_ds                (ds_intm_rs_itf_i),
         .to_prf                 (rs_prf_itfs[1]),
@@ -137,7 +137,7 @@ import uop_types::*;
     
     lsu_top lsu_i(
         .clk                    (clk),
-        .rst                    (rst),
+        .rst                    (rst || backend_flush),
 
         .from_ds                (ds_mem_rs_itf_i),
         .to_prf                 (rs_prf_itfs[3]),
@@ -150,7 +150,7 @@ import uop_types::*;
 
     branch_top branch_i(
         .clk                    (clk),
-        .rst                    (rst),
+        .rst                    (rst || backend_flush),
         .from_ds                (ds_branch_itf_i),
         .to_prf                 (rs_prf_itfs[2]),
         .cdb                    (cdb_itfs),
