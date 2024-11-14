@@ -1,7 +1,6 @@
 module control_buffer
 import cpu_params::*;
 import uop_types::*;
-import cb_types::*;
 (
     input   logic               clk,
     input   logic               rst,
@@ -42,7 +41,7 @@ import cb_types::*;
         if (rst) begin
             wr_ptr <= '0;
             rd_ptr <= '0;
-            for (int i = 0; i < DEPTH; i++) begin
+            for (int i = 0; i < CB_DEPTH; i++) begin
                 fifo[i] <= 'x;
             end
         end else begin
@@ -56,7 +55,7 @@ import cb_types::*;
                 for (int i = 0; i < CB_DEPTH; i++) begin
                     if (fifo[i].rob_id == br_cdb_in.rob_id) begin
                         fifo[i].ready <= 1'b1;
-                        fifo[i].miss_predict <= br_cdb_in.addr;
+                        fifo[i].miss_predict <= br_cdb_in.miss_predict;
                         fifo[i].target_address <= br_cdb_in.target_address;
                     end
                 end
@@ -71,7 +70,7 @@ import cb_types::*;
     // enqueue, dequeue
     assign empty = (wr_ptr == rd_ptr);
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
-    assign from_ds.ready = ~full;
+    // assign from_ds.ready = ~full;
 
     assign enqueue = from_ds.valid && from_ds.ready;
     assign dequeue = to_rob.dequeue;

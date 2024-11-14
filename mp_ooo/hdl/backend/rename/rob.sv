@@ -132,7 +132,7 @@ import rvfi_types::*;
     end endgenerate
 
     // interface with control_buffer
-    assign dequeue = pop && (from_cb.rob_id / ID_WIDTH == head_ptr);
+    assign dequeue = pop && ((ROB_IDX)'(from_cb.rob_id / ID_WIDTH) == head_ptr);
     assign from_cb.dequeue = dequeue;
     assign backend_flush = dequeue && from_cb.miss_predict;
     assign backend_redirect_pc = from_cb.target_address; 
