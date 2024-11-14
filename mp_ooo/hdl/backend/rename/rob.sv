@@ -82,7 +82,6 @@ import rvfi_types::*;
         assign cdb_rob[k].rs2_value_dbg = cdb[k].rs2_value_dbg;
     end endgenerate
 
-
     always_ff @(posedge clk) begin
         if (rst || backend_flush) begin
             for (int i = 0; i < ROB_DEPTH; i++) begin
@@ -93,7 +92,7 @@ import rvfi_types::*;
             end
             head_ptr_reg <= '0;
             tail_ptr_reg <= '0;
-            rvfi_order <= 64'h0;
+            // rvfi_order <= 64'h0;
         end else begin
             if (from_id.valid && from_id.ready) begin           // push in
                 tail_ptr_reg <= (ROB_IDX+1)'(tail_ptr_reg + 1);
@@ -108,7 +107,7 @@ import rvfi_types::*;
 
             if (pop) begin                              // pop out
                 head_ptr_reg <= (ROB_IDX+1)'(head_ptr_reg +1);
-                rvfi_order <= rvfi_order + valid_instrs;
+                // rvfi_order <= rvfi_order + valid_instrs;
             end
 
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
@@ -174,6 +173,14 @@ import rvfi_types::*;
         assign rvfi_itf[i].mem_wdata = rvfi_head[i].mem_wdata;
     end endgenerate
 
+    always_ff @(posedge clk) begin
+        if (rst) begin 
+            rvfi_order <= 64'h0;
+        end else if (pop) begin 
+            rvfi_order <= rvfi_order + valid_instrs;
+        end
+    end
+    
     always_comb begin
         valid_instrs = '0;
         for (int i = 0; i < ID_WIDTH; i++) begin
