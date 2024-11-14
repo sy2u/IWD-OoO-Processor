@@ -45,7 +45,7 @@ import lsu_types::*;
 
     lsq lsq_i(
         .clk                    (clk),
-        .rst                    (rst || backend_flush),
+        .rst                    (rst),
 
         .from_ds                (ds_lsq_i),
         .from_agu               (agu_lsq_i),
@@ -53,6 +53,7 @@ import lsu_types::*;
         .cdb_out_dbg            (fu_cdb_out_dbg),
         .rob_head               (rob_head),
         .lsu_ready              (from_ds.ready),
+        .backend_flush          (backend_flush),
 
         .dmem                   (dmem_itf_i)
     );
@@ -62,7 +63,6 @@ import lsu_types::*;
         .rst                    (rst),
 
         .ufp                    (dmem_itf_i),
-        .kill                   (backend_flush),
 
         .dfp                    (dcache_itf)
     );

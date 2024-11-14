@@ -4,7 +4,6 @@ import dcache_types::*;
     input   logic           clk,
     input   logic           rst,
 
-    input   logic           kill,
     input   logic           hit,
     input   logic           dirty,
     input   logic   [3:0]   rmask,
@@ -59,17 +58,11 @@ import dcache_types::*;
                     end
                     write_hit = |wmask && hit;
                 end
-                if (kill) begin
-                    next_state = PASS_THRU;
-                end
             end
             ALLOCATE: begin
                 if (dfp_rvalid && dfp_addr == dfp_raddr) begin
                     next_state = ALLOCATE_STALL;
                     allocate_done = 1'b1;
-                end
-                if (kill) begin
-                    next_state = PASS_THRU;
                 end
             end
             ALLOCATE_STALL: begin
@@ -79,9 +72,6 @@ import dcache_types::*;
                 dfp_read = 1'b1;
                 if (dfp_ready) begin
                     next_state = ALLOCATE;
-                end
-                if (kill) begin
-                    next_state = PASS_THRU;
                 end
             end
             default: begin

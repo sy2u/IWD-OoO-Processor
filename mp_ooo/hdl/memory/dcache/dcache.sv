@@ -7,7 +7,6 @@ import dcache_types::*;
     // cpu side signals, ufp -> upward facing port
 
     dmem_itf.cache          ufp,
-    logic                   kill,
 
     // memory side signals, dfp -> downward facing port
     cacheline_itf.master    dfp
@@ -131,7 +130,6 @@ import dcache_types::*;
         .clk            (clk),
         .rst            (rst),
 
-        .kill           (kill),
         .hit            (hit),
         .dirty          (replace_way_dirty),
         .rmask          (stage_reg.rmask),
