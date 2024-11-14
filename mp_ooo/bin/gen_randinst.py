@@ -49,7 +49,8 @@ def generate_i_load_type(instr):
         imm = generate_aligned_imm() * 4
     else:
         imm = generate_imm()
-    return f"{instr} {rd}, {imm}({rs1})"
+    return f"{instr} {rd}, {imm}(x0)"
+    # return f"{instr} {rd}, {imm}({rs1})"
 
 # U-type instruction format
 def generate_u_type(instr):
@@ -67,7 +68,8 @@ def generate_s_type(instr):
         imm = generate_aligned_imm() * 4
     else:
         imm = generate_imm()
-    return f"{instr} {rs2}, {imm}({rs1})"
+    # return f"{instr} {rs2}, {imm}({rs1})"
+    return f"{instr} {rs2}, {imm}(x0)"
 
 # Generate a random instruction based on the instruction format
 def generate_instruction():
@@ -75,7 +77,7 @@ def generate_instruction():
         'add', 'sub', 'sll', 'srl', 'sra', 'and', 'or', 'xor', 
         'slt', 'sltu', 'addi', 'slli', 'srli', 'srai', 'andi', 
         'ori', 'xori', 'slti', 'sltiu', 'lui', 'auipc', 
-        # 'sb', 'sh', 'sw', 'lb', 'lh', 'lw', 'lbu', 'lhu'
+        'sb', 'sh', 'sw', 'lb', 'lh', 'lw', 'lbu', 'lhu',
         'mul', 'mulh', 'mulhu', 'mulhsu', 
         'div', 'divu', 'rem', 'remu'
     ])
@@ -90,10 +92,10 @@ def generate_instruction():
         return generate_u_type(instr_type)
     elif instr_type in ['mul', 'mulh', 'mulhu', 'mulhsu', 'div', 'divu', 'rem', 'remu']:
         return generate_r_type(instr_type)
-    # elif instr_type in ['sb', 'sh', 'sw']:
-    #     return generate_s_type(instr_type)
-    # elif instr_type in ['lb', 'lh', 'lw', 'lbu', 'lhu']:
-    #     return generate_i_load_type(instr_type)
+    elif instr_type in ['sb', 'sh', 'sw']:
+        return generate_s_type(instr_type)
+    elif instr_type in ['lb', 'lh', 'lw', 'lbu', 'lhu']:
+        return generate_i_load_type(instr_type)
 
 # Generate an assembly program
 def generate_asm_program(num_instructions):

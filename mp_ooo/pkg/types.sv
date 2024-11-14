@@ -473,3 +473,12 @@ import cpu_params::*;
     } rvfi_dbg_t;
 
 endpackage
+
+package arbiter_types;
+
+    typedef enum logic {
+        PASS_THRU   =   1'b0,
+        WAIT_WRITE  =   1'b1
+    } rv32i_opcode;
+
+endpackage
