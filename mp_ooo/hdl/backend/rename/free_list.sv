@@ -32,6 +32,11 @@ import cpu_params::*;
                 free_list[i] <= (PRF_IDX)'(ARF_DEPTH + unsigned'(i));
             end
         end if (backend_flush) begin
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                if (from_rrf.valid[i]) begin
+                    free_list[wr_ptr_actual] <= from_rrf.stale_idx[i];
+                end
+            end
             wr_ptr <= (FREELIST_IDX+1)'(unsigned'(FREELIST_DEPTH));
             rd_ptr <= '0;
         end else begin
