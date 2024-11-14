@@ -137,7 +137,7 @@ import uop_types::*;
     
     lsu_top lsu_i(
         .clk                    (clk),
-        .rst                    (rst || backend_flush),
+        .rst                    (rst),
 
         .from_ds                (ds_mem_rs_itf_i),
         .to_prf                 (rs_prf_itfs[3]),
@@ -145,7 +145,9 @@ import uop_types::*;
         .fu_cdb_out             (cdb_itfs[3]),
         .fu_cdb_out_dbg         (ls_cdb_itf),
         .dcache_itf             (dcache_itf),
-        .rob_head               (rob_head)
+        .rob_head               (rob_head),
+
+        .backend_flush          (backend_flush)
     );
 
     branch_top branch_i(
