@@ -58,10 +58,11 @@ import lsu_types::*;
     always_comb begin
         to_lsq.wdata = 'x;
 
-        case (agu_reg.fu_opcode)
+        unique case (agu_reg.fu_opcode)
             MEM_SB  : to_lsq.wdata[8 *unaligned_addr[1:0] +: 8 ] = agu_reg.rs2_value[7 :0];
             MEM_SH  : to_lsq.wdata[16*unaligned_addr[1]   +: 16] = agu_reg.rs2_value[15:0];
             MEM_SW  : to_lsq.wdata = agu_reg.rs2_value;
+            default : to_lsq.wdata = 'x;
         endcase
     end
 
