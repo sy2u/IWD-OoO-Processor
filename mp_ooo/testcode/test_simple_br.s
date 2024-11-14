@@ -8,7 +8,8 @@ dependency_test.s:
 
     # This test is NOT exhaustive
 _start:
-loop
+loop:
     beq x0, x0, loop
 halt:
     slti x0, x0, -256
+
