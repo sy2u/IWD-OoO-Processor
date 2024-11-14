@@ -79,5 +79,6 @@ import uop_types::*;
     assign to_rob.rob_id = fifo[rd_ptr_actual].rob_id;
     assign to_rob.miss_predict = fifo[rd_ptr_actual].miss_predict;
     assign to_rob.target_address = fifo[rd_ptr_actual].target_address;
+    assign to_rob.ready = ~empty;
 
 endmodule
