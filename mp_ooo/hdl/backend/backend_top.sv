@@ -110,7 +110,7 @@ import uop_types::*;
 
         .to_int_rs              (ds_int_rs_itf_i),
         .to_intm_rs             (ds_intm_rs_itf_i),
-        .to_br_rs               (ds_br_rs_itf_i),
+        .to_br_rs               (ds_branch_itf_i),
         .to_mem_rs              (ds_mem_rs_itf_i)
     );
 
