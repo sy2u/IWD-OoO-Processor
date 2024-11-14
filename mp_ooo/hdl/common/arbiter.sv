@@ -33,7 +33,7 @@ import arbiter_types::*;
     // FSM
     //---------------------------------------------------------------------------------
 
-    logic curr_state, next_state;
+    arbiter_t curr_state, next_state;
 
     always_ff @( posedge clk ) begin
         if( rst ) begin
@@ -52,41 +52,35 @@ import arbiter_types::*;
         adapter.wdata   =   'x;  
         unique case (curr_state)
             PASS_THRU: begin
-                if( adapter.ready ) begin
-                    if( dcache.read || dcache.write ) begin // prioritize dcache, since icache is always reading
-                        dcache.ready    =   '1;
-                        adapter.read    =   dcache.read;
-                        adapter.write   =   dcache.write;
-                        adapter.addr    =   dcache.addr;
-                        adapter.wdata   =   dcache.wdata;
-                    end else if ( icache.read ) begin
-                        icache.ready    =   '1;
-                        adapter.read    =   '1;
-                        adapter.addr    =   icache.addr;
-                        adapter.wdata   =   icache.wdata;
-                    end
+                if( dcache.read || dcache.write ) begin // prioritize dcache, since icache is always reading
+                    adapter.read    =   dcache.read;
+                    adapter.write   =   dcache.write;
+                    adapter.addr    =   dcache.addr;
+                    adapter.wdata   =   dcache.wdata;
+                    if( adapter.ready ) dcache.ready = '1;
+                end else if ( icache.read ) begin
+                    adapter.read    =   '1;
+                    adapter.addr    =   icache.addr;
+                    adapter.wdata   =   icache.wdata;
+                    if( adapter.ready ) icache.ready = '1;
                 end
             end
             WAIT_WRITE: begin
                     adapter.write   =   '1;
                     adapter.addr    =   addr_buf;
                     adapter.wdata   =   data_buf;
+                    if( adapter.ready ) dcache.ready = '1;
             end
             default: ;
         endcase
     end
 
     always_comb begin
+        next_state = curr_state;
         unique case (curr_state)
-            PASS_THRU: begin
-                if( dcache.write )          next_state = WAIT_WRITE;
-                else                        next_state = PASS_THRU;
-            end
-            WAIT_WRITE: begin
-                if( adapter.ready )         next_state = PASS_THRU;   
-                else                        next_state = WAIT_WRITE;
-            end 
-            default: next_state = curr_state;
+            PASS_THRU: if( dcache.write )   next_state = WAIT_WRITE;
+            WAIT_WRITE: if( adapter.ready ) next_state = PASS_THRU;   
+            default: ;
         endcase
     end
 
