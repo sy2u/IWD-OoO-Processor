@@ -4,6 +4,8 @@ import cpu_params::*;
     input   logic               clk,
     input   logic               rst,
 
+    input   logic               backend_flush,
+
     id_fl_itf.fl                from_id,
     rrf_fl_itf.fl               from_rrf
 );
@@ -29,6 +31,9 @@ import cpu_params::*;
             for (int i = 0; i < FREELIST_DEPTH; i++) begin
                 free_list[i] <= (PRF_IDX)'(ARF_DEPTH + unsigned'(i));
             end
+        end if (backend_flush) begin
+            wr_ptr <= (FREELIST_IDX+1)'(unsigned'(FREELIST_DEPTH));
+            rd_ptr <= '0;
         end else begin
             for (int i = 0; i < ID_WIDTH; i++) begin
                 if (from_rrf.valid[i]) begin

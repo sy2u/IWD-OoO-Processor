@@ -65,6 +65,8 @@ import uop_types::*;
         .clk                    (clk),
         .rst                    (rst),
 
+        .backend_flush          (backend_flush),
+
         .from_id                (id_fl_itf_i),
         .from_rrf               (rrf_fl_itf_i)
     );
