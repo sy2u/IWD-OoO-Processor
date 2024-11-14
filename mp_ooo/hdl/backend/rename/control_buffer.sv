@@ -28,11 +28,11 @@ import cb_types::*;
     logic                   empty;
 
 
-    logic   [ADDR_IDX:0]    wr_ptr;
-    logic   [ADDR_IDX-1:0]  wr_ptr_actual;
+    logic   [CB_IDX:0]    wr_ptr;
+    logic   [CB_IDX-1:0]  wr_ptr_actual;
     logic                   wr_ptr_flag;
-    logic   [ADDR_IDX:0]    rd_ptr;
-    logic   [ADDR_IDX-1:0]  rd_ptr_actual;
+    logic   [CB_IDX:0]    rd_ptr;
+    logic   [CB_IDX-1:0]  rd_ptr_actual;
     logic                   rd_ptr_flag;
 
     assign {wr_ptr_flag, wr_ptr_actual} = wr_ptr;
@@ -49,7 +49,7 @@ import cb_types::*;
             if (enqueue && ~full) begin
                 fifo[wr_ptr_actual].rob_id <= from_ds.uop.rob_id;
                 fifo[wr_ptr_actual].ready <= 1'b0;
-                wr_ptr <= (ADDR_IDX+1)'(wr_ptr + 1);
+                wr_ptr <= (CB_IDX+1)'(wr_ptr + 1);
             end
 
             if (br_cdb_in.valid) begin
@@ -63,7 +63,7 @@ import cb_types::*;
             end
 
             if (dequeue) begin
-                rd_ptr <= (ADDR_IDX+1)'(rd_ptr + 1);
+                rd_ptr <= (CB_IDX+1)'(rd_ptr + 1);
             end
         end
     end
