@@ -29,11 +29,14 @@ import uop_types::*;
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
     br_cdb_itf                  br_cdb_itf_i();
     cb_rob_itf                  cb_rob_itf_i();
+    ls_cdb_itf                  ls_cdb_itf();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
 
     logic                       dispatch_valid;
     logic                       dispatch_ready;
     uop_t                       uops[ID_WIDTH];
+
+    logic   [ROB_IDX-1:0]       rob_head;
 
     id_stage id_stage_i(
         // .clk                    (clk),
@@ -76,6 +79,8 @@ import uop_types::*;
         .to_rrf                 (rob_rrf_itf_i),
         .cdb                    (cdb_itfs),
         .from_cb                (cb_rob_itf_i)
+        .ls_cdb_dbg             (ls_cdb_itf),
+        .rob_head               (rob_head)
     );
 
     control_buffer control_buffer_i(
@@ -148,7 +153,9 @@ import uop_types::*;
         .to_prf                 (rs_prf_itfs[3]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[3]),
-        .dcache_itf             (dcache_itf)
+        .fu_cdb_out_dbg         (ls_cdb_itf),
+        .dcache_itf             (dcache_itf),
+        .rob_head               (rob_head)
     );
 
     prf prf_i(

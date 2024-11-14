@@ -10,7 +10,12 @@ import rvfi_types::*;
     id_rob_itf.rob              from_id,
     rob_rrf_itf.rob             to_rrf,
     cdb_itf.rob                 cdb[CDB_WIDTH],
+<<<<<<< HEAD
     cb_rob_itf.rob              from_cb
+=======
+    ls_cdb_itf.rob              ls_cdb_dbg,
+    output  logic   [ROB_IDX-1:0]   rob_head
+>>>>>>> main
 );
 
     typedef struct packed {
@@ -53,6 +58,8 @@ import rvfi_types::*;
     // same logic with fifo queue
     assign {head_ptr_flag, head_ptr} = head_ptr_reg;
     assign {tail_ptr_flag, tail_ptr} = tail_ptr_reg;
+
+    assign rob_head = head_ptr;
 
     // assign tail_ptr_next = tail_ptr_reg + ROB_IDX'(1);
     assign full = (tail_ptr == head_ptr) && (tail_ptr_flag != head_ptr_flag);
@@ -114,6 +121,14 @@ import rvfi_types::*;
                     rvfi_array[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].rs1_rdata <= cdb_rob[i].rs1_value_dbg;
                     rvfi_array[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].rs2_rdata <= cdb_rob[i].rs2_value_dbg;
                 end
+            end
+
+            if (ls_cdb_dbg.valid) begin
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_addr <= ls_cdb_dbg.addr_dbg;
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_rmask <= ls_cdb_dbg.rmask_dbg;
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_wmask <= ls_cdb_dbg.wmask_dbg;
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_rdata <= ls_cdb_dbg.rdata_dbg;
+                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_wdata <= ls_cdb_dbg.wdata_dbg;
             end
         end
     end

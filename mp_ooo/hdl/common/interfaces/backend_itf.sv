@@ -258,6 +258,38 @@ import cpu_params::*;
         input              miss_predict,
         input              target_address,
         output             dequeue
+    )
+endinterface
+
+interface ls_cdb_itf();
+import cpu_params::*;
+
+    logic   [ROB_IDX-1:0]   rob_id;
+    logic   [31:0]          addr_dbg;
+    logic   [3:0]           rmask_dbg;
+    logic   [3:0]           wmask_dbg;
+    logic   [31:0]          rdata_dbg;
+    logic   [31:0]          wdata_dbg;
+    logic                   valid;
+
+    modport lsu (
+        output              rob_id,
+        output              addr_dbg,
+        output              rmask_dbg,
+        output              wmask_dbg,
+        output              rdata_dbg,
+        output              wdata_dbg,
+        output              valid
+    );
+
+    modport rob (
+        input               rob_id,
+        input               addr_dbg,
+        input               rmask_dbg,
+        input               wmask_dbg,
+        input               rdata_dbg,
+        input               wdata_dbg,
+        input               valid
     );
 
 endinterface

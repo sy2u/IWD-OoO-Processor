@@ -1,4 +1,4 @@
-module top_tb;
+module top_tb_magic;
 
     timeunit 1ps;
     timeprecision 1ps;
@@ -19,8 +19,16 @@ module top_tb;
     mem_itf_banked mem_itf(.*);
     dram_w_burst_frfcfs_controller mem(.itf(mem_itf));
 
-    mem_itf_banked dbg_mem_itf(.*);
-    dram_w_burst_frfcfs_controller dbg_mem(.itf(dbg_mem_itf));
+    mem_itf_w_mask #(.CHANNELS(1)) dmem_itf(.*);
+    n_port_pipeline_memory_32_w_mask #(.CHANNELS(1), .MAGIC(1)) magic_mem(.itf(dmem_itf));
+
+    dmem_itf magic_dmem();
+    assign dmem_itf.addr[0] = magic_dmem.addr;
+    assign dmem_itf.rmask[0] = magic_dmem.rmask;
+    assign dmem_itf.wmask[0] = magic_dmem.wmask;
+    assign magic_dmem.rdata = dmem_itf.rdata[0];
+    assign dmem_itf.wdata[0] = magic_dmem.wdata;
+    assign magic_dmem.resp = dmem_itf.resp[0];
 
     // For randomized testing
     // logic [31:0] regs_v[32];
@@ -42,24 +50,9 @@ module top_tb;
         .bmem_ready (mem_itf.ready ),
         .bmem_raddr (mem_itf.raddr ),
         .bmem_rdata (mem_itf.rdata ),
-        .bmem_rvalid(mem_itf.rvalid)
+        .bmem_rvalid(mem_itf.rvalid),
 
-        // For debugging
-        ,
-        .dbg_bmem_addr  (dbg_mem_itf.addr  ),
-        .dbg_bmem_read  (dbg_mem_itf.read  ),
-        .dbg_bmem_write (dbg_mem_itf.write ),
-        .dbg_bmem_wdata (dbg_mem_itf.wdata ),
-        .dbg_bmem_ready (dbg_mem_itf.ready ),
-        .dbg_bmem_raddr (dbg_mem_itf.raddr ),
-        .dbg_bmem_rdata (dbg_mem_itf.rdata ),
-        .dbg_bmem_rvalid(dbg_mem_itf.rvalid)
-
-        // For random testing
-        // .imem_addr      (mem_itf.addr [0]),
-        // .imem_rmask     (mem_itf.rmask[0]),
-        // .imem_rdata     (mem_itf.rdata[0]),
-        // .imem_resp      (mem_itf.resp [0])
+        .magic_dmem (magic_dmem)
     );
 
     // For random testing

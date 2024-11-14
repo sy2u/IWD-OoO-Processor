@@ -24,8 +24,8 @@ import lsu_types::*;
         end
     endgenerate
     // rs array, store uop+available
-    uop_t rs_array      [INTRS_DEPTH];
-    logic rs_valid      [INTRS_DEPTH];
+    uop_t mem_rs_arr    [INTRS_DEPTH];
+    logic mem_rs_valid  [INTRS_DEPTH];
 
     // push logic
     logic                 int_rs_push_en;
@@ -34,30 +34,32 @@ import lsu_types::*;
     // issue logic
     logic                 int_rs_issue_en;
     logic [INTRS_IDX-1:0] int_rs_issue_idx;
-    logic                 src2_valid;
 
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
         if (rst) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                rs_valid[i] <= 1'b1;
+                mem_rs_valid[i] <= 1'b0;
             end
         end else begin 
             // issue > snoop cdb > push
             // push renamed instruction
             if (int_rs_push_en) begin 
                 // set rs to unavailable
-                rs_valid[int_rs_push_idx]   <= 1'b0;
-                rs_array[int_rs_push_idx]   <= from_ds.uop;
+                mem_rs_valid[int_rs_push_idx]   <= 1'b1;
+                mem_rs_arr[int_rs_push_idx]   <= from_ds.uop;
             end
 
             // snoop CDB to update rs1 valid
             for (int i = 0; i < INTRS_DEPTH; i++) begin
                 for (int k = 0; k < CDB_WIDTH; k++) begin
-                    if (cdb_rs[k].valid && rs_valid[i]) begin 
-                        if (rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
-                            rs_array[i].rs1_valid <= 1'b1;
+                    if (cdb_rs[k].valid && mem_rs_valid[i]) begin 
+                        if (mem_rs_arr[i].rs1_phy == cdb_rs[k].rd_phy) begin 
+                            mem_rs_arr[i].rs1_valid <= 1'b1;
+                        end
+                        if (mem_rs_arr[i].rs2_phy == cdb_rs[k].rd_phy) begin 
+                            mem_rs_arr[i].rs2_valid <= 1'b1;
                         end
                     end
                 end 
@@ -66,7 +68,7 @@ import lsu_types::*;
             // pop issued instruction
             if (int_rs_issue_en) begin 
                 // set rs to available
-                rs_valid[int_rs_issue_idx] <= 1'b1;
+                mem_rs_valid[int_rs_issue_idx] <= 1'b0;
             end
         end
     end
@@ -78,7 +80,7 @@ import lsu_types::*;
         int_rs_push_idx = '0;
         if (from_ds.valid && from_ds.ready) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                if (!rs_valid[(INTRS_IDX)'(unsigned'(i))]) begin 
+                if (!mem_rs_valid[(INTRS_IDX)'(unsigned'(i))]) begin 
                     int_rs_push_idx = (INTRS_IDX)'(unsigned'(i));
                     int_rs_push_en = 1'b1;
                     break;
@@ -89,22 +91,28 @@ import lsu_types::*;
 
     // issue enable logic
     // loop from top until src all valid
-    logic                 src_valid;
+    logic                 src1_valid;
+    logic                 src2_valid;
 
     always_comb begin
         int_rs_issue_en  = '0;
-        int_rs_issue_idx = '0; 
-        src_valid       = '0;
+        int_rs_issue_idx = '0;
+        src1_valid       = '0;
+        src2_valid       = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (rs_valid[(INTRS_IDX)'(unsigned'(i))]) begin 
-                src_valid = rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
-                for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                        src_valid = 1'b1;
+            if (mem_rs_valid[(INTRS_IDX)'(unsigned'(i))]) begin
+                src1_valid = mem_rs_arr[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
+                src2_valid = mem_rs_arr[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
+                for (int k = 0; k < CDB_WIDTH; k++) begin
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == mem_rs_arr[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                        src1_valid = 1'b1;
+                    end
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == mem_rs_arr[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                        src2_valid = 1'b1;
                     end
                 end
 
-                if (src_valid) begin 
+                if (src1_valid && src2_valid) begin 
                     int_rs_issue_en = '1;
                     int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i));
                     break;
@@ -117,7 +125,7 @@ import lsu_types::*;
     always_comb begin 
         from_ds.ready = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (!rs_valid[i]) begin 
+            if (!mem_rs_valid[i]) begin 
                 from_ds.ready = '1;
                 break;
             end
@@ -125,8 +133,8 @@ import lsu_types::*;
     end
 
     // communicate with prf
-    assign to_prf.rs1_phy = rs_array[int_rs_issue_idx].rs1_phy;
-    assign to_prf.rs2_phy = rs_array[int_rs_issue_idx].rs2_phy;
+    assign to_prf.rs1_phy = mem_rs_arr[int_rs_issue_idx].rs1_phy;
+    assign to_prf.rs2_phy = mem_rs_arr[int_rs_issue_idx].rs2_phy;
 
     ///////////////////////
     // INT_MEM to FU_AGU //
@@ -134,6 +142,12 @@ import lsu_types::*;
     logic           fu_agu_valid;
     agu_reg_t       agu_reg_in;
     agu_lsq_t       agu_lsq;
+
+    assign agu_reg_in.rob_id = mem_rs_arr[int_rs_issue_idx].rob_id;
+    assign agu_reg_in.fu_opcode = mem_rs_arr[int_rs_issue_idx].fu_opcode;
+    assign agu_reg_in.imm = mem_rs_arr[int_rs_issue_idx].imm;
+    assign agu_reg_in.rs1_value = to_prf.rs1_value;
+    assign agu_reg_in.rs2_value = to_prf.rs2_value;
 
     fu_agu fu_agu_i(
         .clk(clk),

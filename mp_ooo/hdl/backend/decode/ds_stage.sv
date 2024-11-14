@@ -40,6 +40,8 @@ import uop_types::*;
         always_comb begin
             to_int_rs.valid = '0;
             to_intm_rs.valid = '0;
+            to_br_rs.valid = '0;
+            to_mem_rs.valid = '0;
             unique case (uops[i].rs_type)
                 RS_INT: begin
                     to_int_rs.valid = dispatch_valid[i]; // Dispatch to INT Reservation Stations
@@ -62,6 +64,8 @@ import uop_types::*;
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
         assign to_int_rs.uop = uops[i];
         assign to_intm_rs.uop = uops[i];
+        assign to_br_rs.uop = uops[i];
+        assign to_mem_rs.uop = uops[i];
     end endgenerate
 
     // Mux for selecting the ready signal
