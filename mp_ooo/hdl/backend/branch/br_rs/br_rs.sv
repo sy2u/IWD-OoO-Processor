@@ -1,4 +1,4 @@
-module int_rs
+module br_rs
 import cpu_params::*;
 import uop_types::*;
 import int_rs_types::*;
@@ -6,10 +6,12 @@ import int_rs_types::*;
     input   logic               clk,
     input   logic               rst,
 
-    ds_rs_itf.rs                from_ds,
+    ds_rs_itf.rs        	    from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
-    cdb_itf.fu                  fu_cdb_out
+    cdb_itf.fu                  fu_cdb_out,
+    br_cdb_itf.fu               br_cdb_out,
+    input   logic               branch_ready
 );
     ///////////////////////////
     // Reservation Stations  //
@@ -83,7 +85,7 @@ import int_rs_types::*;
     always_comb begin
         int_rs_push_en  = '0;
         int_rs_push_idx = '0;
-        if (from_ds.valid && from_ds.ready) begin 
+        if (from_ds.valid && branch_ready) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 if (int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
                     int_rs_push_idx = (INTRS_IDX)'(unsigned'(i));
@@ -103,32 +105,21 @@ import int_rs_types::*;
         src2_valid       = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
             if (!int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
-                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op1_sel)
-                    OP1_ZERO, OP1_PC: src1_valid = '1;
-                    OP1_RS1: begin 
-                        src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
-                        for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                                src1_valid = 1'b1;
-                            end
-                        end
+                
+                src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
+                for (int k = 0; k < CDB_WIDTH; k++) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                        src1_valid = 1'b1;
                     end
-                    default: src1_valid = '0;
-                endcase
-
-                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op2_sel)
-                    OP2_ZERO, OP2_IMM: src2_valid = '1;
-                    OP2_RS2: begin 
-                        src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
-                        for (int k = 0; k < CDB_WIDTH; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                                src2_valid = 1'b1;
-                            end
-                        end
+                end
+                    
+                src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
+                for (int k = 0; k < CDB_WIDTH; k++) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                        src2_valid = 1'b1;
                     end
-                    default: src2_valid = '0;
-                endcase
-
+                end
+                    
                 if (src1_valid && src2_valid) begin 
                     int_rs_issue_en = '1;
                     int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i));
@@ -140,14 +131,13 @@ import int_rs_types::*;
 
     // full logic, set rs.ready to 0 if rs is full
     always_comb begin 
-        from_ds.ready = '0;
+    	from_ds.ready = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
             if (int_rs_available[i]) begin 
                 from_ds.ready = '1;
             end
         end
     end
-    
     // assign from_ds.ready = |int_rs_available;
 
     // communicate with prf
@@ -155,39 +145,40 @@ import int_rs_types::*;
     assign to_prf.rs2_phy = int_rs_array[int_rs_issue_idx].rs2_phy;
 
     //////////////////////
-    // INT_RS to FU_ALU //
+    // BR_RS to FU_ALU //
     //////////////////////
-    logic           int_rs_valid;
-    logic           fu_alu_ready;
-    fu_alu_reg_t    fu_alu_reg_in;
+    logic           br_rs_valid;
+    logic           fu_br_ready;
+    fu_br_reg_t     fu_br_reg_in;
 
     // handshake with fu_alu_reg:
-    assign int_rs_valid = int_rs_issue_en;
+    assign br_rs_valid = int_rs_issue_en;
 
     // send data to fu_alu_reg
     always_comb begin 
-        fu_alu_reg_in.rob_id       = int_rs_array[int_rs_issue_idx].rob_id;
-        fu_alu_reg_in.rd_phy       = int_rs_array[int_rs_issue_idx].rd_phy;
-        fu_alu_reg_in.rd_arch      = int_rs_array[int_rs_issue_idx].rd_arch;
-        fu_alu_reg_in.op1_sel      = int_rs_array[int_rs_issue_idx].op1_sel;
-        fu_alu_reg_in.op2_sel      = int_rs_array[int_rs_issue_idx].op2_sel;
-        fu_alu_reg_in.fu_opcode    = int_rs_array[int_rs_issue_idx].fu_opcode;
-        fu_alu_reg_in.imm          = int_rs_array[int_rs_issue_idx].imm;
-        fu_alu_reg_in.pc           = int_rs_array[int_rs_issue_idx].pc;
+        fu_br_reg_in.rob_id         = int_rs_array[int_rs_issue_idx].rob_id;
+        fu_br_reg_in.rd_phy         = int_rs_array[int_rs_issue_idx].rd_phy;
+        fu_br_reg_in.rd_arch        = int_rs_array[int_rs_issue_idx].rd_arch;
+        fu_br_reg_in.fu_opcode      = int_rs_array[int_rs_issue_idx].fu_opcode;
+        fu_br_reg_in.imm            = int_rs_array[int_rs_issue_idx].imm;
+        fu_br_reg_in.pc             = int_rs_array[int_rs_issue_idx].pc;
+        fu_br_reg_in.predict_taken  = int_rs_array[int_rs_issue_idx].predict_taken;
+        fu_br_reg_in.predict_target = int_rs_array[int_rs_issue_idx].predict_target;
 
-        fu_alu_reg_in.rs1_value    = to_prf.rs1_value;
-        fu_alu_reg_in.rs2_value    = to_prf.rs2_value;
+        fu_br_reg_in.rs1_value      = to_prf.rs1_value;
+        fu_br_reg_in.rs2_value      = to_prf.rs2_value;
     end
 
     
     // Functional Units
-    fu_alu fu_alu_i(
+    fu_br fu_br_i(
         .clk                    (clk),
         .rst                    (rst),
-        .int_rs_valid            (int_rs_valid),
-        .fu_alu_ready           (fu_alu_ready),
-        .fu_alu_reg_in          (fu_alu_reg_in),
-        .cdb                    (fu_cdb_out)
+        .br_rs_valid            (br_rs_valid),
+        .fu_br_ready            (fu_br_ready),
+        .fu_br_reg_in           (fu_br_reg_in),
+        .cdb                    (fu_cdb_out),
+        .br_cdb                 (br_cdb_out)
     );
 
 endmodule

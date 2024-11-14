@@ -5,9 +5,12 @@ import rvfi_types::*;
     input   logic               clk,
     input   logic               rst,
 
+    output  logic               backend_flush,
+    output  logic   [31:0]      backend_redirect_pc,
     id_rob_itf.rob              from_id,
     rob_rrf_itf.rob             to_rrf,
     cdb_itf.rob                 cdb[CDB_WIDTH],
+    cb_rob_itf.rob              from_cb,
     ls_cdb_itf.rob              ls_cdb_dbg,
     output  logic   [ROB_IDX-1:0]   rob_head
 );
@@ -43,6 +46,7 @@ import rvfi_types::*;
 
     cdb_rob_t               cdb_rob [CDB_WIDTH];
 
+    logic                   dequeue;
     rvfi_dbg_t              rvfi_itf    [ID_WIDTH];
     rvfi_dbg_t              rvfi_array  [ROB_DEPTH] [ID_WIDTH];
     logic   [63:0]          rvfi_order;
@@ -78,17 +82,17 @@ import rvfi_types::*;
         assign cdb_rob[k].rs2_value_dbg = cdb[k].rs2_value_dbg;
     end endgenerate
 
-
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (rst || backend_flush) begin
             for (int i = 0; i < ROB_DEPTH; i++) begin
                 for (int j = 0; j < ID_WIDTH; j++) begin
+                    rob_arr[i][j].valid <= 1'b0;
                     rob_arr[i][j].ready <= 1'b0;
                 end
             end
             head_ptr_reg <= '0;
             tail_ptr_reg <= '0;
-            rvfi_order <= 64'h0;
+            // rvfi_order <= 64'h0;
         end else begin
             if (from_id.valid && from_id.ready) begin           // push in
                 tail_ptr_reg <= (ROB_IDX+1)'(tail_ptr_reg + 1);
@@ -103,7 +107,7 @@ import rvfi_types::*;
 
             if (pop) begin                              // pop out
                 head_ptr_reg <= (ROB_IDX+1)'(head_ptr_reg +1);
-                rvfi_order <= rvfi_order + valid_instrs;
+                // rvfi_order <= rvfi_order + valid_instrs;
             end
 
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
@@ -138,6 +142,11 @@ import rvfi_types::*;
         assign to_rrf.rd_arch[i] = rob_arr[head_ptr][i].rd_arch;
     end endgenerate
 
+    // interface with control_buffer
+    assign dequeue = from_cb.ready ? pop && ((ROB_IDX)'(from_cb.rob_id / ID_WIDTH) == head_ptr) : 1'b0;
+    assign from_cb.dequeue = dequeue;
+    assign backend_flush = dequeue && from_cb.miss_predict;
+    assign backend_redirect_pc = from_cb.target_address; 
     //////////////////////////
     //          RVFI        //
     //////////////////////////
@@ -156,7 +165,7 @@ import rvfi_types::*;
         assign rvfi_itf[i].frd_addr = rvfi_head[i].frd_addr;
         assign rvfi_itf[i].frd_wdata = rvfi_head[i].frd_wdata;
         assign rvfi_itf[i].pc_rdata = rvfi_head[i].pc_rdata;
-        assign rvfi_itf[i].pc_wdata = rvfi_head[i].pc_rdata + 4;
+        assign rvfi_itf[i].pc_wdata = backend_flush ? backend_redirect_pc : rvfi_head[i].pc_rdata + 4;
         assign rvfi_itf[i].mem_addr = rvfi_head[i].mem_addr;
         assign rvfi_itf[i].mem_rmask = rvfi_head[i].mem_rmask;
         assign rvfi_itf[i].mem_wmask = rvfi_head[i].mem_wmask;
@@ -164,6 +173,14 @@ import rvfi_types::*;
         assign rvfi_itf[i].mem_wdata = rvfi_head[i].mem_wdata;
     end endgenerate
 
+    always_ff @(posedge clk) begin
+        if (rst) begin 
+            rvfi_order <= 64'h0;
+        end else if (pop) begin 
+            rvfi_order <= rvfi_order + valid_instrs;
+        end
+    end
+    
     always_comb begin
         valid_instrs = '0;
         for (int i = 0; i < ID_WIDTH; i++) begin

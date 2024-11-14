@@ -214,6 +214,56 @@ import cpu_params::*;
 
 endinterface
 
+interface br_cdb_itf();
+import cpu_params::*;
+
+    logic   [ROB_IDX-1:0]   rob_id;
+    logic                   miss_predict;
+    logic   [31:0]          target_address;
+    logic                   valid;
+
+    modport fu (
+        output              rob_id,
+        output              miss_predict,
+        output              target_address,
+        output              valid
+    );
+
+    modport cb (
+        input              rob_id,
+        input              miss_predict,
+        input              target_address,
+        input              valid
+    );
+
+endinterface
+
+interface cb_rob_itf();
+import cpu_params::*;
+
+    logic   [ROB_IDX-1:0]   rob_id;
+    logic                   miss_predict;
+    logic   [31:0]          target_address;
+    logic                   ready;
+    logic                   dequeue;
+
+    modport cb (
+        output              rob_id,
+        output              miss_predict,
+        output              target_address,
+        output              ready,
+        input               dequeue
+    );
+
+    modport rob (
+        input              rob_id,
+        input              miss_predict,
+        input              target_address,
+        input              ready,
+        output             dequeue
+    );
+endinterface
+
 interface ls_cdb_itf();
 import cpu_params::*;
 

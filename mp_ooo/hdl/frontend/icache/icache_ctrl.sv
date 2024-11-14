@@ -49,25 +49,27 @@ import icache_types::*; #(
 
         unique case (state)
             PASS_THRU: begin
-                if (read) begin
-                    if (~hit) begin
-                        dfp_read = 1'b1;
-                        if (dfp_ready) begin
-                            next_state = ALLOCATE;
+                if (kill) begin
+                    next_state = PASS_THRU;
+                end else begin
+                    if (read) begin
+                        if (~hit) begin
+                            dfp_read = 1'b1;
+                            if (dfp_ready) begin
+                                next_state = ALLOCATE;
+                            end
                         end
                     end
                 end
-                if (kill) begin
-                    next_state = PASS_THRU;
-                end
             end
             ALLOCATE: begin
-                if (dfp_rvalid && dfp_addr == dfp_raddr) begin
-                    next_state = ALLOCATE_STALL;
-                    allocate_done = 1'b1;
-                end
                 if (kill) begin
                     next_state = PASS_THRU;
+                end else begin
+                    if (dfp_rvalid && dfp_addr == dfp_raddr) begin
+                        next_state = ALLOCATE_STALL;
+                        allocate_done = 1'b1;
+                    end
                 end
             end
             ALLOCATE_STALL: begin

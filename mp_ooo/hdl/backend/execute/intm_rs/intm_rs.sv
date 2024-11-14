@@ -142,6 +142,7 @@ import int_rs_types::*;
             end
         end
     end
+    // assign from_ds.ready = |intm_rs_available;
     
     //---------------------------------------------------------------------------------
     // INTM_RS Reg:

@@ -11,10 +11,12 @@ import lsu_types::*;
     cdb_itf.fu                  cdb_out,
     ls_cdb_itf.lsu              cdb_out_dbg,
     input   logic   [ROB_IDX-1:0]   rob_head,
-    dmem_itf.cpu                dmem
+    dmem_itf.cpu                dmem,
+
+    input   logic               lsu_ready,
 
     // Flush signals
-    // input   logic               backend_flush
+    input   logic               backend_flush
 );
 
     localparam              LSQ_IDX = $clog2(LSQ_DEPTH);
@@ -39,7 +41,7 @@ import lsu_types::*;
     logic                   dequeue;
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (rst || backend_flush) begin
             wr_ptr <= '0;
             rd_ptr <= '0;
         end else begin
@@ -90,7 +92,7 @@ import lsu_types::*;
     logic                   want_read;
     logic                   want_write;
 
-    assign enqueue = from_ds.valid && from_ds.ready;
+    assign enqueue = from_ds.valid && lsu_ready;
     always_comb begin
         if (empty) begin
             want_dequeue = 1'b0;
@@ -102,9 +104,11 @@ import lsu_types::*;
             end
         end
     end
+    logic           dmem_pending;
+    logic           dmem_flushed;
     assign want_read = want_dequeue && ~fifo[rd_ptr_actual].is_store;
     assign want_write = want_dequeue && fifo[rd_ptr_actual].is_store;
-    assign dequeue = want_dequeue && dmem.resp; // simple dequeue condition
+    assign dequeue = want_dequeue && dmem_pending && dmem.resp && ~dmem_flushed; // simple dequeue condition
 
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
     assign empty = (wr_ptr == rd_ptr);
@@ -115,9 +119,32 @@ import lsu_types::*;
     /////////////////////////
 
     logic   [31:0]  dmem_unaligned_addr;
+    logic           dmem_busy;
 
-    assign dmem.rmask = (want_read && ~dmem.resp) ? fifo[rd_ptr_actual].mask : '0;
-    assign dmem.wmask = (want_write && ~dmem.resp) ? fifo[rd_ptr_actual].mask : '0;
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            dmem_pending <= '0;
+        end else if (|dmem.rmask || |dmem.wmask) begin
+            dmem_pending <= '1;
+        end else if (dmem.resp) begin
+            dmem_pending <= '0;
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            dmem_flushed <= '0;
+        end else if (dmem_pending && backend_flush) begin
+            dmem_flushed <= '1;
+        end else if (dmem.resp) begin
+            dmem_flushed <= '0;
+        end
+    end
+
+    assign dmem_busy = dmem_pending && ~dmem.resp;
+
+    assign dmem.rmask = (want_read && ~dmem_busy && ~dmem.resp && ~backend_flush) ? fifo[rd_ptr_actual].mask : '0;
+    assign dmem.wmask = (want_write && ~dmem_busy && ~dmem.resp && ~backend_flush) ? fifo[rd_ptr_actual].mask : '0;
     assign dmem_unaligned_addr = fifo[rd_ptr_actual].addr;
     assign dmem.addr =  {dmem_unaligned_addr[31:2], 2'b00};
     assign dmem.wdata = fifo[rd_ptr_actual].wdata;

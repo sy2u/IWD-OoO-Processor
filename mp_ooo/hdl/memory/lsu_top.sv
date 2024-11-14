@@ -12,10 +12,10 @@ import lsu_types::*;
     cdb_itf.fu                  fu_cdb_out,
     ls_cdb_itf.lsu              fu_cdb_out_dbg,
     cacheline_itf.master        dcache_itf,
-    input   logic   [ROB_IDX-1:0]   rob_head
+    input   logic   [ROB_IDX-1:0]   rob_head,
 
     // Flush signals
-    // input   logic               backend_flush
+    input   logic               backend_flush
 );
 
     // Distribute signal from dispatch to RS and LSQ
@@ -31,7 +31,9 @@ import lsu_types::*;
 
     mem_rs mem_rs_i(
         .clk                    (clk),
-        .rst                    (rst),
+        .rst                    (rst || backend_flush),
+
+        .lsu_ready              (from_ds.ready),
 
         .from_ds                (ds_mem_rs_i),
         .to_prf                 (to_prf),
@@ -50,6 +52,8 @@ import lsu_types::*;
         .cdb_out                (fu_cdb_out),
         .cdb_out_dbg            (fu_cdb_out_dbg),
         .rob_head               (rob_head),
+        .lsu_ready              (from_ds.ready),
+        .backend_flush          (backend_flush),
 
         .dmem                   (dmem_itf_i)
     );

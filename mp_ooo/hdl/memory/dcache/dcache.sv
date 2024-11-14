@@ -233,7 +233,7 @@ import dcache_types::*;
             data_wmask0 = '0;
             for (int i = 0; i < 4; i++) begin
                 if (stage_reg.wmask[i]) begin
-                    data_wmask0[stage_reg.offset + unsigned'(i)] = 1'b1;
+                    data_wmask0[stage_reg.offset + (OFFSET_IDX)'(unsigned'(i))] = 1'b1;
                 end
             end
             for (int i = 0; i < 256; i++) begin
