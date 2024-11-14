@@ -22,12 +22,11 @@ import uop_types::*;
     id_rob_itf                  id_rob_itf_i();
     ds_rs_itf                   ds_int_rs_itf_i();
     ds_rs_itf                   ds_intm_rs_itf_i();
-    ds_rs_itf                   ds_br_rs_itf_i();
+    ds_rs_itf                   ds_branch_itf_i();
     ds_rs_itf                   ds_mem_rs_itf_i();
     rob_rrf_itf                 rob_rrf_itf_i();
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
-    br_cdb_itf                  br_cdb_itf_i();
     cb_rob_itf                  cb_rob_itf_i();
     ls_cdb_itf                  ls_cdb_itf();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
@@ -89,13 +88,6 @@ import uop_types::*;
         .rob_head               (rob_head)
     );
 
-    control_buffer control_buffer_i(
-        .clk                    (clk),
-        .rst                    (rst),
-        .from_ds                (ds_br_rs_itf_i),
-        .br_cdb_in              (br_cdb_itf_i),
-        .to_rob                 (cb_rob_itf_i)          
-    );
 
     rrf rrf_i(
         .clk                    (clk),
@@ -142,16 +134,6 @@ import uop_types::*;
         .fu_cdb_out             (cdb_itfs[1])
     );
 
-    br_rs br_rs_i(
-        .clk                    (clk),
-        .rst                    (rst),
-
-        .from_ds                (ds_br_rs_itf_i),
-        .to_prf                 (rs_prf_itfs[2]),
-        .cdb                    (cdb_itfs),
-        .fu_cdb_out             (cdb_itfs[2]),
-        .br_cdb_out             (br_cdb_itf_i)
-    );
     
     lsu_top lsu_i(
         .clk                    (clk),
@@ -164,6 +146,16 @@ import uop_types::*;
         .fu_cdb_out_dbg         (ls_cdb_itf),
         .dcache_itf             (dcache_itf),
         .rob_head               (rob_head)
+    );
+
+    branch_top branch_i(
+        .clk                    (clk),
+        .rst                    (rst),
+        .from_ds                (ds_branch_itf_i),
+        .to_prf                 (rs_prf_itfs[2]),
+        .cdb                    (cdb_itfs),
+        .fu_cdb_out             (cdb_itfs[2]),
+        .to_rob                 (cb_rob_itf_i)
     );
 
     prf prf_i(

@@ -70,7 +70,7 @@ import uop_types::*;
     // enqueue, dequeue
     assign empty = (wr_ptr == rd_ptr);
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
-    // assign from_ds.ready = ~full;
+    assign from_ds.ready = ~full;
 
     assign enqueue = from_ds.valid && from_ds.ready;
     assign dequeue = to_rob.dequeue;
