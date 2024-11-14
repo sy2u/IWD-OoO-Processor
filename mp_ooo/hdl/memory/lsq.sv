@@ -143,8 +143,8 @@ import lsu_types::*;
 
     assign dmem_busy = dmem_pending && ~dmem.resp;
 
-    assign dmem.rmask = (want_read && ~dmem_busy && ~dmem.resp) ? fifo[rd_ptr_actual].mask : '0;
-    assign dmem.wmask = (want_write && ~dmem_busy && ~dmem.resp) ? fifo[rd_ptr_actual].mask : '0;
+    assign dmem.rmask = (want_read && ~dmem_busy && ~dmem.resp && ~backend_flush) ? fifo[rd_ptr_actual].mask : '0;
+    assign dmem.wmask = (want_write && ~dmem_busy && ~dmem.resp && ~backend_flush) ? fifo[rd_ptr_actual].mask : '0;
     assign dmem_unaligned_addr = fifo[rd_ptr_actual].addr;
     assign dmem.addr =  {dmem_unaligned_addr[31:2], 2'b00};
     assign dmem.wdata = fifo[rd_ptr_actual].wdata;
