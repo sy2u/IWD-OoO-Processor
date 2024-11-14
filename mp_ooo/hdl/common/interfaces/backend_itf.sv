@@ -258,7 +258,7 @@ import cpu_params::*;
         input              miss_predict,
         input              target_address,
         output             dequeue
-    )
+    );
 endinterface
 
 interface ls_cdb_itf();

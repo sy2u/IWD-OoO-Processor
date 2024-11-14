@@ -10,12 +10,9 @@ import rvfi_types::*;
     id_rob_itf.rob              from_id,
     rob_rrf_itf.rob             to_rrf,
     cdb_itf.rob                 cdb[CDB_WIDTH],
-<<<<<<< HEAD
-    cb_rob_itf.rob              from_cb
-=======
+    cb_rob_itf.rob              from_cb,
     ls_cdb_itf.rob              ls_cdb_dbg,
     output  logic   [ROB_IDX-1:0]   rob_head
->>>>>>> main
 );
 
     typedef struct packed {

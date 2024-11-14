@@ -78,7 +78,7 @@ import uop_types::*;
         .from_id                (id_rob_itf_i),
         .to_rrf                 (rob_rrf_itf_i),
         .cdb                    (cdb_itfs),
-        .from_cb                (cb_rob_itf_i)
+        .from_cb                (cb_rob_itf_i),
         .ls_cdb_dbg             (ls_cdb_itf),
         .rob_head               (rob_head)
     );
