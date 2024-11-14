@@ -37,6 +37,7 @@ import uop_types::*;
     uop_t                       uops[ID_WIDTH];
 
     logic   [ROB_IDX-1:0]       rob_head;
+    logic   [PRF_IDX-1:0]       rrf_mem[ARF_DEPTH];
 
     id_stage id_stage_i(
         // .clk                    (clk),
@@ -56,6 +57,9 @@ import uop_types::*;
     rat rat_i(
         .clk                    (clk),
         .rst                    (rst),
+
+        .backend_flush          (backend_flush),
+        .rrf_mem                (rrf_mem),
 
         .from_id                (id_rat_itf_i),
         .cdb                    (cdb_itfs)
@@ -96,6 +100,8 @@ import uop_types::*;
     rrf rrf_i(
         .clk                    (clk),
         .rst                    (rst),
+
+        .rrf_mem                (rrf_mem),
 
         .from_rob               (rob_rrf_itf_i),
         .to_fl                  (rrf_fl_itf_i)

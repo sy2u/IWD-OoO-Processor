@@ -5,6 +5,9 @@ import rat_types::*;
     input   logic               clk,
     input   logic               rst,
 
+    input   logic               backend_flush,
+    input   logic   [PRF_IDX-1:0] rrf_mem[ARF_DEPTH],
+
     id_rat_itf.rat              from_id,
     cdb_itf.rat                 cdb[CDB_WIDTH]
 );
@@ -25,6 +28,11 @@ import rat_types::*;
             for( int i = 0; i < ARF_DEPTH; i++ ) begin
                 mem[i][PRF_IDX] <= '1;
                 mem[i][PRF_IDX-1:0] <= {1'b0, ARF_IDX'(i)};
+            end
+        end else if( backend_flush ) begin
+            for( int i = 0; i < ARF_DEPTH; i++ ) begin
+                mem[i][PRF_IDX] <= '1;
+                mem[i][PRF_IDX-1:0] <= rrf_mem[i];
             end
         end else begin
             for( int i = 0; i < CDB_WIDTH; i++ ) begin
