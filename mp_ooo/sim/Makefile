@@ -79,7 +79,7 @@ run_verilator_lint: $(VER_SRCS) $(HDRS) $(VER_EX)
 	python3 check_sus.py
 	python3 ../bin/rvfi_reference.py
 	cd verilator ;\
-	verilator --lint-only $(VER_FLAGS) $(VER_SRCS) --top-module top_tb --exe $(VER_EX)
+	verilator --lint-only +define+ECE411_VER_DUMP +define+ECE411_FST_DUMP $(VER_FLAGS) $(VER_SRCS) --top-module top_tb --exe $(VER_EX)
 
 .PHONY: covrep
 covrep: vcs/top_tb.vdb

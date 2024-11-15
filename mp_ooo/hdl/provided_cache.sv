@@ -97,6 +97,8 @@ module provided_cache (
                     end
                     if (dfp_resp) begin
                         state_next = IDLE;
+                        valid_d = 1'b0;
+                        valid_we = 1'b1;
                         ufp_resp = 1'b1;
                     end
                 end

@@ -14,7 +14,7 @@ get_license DC-Ultra-Opt
 
 read_file -format ddc outputs/synth.ddc
 
-read_saif -input ../sim/sim/dump.fsdb.saif -instance top_tb/dut
+read_saif -input ../sim/vcs/dump.fsdb.saif -instance top_tb/dut
 report_power -analysis_effort high -hierarchy > reports/power.rpt
 report_power -analysis_effort high > reports/power2.rpt
 exit

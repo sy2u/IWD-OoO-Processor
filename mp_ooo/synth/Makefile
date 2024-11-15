@@ -1,8 +1,8 @@
 SHELL=/bin/bash -o pipefail
 .SHELLFLAGS += -e
 
-FSDB2SAIF_START = $(shell head -n1 ../sim/sim/time.txt)
-FSDB2SAIF_END   = $(shell tail -n1 ../sim/sim/time.txt)
+FSDB2SAIF_START = $(shell head -n1 ../sim/vcs/time.txt)
+FSDB2SAIF_END   = $(shell tail -n1 ../sim/vcs/time.txt)
 
 export PKG_SRCS = $(PWD)/../pkg/types.sv
 export HDL_SRCS = $(shell find $(PWD)/../hdl -name '*.sv')
@@ -35,11 +35,11 @@ outputs/synth.ddc:
 	rm -rf work
 	bash check_synth_error.sh
 
-../sim/sim/dump.fsdb.saif: ../sim/sim/dump.fsdb
-	cd ../sim/sim && fsdb2saif dump.fsdb -bt $(FSDB2SAIF_START)ps -et $(FSDB2SAIF_END)ps -s top_tb/dut
+../sim/vcs/dump.fsdb.saif: ../sim/vcs/dump.fsdb
+	cd ../sim/vcs && fsdb2saif dump.fsdb -bt $(FSDB2SAIF_START)ps -et $(FSDB2SAIF_END)ps -s top_tb/dut
 
 .PHONY: power
-power: outputs/synth.ddc ../sim/sim/dump.fsdb.saif
+power: outputs/synth.ddc ../sim/vcs/dump.fsdb.saif
 	dc_shell -f power.tcl |& tee reports/power.log
 
 .PHONY: dv

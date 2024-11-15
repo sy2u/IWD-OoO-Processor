@@ -33,3 +33,8 @@
 * Also uses a bignum library to handle large integer computations
 * Utilizes arithmetic units heavily
 * Expresses good ILP
+
+## Ray Tracing
+* Performs ray tracing based render of a simple scene with no reflections
+* Expresses good ILP
+* Many loads/stores, with high memory-level parallelism

@@ -73,9 +73,11 @@ module top_tb;
 
     initial begin
         $fsdbDumpfile("dump.fsdb");
-        $fsdbDumpvars(0, "+all");
         if ($test$plusargs("NO_DUMP_ALL_ECE411")) begin
+            $fsdbDumpvars(0, dut, "+all");
             $fsdbDumpoff();
+        end else begin
+            $fsdbDumpvars(0, "+all");
         end
         rst = 1'b1;
         repeat (2) @(posedge clk);
