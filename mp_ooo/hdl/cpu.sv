@@ -14,26 +14,8 @@ import rv32i_types::*;
     input   logic   [31:0]      bmem_raddr,
     input   logic   [63:0]      bmem_rdata,
     input   logic               bmem_rvalid
-
-    // Debugging 
-    // ,
-    // output  logic   [31:0]      dbg_bmem_addr,
-    // output  logic               dbg_bmem_read,
-    // output  logic               dbg_bmem_write,
-    // output  logic   [63:0]      dbg_bmem_wdata,
-    // input   logic               dbg_bmem_ready,
-
-    // input   logic   [31:0]      dbg_bmem_raddr,
-    // input   logic   [63:0]      dbg_bmem_rdata,
-    // input   logic               dbg_bmem_rvalid
-
-    // output  logic   [31:0]      imem_addr,
-    // output  logic   [3:0]       imem_rmask,
-    // input   logic   [31:0]      imem_rdata,
-    // input   logic               imem_resp
 );
 
-    // cacheline_itf               cacheline_itf_i();
     cacheline_itf               icache_itf_i();
     cacheline_itf               dcache_itf_i();
     cacheline_itf               adapter_itf_i();

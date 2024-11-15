@@ -44,7 +44,6 @@ import fetch_types::*; #(
         if (rst) begin
             wr_ptr <= '0;
             rd_ptr <= '0;
-            fifo <= '{default: 'x};
         end else begin
             if (enq_en && ~full) begin
                 fifo[wr_ptr_actual] <= enq_data;
@@ -58,6 +57,6 @@ import fetch_types::*; #(
 
     assign empty = (wr_ptr == rd_ptr);
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
-    assign deq_data = (~empty) ? fifo[rd_ptr_actual] : '{default: 'x};
+    assign deq_data = fifo[rd_ptr_actual];
 
 endmodule
