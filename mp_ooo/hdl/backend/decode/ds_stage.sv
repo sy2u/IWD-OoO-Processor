@@ -2,8 +2,8 @@ module ds_stage
 import cpu_params::*;
 import uop_types::*;
 (
-    // input   logic               clk,
-    // input   logic               rst,
+    input   logic               clk,
+    input   logic               rst,
 
     // handshake with rename stage
     input   logic               prv_valid,
@@ -95,6 +95,41 @@ import uop_types::*;
         prv_ready = 1'b1;
         for (int i = 0; i < ID_WIDTH; i++) begin
             prv_ready = prv_ready && dispatch_ready[i];
+        end
+    end
+
+    //////////////////////////
+    // Performance Counters //
+    //////////////////////////
+
+    logic   [31:0]  perf_int_rs_block;
+    logic   [31:0]  perf_intm_rs_block;
+    logic   [31:0]  perf_br_rs_block;
+    logic   [31:0]  perf_mem_rs_block;
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            perf_int_rs_block <= '0;
+            perf_intm_rs_block <= '0;
+            perf_br_rs_block <= '0;
+            perf_mem_rs_block <= '0;
+        end else if (!dispatch_ready[0]) begin
+            unique case (uops[0].rs_type)
+                RS_INT: begin
+                    perf_int_rs_block <= perf_int_rs_block + 1;
+                end
+                RS_INTM: begin
+                    perf_intm_rs_block <= perf_intm_rs_block + 1;
+                end
+                RS_BR: begin
+                    perf_br_rs_block <= perf_br_rs_block + 1;
+                end
+                RS_MEM: begin
+                    perf_mem_rs_block <= perf_mem_rs_block + 1;
+                end
+                default: begin
+                end
+            endcase
         end
     end
 

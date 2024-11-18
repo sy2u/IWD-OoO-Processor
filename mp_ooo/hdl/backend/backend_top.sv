@@ -94,8 +94,8 @@ import uop_types::*;
     );
 
     ds_stage ds_stage_i(
-        // .clk                    (clk),
-        // .rst                    (rst),
+        .clk                    (clk),
+        .rst                    (rst),
 
         .prv_valid              (dispatch_valid),
         .prv_ready              (dispatch_ready),
