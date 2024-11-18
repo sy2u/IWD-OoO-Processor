@@ -26,25 +26,25 @@ import int_rs_types::*;
         end
     endgenerate
     // rs array, store uop+available
-    uop_t int_rs_array      [INTRS_DEPTH];
-    logic int_rs_available  [INTRS_DEPTH];
+    uop_t int_rs_array      [BRRS_DEPTH];
+    logic int_rs_available  [BRRS_DEPTH];
 
 
     // push logic
-    logic                 int_rs_push_en;
-    logic [INTRS_IDX-1:0] int_rs_push_idx;
+    logic                   int_rs_push_en;
+    logic [BRRS_IDX-1:0]    int_rs_push_idx;
 
     // issue logic
-    logic                 int_rs_issue_en;
-    logic [INTRS_IDX-1:0] int_rs_issue_idx;
-    logic                 src1_valid;
-    logic                 src2_valid;
+    logic                   int_rs_issue_en;
+    logic [BRRS_IDX-1:0]    int_rs_issue_idx;
+    logic                   src1_valid;
+    logic                   src2_valid;
 
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
         if (rst) begin 
-            for (int i = 0; i < INTRS_DEPTH; i++) begin 
+            for (int i = 0; i < BRRS_DEPTH; i++) begin 
                 int_rs_available[i] <= 1'b1;
             end
         end else begin 
@@ -57,7 +57,7 @@ import int_rs_types::*;
             end
 
             // snoop CDB to update rs1/rs2 valid
-            for (int i = 0; i < INTRS_DEPTH; i++) begin
+            for (int i = 0; i < BRRS_DEPTH; i++) begin
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
                     // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
                     // set rs1/rs2 to valid
@@ -86,9 +86,9 @@ import int_rs_types::*;
         int_rs_push_en  = '0;
         int_rs_push_idx = '0;
         if (from_ds.valid && branch_ready) begin 
-            for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                if (int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
-                    int_rs_push_idx = (INTRS_IDX)'(unsigned'(i));
+            for (int i = 0; i < BRRS_DEPTH; i++) begin 
+                if (int_rs_available[(BRRS_IDX)'(unsigned'(i))]) begin 
+                    int_rs_push_idx = (BRRS_IDX)'(unsigned'(i));
                     int_rs_push_en = 1'b1;
                     break;
                 end
@@ -103,26 +103,26 @@ import int_rs_types::*;
         int_rs_issue_idx = '0; 
         src1_valid       = '0;
         src2_valid       = '0;
-        for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (!int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
+        for (int i = 0; i < BRRS_DEPTH; i++) begin 
+            if (!int_rs_available[(BRRS_IDX)'(unsigned'(i))]) begin 
                 
-                src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
+                src1_valid = int_rs_array[(BRRS_IDX)'(unsigned'(i))].rs1_valid;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(BRRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
                         src1_valid = 1'b1;
                     end
                 end
                     
-                src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
+                src2_valid = int_rs_array[(BRRS_IDX)'(unsigned'(i))].rs2_valid;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(BRRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
                         src2_valid = 1'b1;
                     end
                 end
                     
                 if (src1_valid && src2_valid) begin 
                     int_rs_issue_en = '1;
-                    int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i));
+                    int_rs_issue_idx = (BRRS_IDX)'(unsigned'(i));
                     break;
                 end
             end
@@ -132,7 +132,7 @@ import int_rs_types::*;
     // full logic, set rs.ready to 0 if rs is full
     always_comb begin 
     	from_ds.ready = '0;
-        for (int i = 0; i < INTRS_DEPTH; i++) begin 
+        for (int i = 0; i < BRRS_DEPTH; i++) begin 
             if (int_rs_available[i]) begin 
                 from_ds.ready = '1;
             end

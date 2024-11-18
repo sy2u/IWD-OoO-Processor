@@ -10,12 +10,20 @@ package cpu_params;
     localparam  unsigned    PRF_DEPTH   = 64;
     localparam  unsigned    PRF_IDX     = $clog2(PRF_DEPTH);
 
-    localparam unsigned     INTRS_DEPTH = 8;
-    localparam unsigned     INTRS_IDX   = $clog2(INTRS_DEPTH);    
+    localparam unsigned     INTRS_DEPTH     = 8;
+    localparam unsigned     INTRS_IDX       = $clog2(INTRS_DEPTH);
 
-    localparam  unsigned    LSQ_DEPTH   = 8;
+    localparam unsigned     INTMRS_DEPTH    = 8;
+    localparam unsigned     INTMRS_IDX      = $clog2(INTMRS_DEPTH);
 
-    localparam  unsigned    CB_DEPTH    = 8;
+    localparam unsigned     BRRS_DEPTH      = 8;
+    localparam unsigned     BRRS_IDX        = $clog2(BRRS_DEPTH);
+    localparam  unsigned    CB_DEPTH        = 8;
+
+    localparam unsigned     MEMRS_DEPTH     = 8;
+    localparam unsigned     MEMRS_IDX       = $clog2(MEMRS_DEPTH);
+    localparam  unsigned    LSQ_DEPTH       = 8;
+
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);

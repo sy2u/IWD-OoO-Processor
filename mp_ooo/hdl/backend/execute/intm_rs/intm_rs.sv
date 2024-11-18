@@ -26,22 +26,22 @@ import int_rs_types::*;
     endgenerate
 
     // rs array, store uop+available
-    uop_t intm_rs_array     [INTRS_DEPTH];
-    logic intm_rs_available [INTRS_DEPTH];
+    uop_t intm_rs_array     [INTMRS_DEPTH];
+    logic intm_rs_available [INTMRS_DEPTH];
 
     // pointer to top of the array (like a fifo queue)
-    logic [INTRS_IDX-1:0] int_rs_top;
+    logic [INTMRS_IDX-1:0]  int_rs_top;
 
     // push logic
-    logic                 int_rs_push_en;
-    logic [INTRS_IDX-1:0] int_rs_push_idx;
+    logic                   int_rs_push_en;
+    logic [INTMRS_IDX-1:0]  int_rs_push_idx;
 
     // issue logic
-    logic                 intm_rs_issue_en;
-    logic [INTRS_IDX-1:0] intm_rs_issue_idx;
-    logic                 src1_valid;
-    logic                 src2_valid;
-    logic                 fu_md_ready, fu_md_valid;
+    logic                   intm_rs_issue_en;
+    logic [INTMRS_IDX-1:0]  intm_rs_issue_idx;
+    logic                   src1_valid;
+    logic                   src2_valid;
+    logic                   fu_md_ready, fu_md_valid;
 
     intm_rs_reg_t   intm_rs_in;
     logic           intm_rs_in_valid;
@@ -51,7 +51,7 @@ import int_rs_types::*;
         // rs array reset to all available, and top point to 0
         if (rst) begin 
             int_rs_top <= '0;
-            for (int i = 0; i < INTRS_DEPTH; i++) begin 
+            for (int i = 0; i < INTMRS_DEPTH; i++) begin 
                 intm_rs_available[i]         <= 1'b1;
             end
         end else begin 
@@ -64,7 +64,7 @@ import int_rs_types::*;
             end
 
             // snoop CDB to update rs1/rs2 valid
-            for (int i = 0; i < INTRS_DEPTH; i++) begin
+            for (int i = 0; i < INTMRS_DEPTH; i++) begin
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
                     // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
                     // set rs1/rs2 to valid
@@ -95,9 +95,9 @@ import int_rs_types::*;
         int_rs_push_en  = '0;
         int_rs_push_idx = '0;
         if (from_ds.valid && from_ds.ready) begin 
-            for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                if (intm_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
-                    int_rs_push_idx = (INTRS_IDX)'(unsigned'(i));
+            for (int i = 0; i < INTMRS_DEPTH; i++) begin 
+                if (intm_rs_available[(INTMRS_IDX)'(unsigned'(i))]) begin 
+                    int_rs_push_idx = (INTMRS_IDX)'(unsigned'(i));
                     int_rs_push_en = 1'b1;
                     break;
                 end
@@ -112,21 +112,21 @@ import int_rs_types::*;
         intm_rs_issue_idx = '0; 
         src1_valid       = '0;
         src2_valid       = '0;
-        for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (!intm_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
-                src1_valid = intm_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
-                src2_valid = intm_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
+        for (int i = 0; i < INTMRS_DEPTH; i++) begin 
+            if (!intm_rs_available[(INTMRS_IDX)'(unsigned'(i))]) begin 
+                src1_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
+                src2_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
                         src1_valid = 1'b1;
                     end
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
                         src2_valid = 1'b1;
                     end
                 end
                 if (src1_valid && src2_valid) begin
                     intm_rs_issue_en = '1;
-                    intm_rs_issue_idx = (INTRS_IDX)'(unsigned'(i));
+                    intm_rs_issue_idx = (INTMRS_IDX)'(unsigned'(i));
                 end
             end
         end
@@ -135,7 +135,7 @@ import int_rs_types::*;
     // full logic, set rs.ready to 0 if rs is full
     always_comb begin 
         from_ds.ready = '0;
-        for (int i = 0; i < INTRS_DEPTH; i++) begin 
+        for (int i = 0; i < INTMRS_DEPTH; i++) begin 
             if (intm_rs_available[i]) begin 
                 from_ds.ready = '1;
                 break;

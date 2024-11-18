@@ -26,22 +26,22 @@ import lsu_types::*;
         end
     endgenerate
     // rs array, store uop+available
-    uop_t mem_rs_arr    [INTRS_DEPTH];
-    logic mem_rs_valid  [INTRS_DEPTH];
+    uop_t mem_rs_arr    [MEMRS_DEPTH];
+    logic mem_rs_valid  [MEMRS_DEPTH];
 
     // push logic
     logic                 int_rs_push_en;
-    logic [INTRS_IDX-1:0] int_rs_push_idx;
+    logic [MEMRS_IDX-1:0] int_rs_push_idx;
 
     // issue logic
     logic                 int_rs_issue_en;
-    logic [INTRS_IDX-1:0] int_rs_issue_idx;
+    logic [MEMRS_IDX-1:0] int_rs_issue_idx;
 
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
         if (rst) begin 
-            for (int i = 0; i < INTRS_DEPTH; i++) begin 
+            for (int i = 0; i < MEMRS_DEPTH; i++) begin 
                 mem_rs_valid[i] <= 1'b0;
             end
         end else begin 
@@ -54,7 +54,7 @@ import lsu_types::*;
             end
 
             // snoop CDB to update rs1 valid
-            for (int i = 0; i < INTRS_DEPTH; i++) begin
+            for (int i = 0; i < MEMRS_DEPTH; i++) begin
                 for (int k = 0; k < CDB_WIDTH; k++) begin
                     if (cdb_rs[k].valid && mem_rs_valid[i]) begin 
                         if (mem_rs_arr[i].rs1_phy == cdb_rs[k].rd_phy) begin 
@@ -81,9 +81,9 @@ import lsu_types::*;
         int_rs_push_en  = '0;
         int_rs_push_idx = '0;
         if (from_ds.valid && lsu_ready) begin 
-            for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                if (!mem_rs_valid[(INTRS_IDX)'(unsigned'(i))]) begin 
-                    int_rs_push_idx = (INTRS_IDX)'(unsigned'(i));
+            for (int i = 0; i < MEMRS_DEPTH; i++) begin 
+                if (!mem_rs_valid[(MEMRS_IDX)'(unsigned'(i))]) begin 
+                    int_rs_push_idx = (MEMRS_IDX)'(unsigned'(i));
                     int_rs_push_en = 1'b1;
                     break;
                 end
@@ -101,22 +101,22 @@ import lsu_types::*;
         int_rs_issue_idx = '0;
         src1_valid       = '0;
         src2_valid       = '0;
-        for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (mem_rs_valid[(INTRS_IDX)'(unsigned'(i))]) begin
-                src1_valid = mem_rs_arr[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
-                src2_valid = mem_rs_arr[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
+        for (int i = 0; i < MEMRS_DEPTH; i++) begin 
+            if (mem_rs_valid[(MEMRS_IDX)'(unsigned'(i))]) begin
+                src1_valid = mem_rs_arr[(MEMRS_IDX)'(unsigned'(i))].rs1_valid;
+                src2_valid = mem_rs_arr[(MEMRS_IDX)'(unsigned'(i))].rs2_valid;
                 for (int k = 0; k < CDB_WIDTH; k++) begin
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == mem_rs_arr[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == mem_rs_arr[(MEMRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
                         src1_valid = 1'b1;
                     end
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == mem_rs_arr[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == mem_rs_arr[(MEMRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
                         src2_valid = 1'b1;
                     end
                 end
 
                 if (src1_valid && src2_valid) begin 
                     int_rs_issue_en = '1;
-                    int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i));
+                    int_rs_issue_idx = (MEMRS_IDX)'(unsigned'(i));
                     break;
                 end
             end
@@ -126,7 +126,7 @@ import lsu_types::*;
     // full logic, set rs.ready to 0 if rs is full
     always_comb begin 
         from_ds.ready = '0;
-        for (int i = 0; i < INTRS_DEPTH; i++) begin 
+        for (int i = 0; i < MEMRS_DEPTH; i++) begin 
             if (!mem_rs_valid[i]) begin 
                 from_ds.ready = '1;
                 break;
