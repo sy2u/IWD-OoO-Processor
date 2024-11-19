@@ -27,6 +27,14 @@ module dram_w_burst_frfcfs_controller
     mem_itf_banked.mem itf
 );
 
+    int DRAM_TIMMING_CL_CYCLE   ;
+    int DRAM_TIMMING_tRCD_CYCLE ;
+    int DRAM_TIMMING_tRP_CYCLE  ;
+    int DRAM_TIMMING_tRAS_CYCLE ;
+    int DRAM_TIMMING_tRC_CYCLE  ;
+    int DRAM_TIMMING_tRRD_CYCLE ;
+    int DRAM_TIMMING_tWR_CYCLE  ;
+
     int BRAM_0_ON_X; // return 0 instead of x on rdata
     int CLOCK_PERIOD_PS;
     string memfile;
@@ -34,15 +42,14 @@ module dram_w_burst_frfcfs_controller
         $value$plusargs("BRAM_0_ON_X_ECE411=%d", BRAM_0_ON_X);
         $value$plusargs("CLOCK_PERIOD_PS_ECE411=%d", CLOCK_PERIOD_PS);
         $value$plusargs("MEMLST_ECE411=%s", memfile);
+        DRAM_TIMMING_CL_CYCLE   = int'($ceil((DRAM_TIMMING_CL   *1000.0)/CLOCK_PERIOD_PS));
+        DRAM_TIMMING_tRCD_CYCLE = int'($ceil((DRAM_TIMMING_tRCD *1000.0)/CLOCK_PERIOD_PS));
+        DRAM_TIMMING_tRP_CYCLE  = int'($ceil((DRAM_TIMMING_tRP  *1000.0)/CLOCK_PERIOD_PS));
+        DRAM_TIMMING_tRAS_CYCLE = int'($ceil((DRAM_TIMMING_tRAS *1000.0)/CLOCK_PERIOD_PS));
+        DRAM_TIMMING_tRC_CYCLE  = int'($ceil((DRAM_TIMMING_tRC  *1000.0)/CLOCK_PERIOD_PS));
+        DRAM_TIMMING_tRRD_CYCLE = int'($ceil((DRAM_TIMMING_tRRD *1000.0)/CLOCK_PERIOD_PS));
+        DRAM_TIMMING_tWR_CYCLE  = int'($ceil((DRAM_TIMMING_tWR  *1000.0)/CLOCK_PERIOD_PS));
     end
-
-    int DRAM_TIMMING_CL_CYCLE   = int'($ceil(DRAM_TIMMING_CL   *1000.0/CLOCK_PERIOD_PS));
-    int DRAM_TIMMING_tRCD_CYCLE = int'($ceil(DRAM_TIMMING_tRCD *1000.0/CLOCK_PERIOD_PS));
-    int DRAM_TIMMING_tRP_CYCLE  = int'($ceil(DRAM_TIMMING_tRP  *1000.0/CLOCK_PERIOD_PS));
-    int DRAM_TIMMING_tRAS_CYCLE = int'($ceil(DRAM_TIMMING_tRAS *1000.0/CLOCK_PERIOD_PS));
-    int DRAM_TIMMING_tRC_CYCLE  = int'($ceil(DRAM_TIMMING_tRC  *1000.0/CLOCK_PERIOD_PS));
-    int DRAM_TIMMING_tRRD_CYCLE = int'($ceil(DRAM_TIMMING_tRRD *1000.0/CLOCK_PERIOD_PS));
-    int DRAM_TIMMING_tWR_CYCLE  = int'($ceil(DRAM_TIMMING_tWR  *1000.0/CLOCK_PERIOD_PS));
 
     localparam int DRAM_PARAM_NUM_BANKS         = 2**DRAM_PARAM_BA_WIDTH;
     localparam int DRAM_PARAM_ACCESS_WIDTH      = DRAM_PARAM_BUS_WIDTH * DRAM_PARAM_BURST_LEN;
