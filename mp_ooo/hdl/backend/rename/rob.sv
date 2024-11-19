@@ -11,7 +11,7 @@ import rvfi_types::*;
     rob_rrf_itf.rob             to_rrf,
     cdb_itf.rob                 cdb[CDB_WIDTH],
     cb_rob_itf.rob              from_cb,
-    ls_cdb_itf.rob              ls_cdb_dbg,
+    ls_cdb_itf.rob              from_lsq,
     output  logic   [ROB_IDX-1:0]   rob_head
 );
 
@@ -92,7 +92,6 @@ import rvfi_types::*;
             end
             head_ptr_reg <= '0;
             tail_ptr_reg <= '0;
-            // rvfi_order <= 64'h0;
         end else begin
             if (from_id.valid && from_id.ready) begin           // push in
                 tail_ptr_reg <= (ROB_IDX+1)'(tail_ptr_reg + 1);
@@ -107,7 +106,6 @@ import rvfi_types::*;
 
             if (pop) begin                              // pop out
                 head_ptr_reg <= (ROB_IDX+1)'(head_ptr_reg +1);
-                // rvfi_order <= rvfi_order + valid_instrs;
             end
 
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
@@ -119,12 +117,12 @@ import rvfi_types::*;
                 end
             end
 
-            if (ls_cdb_dbg.valid) begin
-                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_addr <= ls_cdb_dbg.addr_dbg;
-                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_rmask <= ls_cdb_dbg.rmask_dbg;
-                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_wmask <= ls_cdb_dbg.wmask_dbg;
-                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_rdata <= ls_cdb_dbg.rdata_dbg;
-                rvfi_array[ls_cdb_dbg.rob_id / ID_WIDTH][ls_cdb_dbg.rob_id % ID_WIDTH].mem_wdata <= ls_cdb_dbg.wdata_dbg;
+            if (from_lsq.valid) begin
+                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_addr <= from_lsq.addr_dbg;
+                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_rmask <= from_lsq.rmask_dbg;
+                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_wmask <= from_lsq.wmask_dbg;
+                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_rdata <= from_lsq.rdata_dbg;
+                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_wdata <= from_lsq.wdata_dbg;
             end
         end
     end
@@ -146,7 +144,8 @@ import rvfi_types::*;
     assign dequeue = from_cb.ready ? pop && ((ROB_IDX)'(from_cb.rob_id / ID_WIDTH) == head_ptr) : 1'b0;
     assign from_cb.dequeue = dequeue;
     assign backend_flush = dequeue && from_cb.miss_predict;
-    assign backend_redirect_pc = from_cb.target_address; 
+    assign backend_redirect_pc = from_cb.target_address;
+
     //////////////////////////
     //          RVFI        //
     //////////////////////////
@@ -180,7 +179,7 @@ import rvfi_types::*;
             rvfi_order <= rvfi_order + valid_instrs;
         end
     end
-    
+
     always_comb begin
         valid_instrs = '0;
         for (int i = 0; i < ID_WIDTH; i++) begin
