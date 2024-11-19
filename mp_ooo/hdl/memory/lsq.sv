@@ -6,7 +6,7 @@ import lsu_types::*;
     input   logic               clk,
     input   logic               rst,
 
-    ds_rs_itf.rs                from_ds,
+    ds_rs_mono_itf.rs           from_ds,
     agu_lsq_itf.lsq             from_agu,
     cdb_itf.fu                  cdb_out,
     ls_cdb_itf.lsu              cdb_out_dbg,

@@ -6,7 +6,7 @@ import int_rs_types::*;
     input   logic               clk,
     input   logic               rst,
 
-    ds_rs_itf.rs        	    from_ds,
+    ds_rs_mono_itf.rs        	from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
@@ -14,8 +14,8 @@ import int_rs_types::*;
 );
     br_cdb_itf                  br_cdb_itf_i();
 
-    ds_rs_itf                   ds_br_rs_itf_i();
-    ds_rs_itf                   ds_cb_itf_i();
+    ds_rs_mono_itf              ds_br_rs_itf_i();
+    ds_rs_mono_itf              ds_cb_itf_i();
 
     assign ds_br_rs_itf_i.valid = from_ds.valid;
     assign ds_br_rs_itf_i.uop   = from_ds.uop;

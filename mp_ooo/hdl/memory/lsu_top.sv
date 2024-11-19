@@ -6,7 +6,7 @@ import lsu_types::*;
     input   logic               clk,
     input   logic               rst,
 
-    ds_rs_itf.rs                from_ds,
+    ds_rs_mono_itf.rs           from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
@@ -19,8 +19,8 @@ import lsu_types::*;
 );
 
     // Distribute signal from dispatch to RS and LSQ
-    ds_rs_itf                   ds_mem_rs_i();
-    ds_rs_itf                   ds_lsq_i();
+    ds_rs_mono_itf              ds_mem_rs_i();
+    ds_rs_mono_itf              ds_lsq_i();
     assign ds_mem_rs_i.valid = from_ds.valid;
     assign ds_mem_rs_i.uop   = from_ds.uop;
     assign ds_lsq_i.valid    = from_ds.valid;

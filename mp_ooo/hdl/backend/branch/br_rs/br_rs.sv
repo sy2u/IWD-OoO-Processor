@@ -6,7 +6,7 @@ import int_rs_types::*;
     input   logic               clk,
     input   logic               rst,
 
-    ds_rs_itf.rs        	    from_ds,
+    ds_rs_mono_itf.rs        	from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,

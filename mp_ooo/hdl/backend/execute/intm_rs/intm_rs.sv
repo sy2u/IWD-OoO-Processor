@@ -60,7 +60,7 @@ import int_rs_types::*;
             if (int_rs_push_en) begin 
                 // set rs to unavailable
                 intm_rs_available[int_rs_push_idx]      <= 1'b0;
-                intm_rs_array[int_rs_push_idx]          <= from_ds.uop;
+                intm_rs_array[int_rs_push_idx]          <= from_ds.uop[0];
             end
 
             // snoop CDB to update rs1/rs2 valid
@@ -94,7 +94,7 @@ import int_rs_types::*;
     always_comb begin
         int_rs_push_en  = '0;
         int_rs_push_idx = '0;
-        if (from_ds.valid && from_ds.ready) begin 
+        if (from_ds.valid[0] && from_ds.ready) begin 
             for (int i = 0; i < INTMRS_DEPTH; i++) begin 
                 if (intm_rs_available[(INTMRS_IDX)'(unsigned'(i))]) begin 
                     int_rs_push_idx = (INTMRS_IDX)'(unsigned'(i));
@@ -142,8 +142,7 @@ import int_rs_types::*;
             end
         end
     end
-    // assign from_ds.ready = |intm_rs_available;
-    
+
     //---------------------------------------------------------------------------------
     // INTM_RS Reg:
     //---------------------------------------------------------------------------------

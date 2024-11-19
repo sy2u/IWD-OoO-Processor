@@ -17,10 +17,10 @@ import uop_types::*;
     ds_rs_itf.ds                to_intm_rs,
 
     // BR Reservation Stations
-    ds_rs_itf.ds                to_br_rs,
+    ds_rs_mono_itf.ds           to_br_rs,
 
     // MEM Reservation Stations
-    ds_rs_itf.ds                to_mem_rs
+    ds_rs_mono_itf.ds           to_mem_rs
 );
 
     //////////////////////////
@@ -38,16 +38,16 @@ import uop_types::*;
     // Encoder to select the reservation station
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin : valid_encoders
         always_comb begin
-            to_int_rs.valid = '0;
-            to_intm_rs.valid = '0;
+            to_int_rs.valid[i] = '0;
+            to_intm_rs.valid[i] = '0;
             to_br_rs.valid = '0;
             to_mem_rs.valid = '0;
             unique case (uops[i].rs_type)
                 RS_INT: begin
-                    to_int_rs.valid = dispatch_valid[i]; // Dispatch to INT Reservation Stations
+                    to_int_rs.valid[i] = dispatch_valid[i]; // Dispatch to INT Reservation Stations
                 end
                 RS_INTM: begin
-                    to_intm_rs.valid = dispatch_valid[i]; // Dispatch to INTM Reservation Stations
+                    to_intm_rs.valid[i] = dispatch_valid[i]; // Dispatch to INTM Reservation Stations
                 end
                 RS_BR: begin
                     to_br_rs.valid = dispatch_valid[i]; // Dispatch to BR Reservation Stations
@@ -62,8 +62,8 @@ import uop_types::*;
     end endgenerate
 
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign to_int_rs.uop = uops[i];
-        assign to_intm_rs.uop = uops[i];
+        assign to_int_rs.uop[i] = uops[i];
+        assign to_intm_rs.uop[i] = uops[i];
         assign to_br_rs.uop = uops[i];
         assign to_mem_rs.uop = uops[i];
     end endgenerate

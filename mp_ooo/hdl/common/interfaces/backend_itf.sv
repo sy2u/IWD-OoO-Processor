@@ -24,6 +24,28 @@ interface ds_rs_itf();
 import cpu_params::*;
 import uop_types::*;
 
+    logic                   valid   [ID_WIDTH];
+    logic                   ready;
+    uop_t                   uop     [ID_WIDTH];
+
+    modport ds (
+        output              valid,
+        input               ready,
+        output              uop
+    );
+
+    modport rs (
+        input               valid,
+        output              ready,
+        input               uop
+    );
+
+endinterface
+
+interface ds_rs_mono_itf();
+import cpu_params::*;
+import uop_types::*;
+
     logic                   valid;
     logic                   ready;
     uop_t                   uop;

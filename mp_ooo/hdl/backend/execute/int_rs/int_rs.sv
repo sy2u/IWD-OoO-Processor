@@ -51,7 +51,7 @@ import int_rs_types::*;
             if (int_rs_push_en) begin 
                 // set rs to unavailable
                 int_rs_available[int_rs_push_idx]   <= 1'b0;
-                int_rs_array[int_rs_push_idx]       <= from_ds.uop;
+                int_rs_array[int_rs_push_idx]       <= from_ds.uop[0];
             end
 
             // snoop CDB to update rs1/rs2 valid
@@ -83,7 +83,7 @@ import int_rs_types::*;
     always_comb begin
         int_rs_push_en  = '0;
         int_rs_push_idx = '0;
-        if (from_ds.valid && from_ds.ready) begin 
+        if (from_ds.valid[0] && from_ds.ready) begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 if (int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
                     int_rs_push_idx = (INTRS_IDX)'(unsigned'(i));
@@ -147,8 +147,6 @@ import int_rs_types::*;
             end
         end
     end
-    
-    // assign from_ds.ready = |int_rs_available;
 
     // communicate with prf
     assign to_prf.rs1_phy = int_rs_array[int_rs_issue_idx].rs1_phy;

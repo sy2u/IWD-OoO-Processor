@@ -5,7 +5,7 @@ import uop_types::*;
     input   logic               clk,
     input   logic               rst,
 
-    ds_rs_itf.rs                from_ds,
+    ds_rs_mono_itf.rs           from_ds,
     br_cdb_itf.cb               br_cdb_in,
     cb_rob_itf.cb               to_rob,
     input   logic               branch_ready          

@@ -8,7 +8,7 @@ import lsu_types::*;
 
     input   logic               lsu_ready,
 
-    ds_rs_itf.rs                from_ds,
+    ds_rs_mono_itf.rs           from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     agu_lsq_itf.agu             to_lsq
