@@ -159,24 +159,8 @@ import lsu_types::*;
         .prv_ready  (),
         .agu_reg_in (agu_reg_in),
 
-        .nxt_valid  (fu_agu_valid),
-        .to_lsq     (agu_lsq)
-    );
-
-    pipeline_reg #(
-        .DATA_T    (agu_lsq_t)
-    ) agu_lsq_reg_i (
-        .clk        (clk),
-        .rst        (rst),
-        .flush      ('0),
-
-        .prv_valid  (fu_agu_valid),
-        .prv_ready  (),
-        .prv_data   (agu_lsq),
-
         .nxt_valid  (to_lsq.valid),
-        .nxt_ready  ('1),
-        .nxt_data   (to_lsq.data)
+        .to_lsq     (to_lsq.data)
     );
 
 endmodule
