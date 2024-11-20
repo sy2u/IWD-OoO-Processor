@@ -3,7 +3,6 @@ import cpu_params::*;
 import prf_types::*;
 (
     input   logic               clk,
-    input   logic               rst,
 
     rs_prf_itf.prf              from_rs[CDB_WIDTH],
     cdb_itf.prf                 cdb[CDB_WIDTH]
@@ -31,15 +30,9 @@ import prf_types::*;
     endgenerate
 
     always_ff @(posedge clk) begin
-        if (rst) begin
-            for (int i = 0; i < 32; i++) begin
-                prf_data[i] <= '0;
-            end
-        end else begin
-            for (int i = 0; i < CDB_WIDTH; i++) begin
-                if (cdb_local[i].valid && (cdb_local[i].rd_phy != '0)) begin 
-                    prf_data[cdb_local[i].rd_phy] <= cdb_local[i].rd_value;
-                end
+        for (int i = 0; i < CDB_WIDTH; i++) begin
+            if (cdb_local[i].valid && (cdb_local[i].rd_phy != '0)) begin 
+                prf_data[cdb_local[i].rd_phy] <= cdb_local[i].rd_value;
             end
         end
     end

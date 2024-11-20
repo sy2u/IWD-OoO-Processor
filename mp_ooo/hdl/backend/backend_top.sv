@@ -157,7 +157,7 @@ import uop_types::*;
 
     prf prf_i(
         .clk                    (clk),
-        .rst                    (rst),
+
         .from_rs                (rs_prf_itfs),
         .cdb                    (cdb_itfs)
     );
