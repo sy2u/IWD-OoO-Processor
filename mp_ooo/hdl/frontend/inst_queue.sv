@@ -59,4 +59,29 @@ import fetch_types::*; #(
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
     assign deq_data = fifo[rd_ptr_actual];
 
+    //////////////////////////
+    // Performance Counters //
+    //////////////////////////
+
+    logic   [ADDR_IDX-1:0]      perf_n_elem;
+    logic   [ADDR_IDX-1:0]      perf_n_elem_nxt;
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            perf_n_elem <= '0;
+        end else begin
+            perf_n_elem <= perf_n_elem_nxt;
+        end
+    end
+
+    always_comb begin
+        perf_n_elem_nxt = perf_n_elem;
+        if (enq_en && ~full) begin
+            perf_n_elem_nxt = (ADDR_IDX)'(perf_n_elem_nxt + 1);
+        end
+        if (deq_en && ~empty) begin
+            perf_n_elem_nxt = (ADDR_IDX)'(perf_n_elem_nxt - 1);
+        end
+    end
+
 endmodule

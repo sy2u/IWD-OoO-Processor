@@ -130,7 +130,9 @@ import uop_types::*;
 
     branch_top branch_i(
         .clk                    (clk),
-        .rst                    (rst || backend_flush),
+        .rst                    (rst),
+        .backend_flush          (backend_flush),
+
         .from_ds                (ds_branch_itf_i),
         .to_prf                 (rs_prf_itfs[2]),
         .cdb                    (cdb_itfs),

@@ -5,6 +5,8 @@ import int_rs_types::*;
 (
     input   logic               clk,
     input   logic               rst,
+    input   logic               backend_flush,
+
     input   logic               br_rs_valid,
     output  logic               fu_br_ready,
     input   fu_br_reg_t         fu_br_reg_in,
@@ -24,12 +26,10 @@ import int_rs_types::*;
     // FU_BR_REG //
     ////////////////
 
-    // to br_rs
-    // assign fu_br_ready = ~fu_br_valid || (fu_br_valid && cdb_ready)
     assign fu_br_ready = 1'b1;
 
     always_ff @(posedge clk) begin 
-        if (rst) begin 
+        if (rst || backend_flush) begin 
             fu_br_valid <= '0;
         end else if (fu_br_ready) begin 
             fu_br_valid <= br_rs_valid;
@@ -37,9 +37,7 @@ import int_rs_types::*;
     end
 
     always_ff @(posedge clk) begin 
-        if (rst) begin 
-            fu_br_reg_out <= '{default: 'x};
-        end else if (br_rs_valid && fu_br_ready) begin 
+        if (br_rs_valid && fu_br_ready) begin 
             fu_br_reg_out <= fu_br_reg_in;
         end
     end
@@ -103,7 +101,7 @@ import int_rs_types::*;
     assign cdb_ready = 1'b1;
 
     always_ff @(posedge clk) begin 
-        if (rst) begin 
+        if (rst || backend_flush) begin 
             cdb_valid <= '0;
         end else if (cdb_ready) begin 
             cdb_valid <= fu_br_valid;
@@ -115,7 +113,7 @@ import int_rs_types::*;
     logic                   cdb_reg_miss_predict;
     logic   [31:0]          cdb_reg_target_address;
     always_ff @(posedge clk) begin 
-        if (rst) begin 
+        if (rst || backend_flush) begin 
             cdb_reg                     <= '0;
             cdb_reg_miss_predict        <= '0;
             cdb_reg_target_address      <= '0;
@@ -147,5 +145,27 @@ import int_rs_types::*;
     assign br_cdb.miss_predict   = cdb_reg_miss_predict;
     assign br_cdb.target_address = cdb_reg_target_address;
     assign br_cdb.valid          = cdb_valid;
+
+    //////////////////////////
+    // Performance Counters //
+    //////////////////////////
+
+    logic   [31:0]              perf_br_cnt;
+    logic   [31:0]              perf_br_mispredict_cnt;
+    real                        perf_mispredict_rate;
+
+    always_ff @(posedge clk) begin 
+        if (rst) begin 
+            perf_br_cnt             <= '0;
+            perf_br_mispredict_cnt  <= '0;
+        end else if (fu_br_valid) begin 
+            perf_br_cnt             <= perf_br_cnt + 1;
+            perf_br_mispredict_cnt  <= perf_br_mispredict_cnt + 32'(miss_predict);
+        end
+    end
+
+    assign perf_mispredict_rate = (perf_br_cnt != 0) ? 
+                                real'(perf_br_mispredict_cnt) / real'(perf_br_cnt) : 
+                                0.0;
 
 endmodule

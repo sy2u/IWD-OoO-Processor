@@ -5,6 +5,7 @@ import int_rs_types::*;
 (
     input   logic               clk,
     input   logic               rst,
+    input   logic               backend_flush,
 
     ds_rs_mono_itf.rs        	from_ds,
     rs_prf_itf.rs               to_prf,
@@ -26,7 +27,8 @@ import int_rs_types::*;
 
     control_buffer control_buffer_i(
         .clk                    (clk),
-        .rst                    (rst),
+        .rst                    (rst || backend_flush),
+
         .from_ds                (ds_cb_itf_i),
         .br_cdb_in              (br_cdb_itf_i),
         .to_rob                 (to_rob),
@@ -36,6 +38,7 @@ import int_rs_types::*;
     br_rs br_rs_i(
         .clk                    (clk),
         .rst                    (rst),
+        .backend_flush          (backend_flush),
 
         .from_ds                (ds_br_rs_itf_i),
         .to_prf                 (to_prf),
