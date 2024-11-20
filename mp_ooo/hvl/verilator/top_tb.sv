@@ -15,6 +15,8 @@ module top_tb
     mon_itf #(.CHANNELS(8)) mon_itf(.*);
     monitor #(.CHANNELS(8)) monitor(.itf(mon_itf));
 
+    perf_monitor perf_monitor_i(.clk(clk), .rst(rst));
+
     cpu dut(
         .clk            (clk),
         .rst            (rst),

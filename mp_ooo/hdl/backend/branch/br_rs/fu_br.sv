@@ -48,7 +48,6 @@ import int_rs_types::*;
 
     // calculate target address
     logic   [31:0]  target_address;
-    // assign target_address = (fu_br_reg_out.fu_opcode == BR_JALR) ? ((fu_br_reg_out.rs1_value + fu_br_reg_out.imm) & 32'hfffffffe) : fu_br_reg_out.pc + fu_br_reg_out.imm;
 
     // calculate branch taken
     logic   [31:0]  a;
@@ -152,7 +151,6 @@ import int_rs_types::*;
 
     logic   [31:0]              perf_br_cnt;
     logic   [31:0]              perf_br_mispredict_cnt;
-    real                        perf_mispredict_rate;
 
     always_ff @(posedge clk) begin 
         if (rst) begin 
@@ -163,9 +161,5 @@ import int_rs_types::*;
             perf_br_mispredict_cnt  <= perf_br_mispredict_cnt + 32'(miss_predict);
         end
     end
-
-    assign perf_mispredict_rate = (perf_br_cnt != 0) ? 
-                                real'(perf_br_mispredict_cnt) / real'(perf_br_cnt) : 
-                                0.0;
 
 endmodule
