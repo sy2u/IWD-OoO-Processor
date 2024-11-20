@@ -42,9 +42,7 @@ import cpu_params::*;
 
     // Stage IF1 = Read ICache and send to FIFO
 
-    if1_stage #(
-        .IF_WIDTH(IF_WIDTH)
-    ) if1_stage_i(
+    if1_stage if1_stage_i(
         .clk                    (clk),
         .rst                    (rst),
 
@@ -57,6 +55,7 @@ import cpu_params::*;
         .nxt_ready              (if1_ready),
 
         .pc_next                (pc_next),
+
         .pc                     (pc),
         .insts                  (insts),
 

@@ -1,6 +1,5 @@
-module if1_stage #(
-            parameter       IF_WIDTH    = 2
-)
+module if1_stage
+import cpu_params::*;
 (
     input   logic           clk,
     input   logic           rst,
