@@ -36,9 +36,7 @@ import int_rs_types::*;
     end
 
     always_ff @(posedge clk) begin 
-        if (rst) begin 
-            fu_alu_reg_out <= '{default: 'x};
-        end else if (int_rs_valid && fu_alu_ready) begin 
+        if (int_rs_valid && fu_alu_ready) begin 
             fu_alu_reg_out <= fu_alu_reg_in;
         end
     end
@@ -64,7 +62,6 @@ import int_rs_types::*;
 
         unique case (fu_alu_reg_out.op2_sel) 
             OP2_RS2:  b = fu_alu_reg_out.rs2_value;
-            OP2_ZERO: b = '0;
             OP2_IMM:  b = fu_alu_reg_out.imm;
             default:  b = '0;
         endcase

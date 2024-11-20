@@ -117,7 +117,7 @@ import int_rs_types::*;
                 endcase
 
                 unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op2_sel)
-                    OP2_ZERO, OP2_IMM: src2_valid = '1;
+                    OP2_IMM: src2_valid = '1;
                     OP2_RS2: begin 
                         src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
                         for (int k = 0; k < CDB_WIDTH; k++) begin 

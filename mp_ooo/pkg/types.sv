@@ -170,17 +170,16 @@ endpackage
 package uop_types;
 import cpu_params::*;
 
-    typedef enum logic [1:0] {
-        OP1_X       = 2'bxx,
-        OP1_RS1     = 2'b00,
-        OP1_ZERO    = 2'b01
+    typedef enum logic [0:0] {
+        OP1_X       = 1'bx,
+        OP1_RS1     = 1'b0,
+        OP1_ZERO    = 1'b1
     } op1_sel_t;
 
-    typedef enum logic [1:0] {
-        OP2_X       = 2'bxx,
-        OP2_RS2     = 2'b00,
-        OP2_ZERO    = 2'b01,
-        OP2_IMM     = 2'b10
+    typedef enum logic [0:0] {
+        OP2_X       = 1'bx,
+        OP2_RS2     = 1'b0,
+        OP2_IMM     = 1'b1
     } op2_sel_t;
 
     typedef enum logic [1:0] {
@@ -335,6 +334,7 @@ endpackage
 
 package int_rs_types;
 import cpu_params::*;
+import uop_types::*;
 
     typedef struct packed {
         logic   [PRF_IDX-1:0]   rd_phy;
@@ -347,8 +347,8 @@ import cpu_params::*;
         logic   [PRF_IDX-1:0]   rd_phy;
 
         logic   [3:0]           fu_opcode;  
-        logic   [1:0]           op1_sel;    
-        logic   [1:0]           op2_sel;    
+        op1_sel_t               op1_sel;    
+        op2_sel_t               op2_sel;    
 
         logic   [31:0]          pc;
         logic   [31:0]          imm;
