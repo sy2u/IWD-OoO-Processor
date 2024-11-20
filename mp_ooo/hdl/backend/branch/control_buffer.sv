@@ -17,7 +17,6 @@ import uop_types::*;
         logic   [ROB_IDX-1:0]   rob_id;
         logic                   miss_predict;
         logic   [31:0]          target_address;
-        logic                   ready;
     } cb_entry_t;
 
     cb_entry_t              fifo[CB_DEPTH];
@@ -42,20 +41,15 @@ import uop_types::*;
         if (rst) begin
             wr_ptr <= '0;
             rd_ptr <= '0;
-            for (int i = 0; i < CB_DEPTH; i++) begin
-                fifo[i] <= 'x;
-            end
         end else begin
             if (enqueue && ~full) begin
                 fifo[wr_ptr_actual].rob_id <= from_ds.uop.rob_id;
-                fifo[wr_ptr_actual].ready <= 1'b0;
                 wr_ptr <= (CB_IDX+1)'(wr_ptr + 1);
             end
 
             if (br_cdb_in.valid) begin
                 for (int i = 0; i < CB_DEPTH; i++) begin
                     if (fifo[i].rob_id == br_cdb_in.rob_id) begin
-                        fifo[i].ready <= 1'b1;
                         fifo[i].miss_predict <= br_cdb_in.miss_predict;
                         fifo[i].target_address <= br_cdb_in.target_address;
                     end
@@ -73,7 +67,7 @@ import uop_types::*;
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
     assign from_ds.ready = ~full;
 
-    assign enqueue = from_ds.valid && branch_ready;
+    assign enqueue = from_ds.valid && branch_ready && ~(from_ds.uop.fu_opcode == BR_AUIPC);
     assign dequeue = to_rob.dequeue;
 
     // to rob

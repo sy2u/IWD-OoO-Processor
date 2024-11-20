@@ -89,6 +89,7 @@ import int_rs_types::*;
             target_address = fu_br_reg_out.pc + 32'd4;
         end
     end
+
     assign miss_predict = (branch_taken != fu_br_reg_out.predict_taken) || (target_address != fu_br_reg_out.predict_target);
 
     // calculate rd_value for jal & jalr
