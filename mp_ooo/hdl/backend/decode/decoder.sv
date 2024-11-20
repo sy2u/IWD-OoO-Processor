@@ -45,11 +45,9 @@ import rv32i_types::*;
                 fu_opcode = ALU_ADD;
             end
             op_b_auipc  : begin
-                rs_type = RS_INT;
-                fu_type = FU_ALU;
-                op1_sel = OP1_PC;
-                op2_sel = OP2_IMM;
-                fu_opcode = ALU_ADD;
+                rs_type = RS_BR;
+                fu_type = FU_BR;
+                fu_opcode = BR_AUIPC;
             end
             op_b_jal    : begin
                 rs_type = RS_BR;

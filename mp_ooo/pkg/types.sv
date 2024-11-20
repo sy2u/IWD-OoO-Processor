@@ -173,8 +173,7 @@ import cpu_params::*;
     typedef enum logic [1:0] {
         OP1_X       = 2'bxx,
         OP1_RS1     = 2'b00,
-        OP1_ZERO    = 2'b01,
-        OP1_PC      = 2'b10
+        OP1_ZERO    = 2'b01
     } op1_sel_t;
 
     typedef enum logic [1:0] {
@@ -232,7 +231,8 @@ import cpu_params::*;
         BR_BLTU     = 4'b0110,
         BR_BGEU     = 4'b0111,
         BR_JAL      = 4'b1000,
-        BR_JALR     = 4'b1001
+        BR_JALR     = 4'b1001,
+        BR_AUIPC    = 4'b1111
     } bropc_t;
 
     typedef enum logic [3:0] {

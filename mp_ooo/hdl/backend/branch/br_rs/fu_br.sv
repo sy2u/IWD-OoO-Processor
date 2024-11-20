@@ -20,6 +20,7 @@ import int_rs_types::*;
 
     logic            cdb_ready;
     logic            cdb_valid;
+    logic            br_cdb_valid;
     fu_cdb_reg_t     cdb_reg;
 
     ////////////////
@@ -77,10 +78,10 @@ import int_rs_types::*;
             BR_BGEU : branch_taken = (au >= bu);
             BR_JAL  : branch_taken = 1'b1;
             BR_JALR : branch_taken = 1'b1;
-	    default : branch_taken = 'x;
+	        default : branch_taken = 'x;
         endcase
     end
-    
+
     always_comb begin 
         if (branch_taken) begin 
             target_address = (fu_br_reg_out.fu_opcode == BR_JALR) ? ((fu_br_reg_out.rs1_value + fu_br_reg_out.imm) & 32'hfffffffe) : fu_br_reg_out.pc + fu_br_reg_out.imm;
@@ -92,7 +93,13 @@ import int_rs_types::*;
 
     // calculate rd_value for jal & jalr
     logic   [31:0]  rd_value;
-    assign rd_value = fu_br_reg_out.pc + 'd4;
+    always_comb begin
+        if (fu_br_reg_out.fu_opcode == BR_AUIPC) begin
+            rd_value = fu_br_reg_out.pc + fu_br_reg_out.imm;
+        end else begin
+            rd_value = fu_br_reg_out.pc + 32'd4;
+        end
+    end
 
     ///////////////////
     // fu_br TO CDB //
@@ -102,8 +109,10 @@ import int_rs_types::*;
     always_ff @(posedge clk) begin 
         if (rst || backend_flush) begin 
             cdb_valid <= '0;
+            br_cdb_valid <= '0;
         end else if (cdb_ready) begin 
             cdb_valid <= fu_br_valid;
+            br_cdb_valid <= fu_br_valid && ~(fu_br_reg_out.fu_opcode == BR_AUIPC);
         end
     end
 
@@ -143,7 +152,7 @@ import int_rs_types::*;
     assign br_cdb.rob_id         = cdb_reg.rob_id;
     assign br_cdb.miss_predict   = cdb_reg_miss_predict;
     assign br_cdb.target_address = cdb_reg_target_address;
-    assign br_cdb.valid          = cdb_valid;
+    assign br_cdb.valid          = br_cdb_valid;
 
     //////////////////////////
     // Performance Counters //

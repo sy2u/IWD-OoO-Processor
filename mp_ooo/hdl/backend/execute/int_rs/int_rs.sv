@@ -104,7 +104,7 @@ import int_rs_types::*;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
             if (!int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
                 unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op1_sel)
-                    OP1_ZERO, OP1_PC: src1_valid = '1;
+                    OP1_ZERO: src1_valid = '1;
                     OP1_RS1: begin 
                         src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
                         for (int k = 0; k < CDB_WIDTH; k++) begin 

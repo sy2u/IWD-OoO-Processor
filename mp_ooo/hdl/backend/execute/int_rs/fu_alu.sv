@@ -59,7 +59,6 @@ import int_rs_types::*;
         unique case (fu_alu_reg_out.op1_sel) 
             OP1_RS1:  a = fu_alu_reg_out.rs1_value;
             OP1_ZERO: a = '0;
-            OP1_PC:   a = fu_alu_reg_out.pc;
             default:  a = '0;
         endcase
 
