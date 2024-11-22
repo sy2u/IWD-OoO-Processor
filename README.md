@@ -28,3 +28,7 @@
 | CP2: ROB                  |   |✅ |  |  |
 | CP2: RAT & RRF            |   |   | |✅ |
 | CP2: Free List            |✅ |  | | |
+| CP3: Memory Subsystem     |✅ ||||
+| CP3: Branches             | ||✅||
+| CP3: Bmem Arbiter         | |||✅|
+
