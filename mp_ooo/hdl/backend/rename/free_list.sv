@@ -14,45 +14,55 @@ import cpu_params::*;
     localparam  unsigned        FREELIST_IDX = $clog2(FREELIST_DEPTH);
 
     logic   [PRF_IDX-1:0]       free_list[FREELIST_DEPTH];
-    logic   [FREELIST_IDX:0]    wr_ptr;
-    logic   [FREELIST_IDX-1:0]  wr_ptr_actual;
-    logic                       wr_ptr_flag;
-    logic   [FREELIST_IDX:0]    rd_ptr;
-    logic   [FREELIST_IDX-1:0]  rd_ptr_actual;
-    logic                       rd_ptr_flag;
-
-    assign {wr_ptr_flag, wr_ptr_actual} = wr_ptr;
-    assign {rd_ptr_flag, rd_ptr_actual} = rd_ptr;
+    logic   [FREELIST_IDX-1:0]  wr_ptr;
+    logic   [FREELIST_IDX-1:0]  rd_ptr;
+    logic   [FREELIST_IDX:0]    counter;
+    logic   [FREELIST_IDX:0]    counter_nxt;
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            wr_ptr <= (FREELIST_IDX+1)'(unsigned'(FREELIST_DEPTH));
+            wr_ptr <= '0;
             rd_ptr <= '0;
+            counter <= (FREELIST_IDX+1)'(FREELIST_DEPTH);
             for (int i = 0; i < FREELIST_DEPTH; i++) begin
                 free_list[i] <= (PRF_IDX)'(ARF_DEPTH + unsigned'(i));
             end
-        end if (backend_flush) begin
+        end else if (backend_flush) begin
+            wr_ptr <= '0;
+            rd_ptr <= '0;
+            counter <= (FREELIST_IDX+1)'(FREELIST_DEPTH);
             for (int i = 0; i < ID_WIDTH; i++) begin
                 if (from_rrf.valid[i]) begin
-                    free_list[wr_ptr_actual] <= from_rrf.stale_idx[i];
+                    free_list[wr_ptr] <= from_rrf.stale_idx[i];
                 end
             end
-            wr_ptr <= (FREELIST_IDX+1)'(unsigned'(FREELIST_DEPTH));
-            rd_ptr <= '0;
         end else begin
             for (int i = 0; i < ID_WIDTH; i++) begin
                 if (from_rrf.valid[i]) begin
-                    free_list[wr_ptr_actual] <= from_rrf.stale_idx[i];
-                    wr_ptr <= (FREELIST_IDX+1)'(wr_ptr + 1);
+                    free_list[wr_ptr] <= from_rrf.stale_idx[i];
+                    wr_ptr <= (FREELIST_IDX)'(wr_ptr + 1);
                 end
             end
             if (from_id.ready && from_id.valid) begin
-                rd_ptr <= (FREELIST_IDX+1)'(rd_ptr + 1);
+                rd_ptr <= (FREELIST_IDX)'(rd_ptr + 1);
             end
+            counter <= counter_nxt;
         end
     end
 
-    assign from_id.free_idx = free_list[rd_ptr_actual];
-    assign from_id.ready = ~(wr_ptr == rd_ptr);
+    always_comb begin
+        counter_nxt = counter;
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            if (from_rrf.valid[i]) begin
+                counter_nxt = (FREELIST_IDX+1)'(counter_nxt + 1);
+            end
+        end
+        if (from_id.ready && from_id.valid) begin
+            counter_nxt = (FREELIST_IDX+1)'(counter_nxt - 1);
+        end
+    end
+
+    assign from_id.free_idx = free_list[rd_ptr];
+    assign from_id.ready = (counter >= 1);
 
 endmodule
