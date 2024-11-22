@@ -101,15 +101,15 @@ endinterface
 interface id_rat_itf();
 import cpu_params::*;
 
-    logic   [ARF_IDX-1:0]   rs1_arch;
-    logic   [ARF_IDX-1:0]   rs2_arch;
-    logic   [PRF_IDX-1:0]   rs1_phy;
-    logic   [PRF_IDX-1:0]   rs2_phy;
-    logic                   rs1_valid;
-    logic                   rs2_valid;
-    logic                   write_en;
-    logic   [ARF_IDX-1:0]   rd_arch;
-    logic   [PRF_IDX-1:0]   rd_phy;
+    logic   [ARF_IDX-1:0]   rs1_arch    [ID_WIDTH];
+    logic   [ARF_IDX-1:0]   rs2_arch    [ID_WIDTH];
+    logic   [PRF_IDX-1:0]   rs1_phy     [ID_WIDTH];
+    logic   [PRF_IDX-1:0]   rs2_phy     [ID_WIDTH];
+    logic                   rs1_valid   [ID_WIDTH];
+    logic                   rs2_valid   [ID_WIDTH];
+    logic                   write_en    [ID_WIDTH];
+    logic   [ARF_IDX-1:0]   rd_arch     [ID_WIDTH];
+    logic   [PRF_IDX-1:0]   rd_phy      [ID_WIDTH];
 
     modport id (
         output              rs1_arch,

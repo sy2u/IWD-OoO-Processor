@@ -39,35 +39,39 @@ import rat_types::*;
                 if( cdb_local[i].valid && (mem[cdb_local[i].rd_arch][PRF_IDX-1:0] == cdb_local[i].rd_phy) )
                     mem[cdb_local[i].rd_arch][PRF_IDX] <= '1;
             end
-            if( from_id.write_en ) begin
-                mem[from_id.rd_arch][PRF_IDX] <= '0;
-                mem[from_id.rd_arch][PRF_IDX-1:0] <= from_id.rd_phy;
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                if( from_id.write_en[i] ) begin
+                    mem[from_id.rd_arch[i]][PRF_IDX] <= '0;
+                    mem[from_id.rd_arch[i]][PRF_IDX-1:0] <= from_id.rd_phy[i];
+                end
             end
         end
     end
 
     always_comb begin
-        from_id.rs1_phy = mem[from_id.rs1_arch][PRF_IDX-1:0];
-        from_id.rs2_phy = mem[from_id.rs2_arch][PRF_IDX-1:0];
-        from_id.rs1_valid = mem[from_id.rs1_arch][PRF_IDX];
-        from_id.rs2_valid = mem[from_id.rs2_arch][PRF_IDX];
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            from_id.rs1_phy[i] = mem[from_id.rs1_arch[i]][PRF_IDX-1:0];
+            from_id.rs2_phy[i] = mem[from_id.rs2_arch[i]][PRF_IDX-1:0];
+            from_id.rs1_valid[i] = mem[from_id.rs1_arch[i]][PRF_IDX];
+            from_id.rs2_valid[i] = mem[from_id.rs2_arch[i]][PRF_IDX];
 
-        // transparent RAT
-        for( int i = 0; i < CDB_WIDTH; i++ ) begin
-            if( cdb_local[i].valid && (mem[cdb_local[i].rd_arch][PRF_IDX-1:0] == cdb_local[i].rd_phy) ) begin
-                if ( cdb_local[i].rd_arch==from_id.rs1_arch ) from_id.rs1_valid = '1;
-                if ( cdb_local[i].rd_arch==from_id.rs2_arch ) from_id.rs2_valid = '1;
+            // transparent RAT
+            for( int j = 0; j < CDB_WIDTH; j++ ) begin
+                if( cdb_local[j].valid && (mem[cdb_local[j].rd_arch][PRF_IDX-1:0] == cdb_local[j].rd_phy) ) begin
+                    if ( cdb_local[j].rd_arch==from_id.rs1_arch[i] ) from_id.rs1_valid[i] = '1;
+                    if ( cdb_local[j].rd_arch==from_id.rs2_arch[i] ) from_id.rs2_valid[i] = '1;
+                end
             end
-        end
 
-        // handle r0
-        if( from_id.rs1_arch == '0 ) begin
-            from_id.rs1_phy   = '0;
-            from_id.rs1_valid = '1;
-        end
-        if( from_id.rs2_arch == '0 ) begin
-            from_id.rs2_phy   = '0;
-            from_id.rs2_valid = '1;
+            // handle r0
+            if( from_id.rs1_arch[i] == '0 ) begin
+                from_id.rs1_phy[i]   = '0;
+                from_id.rs1_valid[i] = '1;
+            end
+            if( from_id.rs2_arch[i] == '0 ) begin
+                from_id.rs2_phy[i]   = '0;
+                from_id.rs2_valid[i] = '1;
+            end
         end
     end
 
