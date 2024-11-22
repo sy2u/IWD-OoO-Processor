@@ -46,16 +46,16 @@ import uop_types::*;
             to_mem_rs.valid = '0;
             unique case (rs_type[i])
                 RS_INT: begin
-                    to_int_rs.valid[i] = dispatch_valid[i]; // Dispatch to INT Reservation Stations
+                    to_int_rs.valid[i] = dispatch_valid[i] && prv_ready; // Dispatch to INT Reservation Stations
                 end
                 RS_INTM: begin
-                    to_intm_rs.valid[i] = dispatch_valid[i]; // Dispatch to INTM Reservation Stations
+                    to_intm_rs.valid[i] = dispatch_valid[i] && prv_ready; // Dispatch to INTM Reservation Stations
                 end
                 RS_BR: begin
-                    to_br_rs.valid = dispatch_valid[i]; // Dispatch to BR Reservation Stations
+                    to_br_rs.valid = dispatch_valid[i] && prv_ready; // Dispatch to BR Reservation Stations
                 end
                 RS_MEM: begin
-                    to_mem_rs.valid = dispatch_valid[i]; // Dispatch to MEM Reservation Stations
+                    to_mem_rs.valid = dispatch_valid[i] && prv_ready; // Dispatch to MEM Reservation Stations
                 end
                 default: begin
                 end
