@@ -57,9 +57,9 @@ import rat_types::*;
 
             // transparent RAT
             for( int j = 0; j < CDB_WIDTH; j++ ) begin
-                if( cdb_local[j].valid && (mem[cdb_local[j].rd_arch][PRF_IDX-1:0] == cdb_local[j].rd_phy) ) begin
-                    if ( cdb_local[j].rd_arch==from_id.rs1_arch[i] ) from_id.rs1_valid[i] = 1'b1;
-                    if ( cdb_local[j].rd_arch==from_id.rs2_arch[i] ) from_id.rs2_valid[i] = 1'b1;
+                if( cdb_local[j].valid ) begin
+                    if ( cdb_local[j].rd_phy==from_id.rs1_phy[i] ) from_id.rs1_valid[i] = 1'b1;
+                    if ( cdb_local[j].rd_phy==from_id.rs2_phy[i] ) from_id.rs2_valid[i] = 1'b1;
                 end
             end
 
