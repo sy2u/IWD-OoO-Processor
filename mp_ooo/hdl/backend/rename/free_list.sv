@@ -30,11 +30,11 @@ import cpu_params::*;
         if (rst) begin
             wr_ptr <= '0;
             rd_ptr <= '0;
-            counter <= (FREELIST_IDX+1)'(FREELIST_DEPTH);
+            counter <= (FREELIST_IDX+1)'(unsigned'(FREELIST_DEPTH));
         end else if (backend_flush) begin
             wr_ptr <= '0;
             rd_ptr <= '0;
-            counter <= (FREELIST_IDX+1)'(FREELIST_DEPTH);
+            counter <= (FREELIST_IDX+1)'(unsigned'(FREELIST_DEPTH));
         end else begin
             wr_ptr <= FREELIST_IDX'(wr_ptr + n_valids_rrf);
             if (from_id.ready) begin
@@ -66,7 +66,7 @@ import cpu_params::*;
         end else begin
             for (int i = 0; i < ID_WIDTH; i++) begin
                 if (from_rrf.valid[i]) begin
-                    free_list[(FREELIST_IDX)'(wr_ptr + i)] <= from_rrf.stale_idx[i];
+                    free_list[(FREELIST_IDX)'(wr_ptr + unsigned'(i))] <= from_rrf.stale_idx[i];
                 end
             end
         end
