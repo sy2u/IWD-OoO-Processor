@@ -16,6 +16,8 @@ import cpu_params::*;
     logic   [PRF_IDX-1:0]       free_list[FREELIST_DEPTH];
     logic   [FREELIST_IDX-1:0]  wr_ptr;
     logic   [FREELIST_IDX-1:0]  rd_ptr;
+    logic   [FREELIST_IDX-1:0]  wr_ptrs [ID_WIDTH];
+    logic   [FREELIST_IDX-1:0]  rd_ptrs [ID_WIDTH];
     logic   [FREELIST_IDX:0]    counter;
     logic   [FREELIST_IDX:0]    counter_nxt;
 
@@ -66,7 +68,7 @@ import cpu_params::*;
         end else begin
             for (int i = 0; i < ID_WIDTH; i++) begin
                 if (from_rrf.valid[i]) begin
-                    free_list[(FREELIST_IDX)'(wr_ptr + unsigned'(i))] <= from_rrf.stale_idx[i];
+                    free_list[(FREELIST_IDX)'(wr_ptrs[i])] <= from_rrf.stale_idx[i];
                 end
             end
         end
@@ -75,6 +77,7 @@ import cpu_params::*;
     always_comb begin
         n_valids_id = '0;
         for (int i = 0; i < ID_WIDTH; i++) begin
+            rd_ptrs[i] = rd_ptr + FREELIST_IDX'(n_valids_id);
             if (from_id.valid[i]) begin
                 n_valids_id = (ID_WIDTH_IDX+1)'(n_valids_id + 1);
             end
@@ -84,6 +87,7 @@ import cpu_params::*;
     always_comb begin
         n_valids_rrf = '0;
         for (int i = 0; i < ID_WIDTH; i++) begin
+            wr_ptrs[i] = wr_ptr + FREELIST_IDX'(n_valids_rrf);
             if (from_rrf.valid[i]) begin
                 n_valids_rrf = (ID_WIDTH_IDX+1)'(n_valids_rrf + 1);
             end
@@ -91,9 +95,9 @@ import cpu_params::*;
     end
 
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign from_id.free_idx[i] = free_list[FREELIST_IDX'(rd_ptr + i)];
+        assign from_id.free_idx[i] = free_list[FREELIST_IDX'(rd_ptrs[i])];
     end endgenerate
 
-    assign from_id.ready = (counter >= (FREELIST_IDX+1)'(n_valids_id));
+    assign from_id.ready = (counter >= (FREELIST_IDX+1)'(ID_WIDTH));
 
 endmodule
