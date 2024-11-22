@@ -29,8 +29,8 @@ import int_rs_types::*;
 
 
     // push logic
-    logic                 int_rs_push_en;
-    logic [INTRS_IDX-1:0] int_rs_push_idx;
+    logic                 int_rs_push_en    [ID_WIDTH];
+    logic [INTRS_IDX-1:0] int_rs_push_idx   [ID_WIDTH];
 
     // issue logic
     logic                 int_rs_issue_en;
@@ -48,10 +48,12 @@ import int_rs_types::*;
         end else begin 
             // issue > snoop cdb > push
             // push renamed instruction
-            if (int_rs_push_en) begin 
-                // set rs to unavailable
-                int_rs_available[int_rs_push_idx]   <= 1'b0;
-                int_rs_array[int_rs_push_idx]       <= from_ds.uop[0];
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                if (int_rs_push_en[i]) begin 
+                    // set rs to unavailable
+                    int_rs_available[int_rs_push_idx[i]]   <= 1'b0;
+                    int_rs_array[int_rs_push_idx[i]]       <= from_ds.uop[i];
+                end
             end
 
             // snoop CDB to update rs1/rs2 valid
@@ -80,15 +82,23 @@ import int_rs_types::*;
 
     // push logic, push instruction to rs if id is valid and rs is ready
     // loop from top until the first available station
+    logic [INTRS_DEPTH-1:0] assigned_this_cycle;
     always_comb begin
-        int_rs_push_en  = '0;
-        int_rs_push_idx = '0;
-        if (from_ds.valid[0] && from_ds.ready) begin 
-            for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                if (int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
-                    int_rs_push_idx = (INTRS_IDX)'(unsigned'(i));
-                    int_rs_push_en = 1'b1;
-                    break;
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            int_rs_push_en[i]  = 1'b0;
+            int_rs_push_idx[i] = '0;
+        end
+        assigned_this_cycle = '0;
+        for (int p = 0; p < ID_WIDTH; p++) begin
+            if (from_ds.valid[p] && from_ds.ready) begin
+                // Look for first available RS entry not already assigned this cycle
+                for (int i = 0; i < INTRS_DEPTH; i++) begin
+                    if (int_rs_available[(INTRS_IDX)'(unsigned'(i))] && ~assigned_this_cycle[i]) begin
+                        int_rs_push_idx[p] = (INTRS_IDX)'(unsigned'(i));
+                        int_rs_push_en[p] = 1'b1;
+                        assigned_this_cycle[i] = 1'b1;  // Mark this entry as assigned
+                        break;
+                    end
                 end
             end
         end
@@ -139,14 +149,16 @@ import int_rs_types::*;
     end
 
     // full logic, set rs.ready to 0 if rs is full
+    logic   [INTRS_IDX:0]    n_available_slots;
     always_comb begin 
-        from_ds.ready = '0;
+        n_available_slots = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
             if (int_rs_available[i]) begin 
-                from_ds.ready = '1;
+                n_available_slots = (INTRS_IDX+1)'(n_available_slots + 1);
             end
         end
     end
+    assign from_ds.ready = (n_available_slots >= (INTRS_IDX+1)'(ID_WIDTH));
 
     // communicate with prf
     assign to_prf.rs1_phy = int_rs_array[int_rs_issue_idx].rs1_phy;
