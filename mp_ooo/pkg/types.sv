@@ -6,6 +6,7 @@ package cpu_params;
     localparam  unsigned    ID_WIDTH_IDX= $clog2(ID_WIDTH);
 
     localparam  unsigned    ROB_DEPTH   = 32;
+    localparam  unsigned    ROB_PTR_IDX = $clog2(ROB_DEPTH);
     localparam  unsigned    ROB_IDX     = $clog2(ROB_DEPTH * ID_WIDTH);
 
     localparam  unsigned    PRF_DEPTH   = 64;

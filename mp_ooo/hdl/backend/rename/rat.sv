@@ -12,8 +12,8 @@ import rat_types::*;
     cdb_itf.rat                 cdb[CDB_WIDTH]
 );
 
-    logic       [PRF_IDX:0]     mem [ARF_DEPTH];    // msb for valid
-    cdb_rat_t                   cdb_local[CDB_WIDTH];
+    logic       [PRF_IDX:0]     mem         [ARF_DEPTH];    // msb for valid
+    cdb_rat_t                   cdb_local   [CDB_WIDTH];
 
     generate
         for( genvar i = 0; i < CDB_WIDTH; i++ ) begin
@@ -26,22 +26,22 @@ import rat_types::*;
     always_ff @( posedge clk ) begin
         if( rst ) begin
             for( int i = 0; i < ARF_DEPTH; i++ ) begin
-                mem[i][PRF_IDX] <= '1;
+                mem[i][PRF_IDX] <= 1'b1;
                 mem[i][PRF_IDX-1:0] <= {1'b0, ARF_IDX'(i)};
             end
         end else if( backend_flush ) begin
             for( int i = 0; i < ARF_DEPTH; i++ ) begin
-                mem[i][PRF_IDX] <= '1;
+                mem[i][PRF_IDX] <= 1'b1;
                 mem[i][PRF_IDX-1:0] <= rrf_mem[i];
             end
         end else begin
             for( int i = 0; i < CDB_WIDTH; i++ ) begin
                 if( cdb_local[i].valid && (mem[cdb_local[i].rd_arch][PRF_IDX-1:0] == cdb_local[i].rd_phy) )
-                    mem[cdb_local[i].rd_arch][PRF_IDX] <= '1;
+                    mem[cdb_local[i].rd_arch][PRF_IDX] <= 1'b1;
             end
             for (int i = 0; i < ID_WIDTH; i++) begin
                 if( from_id.write_en[i] ) begin
-                    mem[from_id.rd_arch[i]][PRF_IDX] <= '0;
+                    mem[from_id.rd_arch[i]][PRF_IDX] <= 1'b0;
                     mem[from_id.rd_arch[i]][PRF_IDX-1:0] <= from_id.rd_phy[i];
                 end
             end
@@ -58,19 +58,19 @@ import rat_types::*;
             // transparent RAT
             for( int j = 0; j < CDB_WIDTH; j++ ) begin
                 if( cdb_local[j].valid && (mem[cdb_local[j].rd_arch][PRF_IDX-1:0] == cdb_local[j].rd_phy) ) begin
-                    if ( cdb_local[j].rd_arch==from_id.rs1_arch[i] ) from_id.rs1_valid[i] = '1;
-                    if ( cdb_local[j].rd_arch==from_id.rs2_arch[i] ) from_id.rs2_valid[i] = '1;
+                    if ( cdb_local[j].rd_arch==from_id.rs1_arch[i] ) from_id.rs1_valid[i] = 1'b1;
+                    if ( cdb_local[j].rd_arch==from_id.rs2_arch[i] ) from_id.rs2_valid[i] = 1'b1;
                 end
             end
 
             // handle r0
             if( from_id.rs1_arch[i] == '0 ) begin
                 from_id.rs1_phy[i]   = '0;
-                from_id.rs1_valid[i] = '1;
+                from_id.rs1_valid[i] = 1'b1;
             end
             if( from_id.rs2_arch[i] == '0 ) begin
                 from_id.rs2_phy[i]   = '0;
-                from_id.rs2_valid[i] = '1;
+                from_id.rs2_valid[i] = 1'b1;
             end
         end
     end

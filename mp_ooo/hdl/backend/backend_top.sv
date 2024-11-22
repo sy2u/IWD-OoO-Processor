@@ -24,14 +24,13 @@ import uop_types::*;
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
     cb_rob_itf                  cb_rob_itf_i();
-    ls_cdb_itf                  ls_cdb_itf();
+    ls_rob_itf                  ls_rob_itf();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
 
     logic                       dispatch_valid;
     logic                       dispatch_ready;
     uop_t                       uops[ID_WIDTH];
 
-    logic   [ROB_IDX-1:0]       rob_head;
     logic   [PRF_IDX-1:0]       rrf_mem[ARF_DEPTH];
 
     id_stage id_stage_i(
@@ -79,8 +78,7 @@ import uop_types::*;
         .to_rrf                 (rob_rrf_itf_i),
         .cdb                    (cdb_itfs),
         .from_cb                (cb_rob_itf_i),
-        .from_lsq               (ls_cdb_itf),
-        .rob_head               (rob_head)
+        .from_lsq               (ls_rob_itf)
     );
 
     rrf rrf_i(
@@ -148,9 +146,8 @@ import uop_types::*;
         .to_prf                 (rs_prf_itfs[3]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[3]),
-        .fu_cdb_out_dbg         (ls_cdb_itf),
+        .fu_cdb_out_dbg         (ls_rob_itf),
         .dcache_itf             (dcache_itf),
-        .rob_head               (rob_head),
 
         .backend_flush          (backend_flush)
     );

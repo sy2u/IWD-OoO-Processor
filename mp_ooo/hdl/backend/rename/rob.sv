@@ -11,8 +11,7 @@ import rvfi_types::*;
     rob_rrf_itf.rob             to_rrf,
     cdb_itf.rob                 cdb[CDB_WIDTH],
     cb_rob_itf.rob              from_cb,
-    ls_cdb_itf.rob              from_lsq,
-    output  logic   [ROB_IDX-1:0]   rob_head
+    ls_rob_itf.rob              from_lsq
 );
 
     typedef struct packed {
@@ -32,12 +31,12 @@ import rvfi_types::*;
 
     rob_entry_t             rob_arr [ROB_DEPTH] [ID_WIDTH];
 
-    logic   [ROB_IDX:0]     head_ptr_reg;
-    logic   [ROB_IDX:0]     tail_ptr_reg;
+    logic   [ROB_PTR_IDX:0]     head_ptr_reg;
+    logic   [ROB_PTR_IDX:0]     tail_ptr_reg;
 
-    logic   [ROB_IDX-1:0]   head_ptr;
+    logic   [ROB_PTR_IDX-1:0]   head_ptr;
     logic                   head_ptr_flag;
-    logic   [ROB_IDX-1:0]   tail_ptr;
+    logic   [ROB_PTR_IDX-1:0]   tail_ptr;
     logic                   tail_ptr_flag;
 
     logic                   full;
@@ -56,9 +55,8 @@ import rvfi_types::*;
     assign {head_ptr_flag, head_ptr} = head_ptr_reg;
     assign {tail_ptr_flag, tail_ptr} = tail_ptr_reg;
 
-    assign rob_head = head_ptr;
+    assign from_lsq.rob_head = head_ptr;
 
-    // assign tail_ptr_next = tail_ptr_reg + ROB_IDX'(1);
     assign full = (tail_ptr == head_ptr) && (tail_ptr_flag != head_ptr_flag);
     assign empty = (tail_ptr == head_ptr) && (tail_ptr_flag == head_ptr_flag);
 
@@ -96,7 +94,7 @@ import rvfi_types::*;
             tail_ptr_reg <= '0;
         end else begin
             if (from_id.valid && from_id.ready) begin           // push in
-                tail_ptr_reg <= (ROB_IDX+1)'(tail_ptr_reg + 1);
+                tail_ptr_reg <= (ROB_PTR_IDX+1)'(tail_ptr_reg + 1);
                 for (int i = 0; i< ID_WIDTH; i++) begin
                     rob_arr[tail_ptr][i].valid <= from_id.inst_valid[i];
                     rob_arr[tail_ptr][i].ready <= 1'b0;
@@ -107,7 +105,7 @@ import rvfi_types::*;
             end
 
             if (pop) begin                              // pop out
-                head_ptr_reg <= (ROB_IDX+1)'(head_ptr_reg +1);
+                head_ptr_reg <= (ROB_PTR_IDX+1)'(head_ptr_reg +1);
             end
 
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
@@ -143,7 +141,7 @@ import rvfi_types::*;
     end endgenerate
 
     // interface with control_buffer
-    assign dequeue = from_cb.ready ? pop && ((ROB_IDX)'(from_cb.rob_id / ID_WIDTH) == head_ptr) : 1'b0;
+    assign dequeue = from_cb.ready ? pop && ((ROB_PTR_IDX)'(from_cb.rob_id / ID_WIDTH) == head_ptr) : 1'b0;
     assign from_cb.dequeue = dequeue;
     assign backend_flush = dequeue && from_cb.miss_predict;
     assign backend_redirect_pc = from_cb.target_address;
