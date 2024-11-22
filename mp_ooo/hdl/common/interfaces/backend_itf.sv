@@ -131,9 +131,9 @@ endinterface
 interface id_fl_itf();
 import cpu_params::*;
 
-    logic                   valid;
+    logic                   valid   [ID_WIDTH];
     logic                   ready;
-    logic   [PRF_IDX-1:0]   free_idx;
+    logic   [PRF_IDX-1:0]   free_idx[ID_WIDTH];
 
     modport id (
         output              valid,

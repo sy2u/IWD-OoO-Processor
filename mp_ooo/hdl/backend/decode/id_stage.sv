@@ -74,7 +74,7 @@ import uop_types::*;
     //////////////////////////
 
     // Pop from free list if we do need destination register
-    assign to_fl.valid = from_fifo.valid && to_rob.ready && nxt_ready && (rd_arch[0] != '0);
+    assign to_fl.valid[0] = from_fifo.valid && to_rob.ready && nxt_ready && (rd_arch[0] != '0);
 
     // Read from RAT
     assign to_rat.read_arch[0] = rs1_arch[0];
@@ -87,8 +87,8 @@ import uop_types::*;
     // Write to RAT if we do need destination register
     assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && nxt_ready && (rd_arch[0] != '0);
     assign to_rat.write_arch = uops[0].rd_arch;
-    assign to_rat.write_phy = to_fl.free_idx;
-    assign uops[0].rd_phy = (rd_arch[0] != '0) ? to_fl.free_idx : '0;
+    assign to_rat.write_phy = to_fl.free_idx[0];
+    assign uops[0].rd_phy = (rd_arch[0] != '0) ? to_fl.free_idx[0] : '0;
 
     // Notify ROB
     assign to_rob.valid = from_fifo.valid && to_fl.ready && nxt_ready;
