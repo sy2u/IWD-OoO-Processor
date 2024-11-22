@@ -74,21 +74,28 @@ import uop_types::*;
     //////////////////////////
 
     // Pop from free list if we do need destination register
-    assign to_fl.valid[0] = from_fifo.valid && to_rob.ready && nxt_ready && (rd_arch[0] != '0);
+    generate for (genvar i = 0; i < ID_WIDTH; i++) begin
+        assign to_fl.valid[0] = from_fifo.valid && uops[i].valid && to_rob.ready && nxt_ready && (rd_arch[i] != '0);
+    end endgenerate
 
     // Read from RAT
-    assign to_rat.read_arch[0] = rs1_arch[0];
-    assign to_rat.read_arch[1] = rs2_arch[0];
-    assign uops[0].rs1_phy = to_rat.read_phy[0];
-    assign uops[0].rs1_valid = to_rat.read_valid[0];
-    assign uops[0].rs2_phy = to_rat.read_phy[1];
-    assign uops[0].rs2_valid = to_rat.read_valid[1];
+    assign to_rat.rs1_arch = rs1_arch[0];
+    assign to_rat.rs2_arch = rs2_arch[0];
+    assign uops[0].rs1_phy = to_rat.rs1_phy;
+    assign uops[0].rs1_valid = to_rat.rs1_valid;
+    assign uops[0].rs2_phy = to_rat.rs2_phy;
+    assign uops[0].rs2_valid = to_rat.rs2_valid;
 
     // Write to RAT if we do need destination register
+    generate for (genvar i = 0; i < ID_WIDTH; i++) begin
+        // assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && nxt_ready && (rd_arch[i] != '0);
+        // assign to_rat.rd_arch = uops[i].rd_arch;
+        // assign to_rat.rd_phy = to_fl.free_idx[i];
+        assign uops[i].rd_phy = (rd_arch[i] != '0) ? to_fl.free_idx[i] : '0;
+    end endgenerate
     assign to_rat.write_en = from_fifo.valid && to_fl.ready && to_rob.ready && nxt_ready && (rd_arch[0] != '0);
-    assign to_rat.write_arch = uops[0].rd_arch;
-    assign to_rat.write_phy = to_fl.free_idx[0];
-    assign uops[0].rd_phy = (rd_arch[0] != '0) ? to_fl.free_idx[0] : '0;
+    assign to_rat.rd_arch = uops[0].rd_arch;
+    assign to_rat.rd_phy = to_fl.free_idx[0];
 
     // Notify ROB
     assign to_rob.valid = from_fifo.valid && to_fl.ready && nxt_ready;

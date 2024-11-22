@@ -68,7 +68,9 @@ import rvfi_types::*;
         end else begin
             pop = 1'b1;
             for (int i = 0; i < ID_WIDTH; i++) begin
-                pop = pop && (rob_arr[head_ptr][i].ready || ~rob_arr[head_ptr][i].valid);
+                if (rob_arr[head_ptr][i].valid && ~rob_arr[head_ptr][i].ready) begin
+                    pop = 1'b0;
+                end
             end
         end
     end
