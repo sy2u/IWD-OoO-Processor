@@ -11,6 +11,8 @@ import uop_types::*;
     // handshake with dispatch stage
     output  logic               nxt_valid,
     input   logic               nxt_ready,
+    output  logic               uops_valid[ID_WIDTH],
+    output  rs_type_t           rs_type[ID_WIDTH],
     output  uop_t               uops[ID_WIDTH],
 
     // RAT
@@ -23,7 +25,6 @@ import uop_types::*;
     id_rob_itf.id               to_rob
 
 );
-    rs_type_t                   rs_type[ID_WIDTH];
     fu_type_t                   fu_type[ID_WIDTH];
     logic   [3:0]               fu_opcode[ID_WIDTH];
     op1_sel_t                   op1_sel[ID_WIDTH];
@@ -52,7 +53,8 @@ import uop_types::*;
             .rs2_arch               (rs2_arch[i])
         );
 
-        assign uops[i].valid = from_fifo.packet.valid[i];
+        assign uops_valid[i] = from_fifo.packet.valid[i];
+        assign uops[i].valid = uops_valid[i];
         assign uops[i].pc = from_fifo.packet.pc + unsigned'(i) * 4;
         assign uops[i].inst = from_fifo.packet.inst[i];
         assign uops[i].rs_type = rs_type[i];
@@ -75,7 +77,7 @@ import uop_types::*;
 
     // Pop from free list if we do need destination register
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign to_fl.valid[0] = from_fifo.valid && uops[i].valid && to_rob.ready && nxt_ready && (rd_arch[i] != '0);
+        assign to_fl.valid[i] = from_fifo.valid && uops_valid[i] && to_rob.ready && nxt_ready && (rd_arch[i] != '0);
     end endgenerate
 
     // Read from RAT
@@ -91,7 +93,7 @@ import uop_types::*;
     // Write to RAT if we do need destination register
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
         assign to_rat.write_en[i] = from_fifo.valid && to_fl.ready && to_rob.ready && nxt_ready && (rd_arch[i] != '0);
-        assign to_rat.rd_arch[i] = uops[i].rd_arch;
+        assign to_rat.rd_arch[i] = rd_arch[i];
         assign to_rat.rd_phy[i] = to_fl.free_idx[i];
         assign uops[i].rd_phy = (rd_arch[i] != '0) ? to_fl.free_idx[i] : '0;
     end endgenerate
@@ -101,7 +103,7 @@ import uop_types::*;
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
         assign to_rob.inst_valid[i] = from_fifo.packet.valid[i];
         assign to_rob.rd_phy[i] = uops[i].rd_phy;
-        assign to_rob.rd_arch[i] = uops[i].rd_arch;
+        assign to_rob.rd_arch[i] = rd_arch[i];
         assign uops[i].rob_id = to_rob.rob_id[i];
     end endgenerate
 
@@ -123,11 +125,11 @@ import uop_types::*;
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
         assign to_rob.rvfi_dbg[i].order = 'x;
         assign to_rob.rvfi_dbg[i].inst = uops[i].inst;
-        assign to_rob.rvfi_dbg[i].rs1_addr = uops[i].rs1_arch;
-        assign to_rob.rvfi_dbg[i].rs2_addr = uops[i].rs2_arch;
+        assign to_rob.rvfi_dbg[i].rs1_addr = rs1_arch[i];
+        assign to_rob.rvfi_dbg[i].rs2_addr = rs2_arch[i];
         assign to_rob.rvfi_dbg[i].rs1_rdata = 'x;
         assign to_rob.rvfi_dbg[i].rs2_rdata = 'x;
-        assign to_rob.rvfi_dbg[i].rd_addr = uops[i].rd_arch;
+        assign to_rob.rvfi_dbg[i].rd_addr = rd_arch[i];
         assign to_rob.rvfi_dbg[i].rd_wdata = 'x;
         assign to_rob.rvfi_dbg[i].frd_addr = 'x;
         assign to_rob.rvfi_dbg[i].frd_wdata = 'x;

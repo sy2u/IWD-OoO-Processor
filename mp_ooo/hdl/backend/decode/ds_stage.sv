@@ -8,6 +8,8 @@ import uop_types::*;
     // handshake with rename stage
     input   logic               prv_valid,
     output  logic               prv_ready,
+    input   logic               uops_valid[ID_WIDTH],
+    input   rs_type_t           rs_type[ID_WIDTH],
     input   uop_t               uops[ID_WIDTH],
 
     // INT Reservation Stations
@@ -32,7 +34,7 @@ import uop_types::*;
 
     // Upstream signals to determine if we can dispatch
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin : dispatch_valids
-        assign dispatch_valid[i] = prv_valid && uops[i].valid;
+        assign dispatch_valid[i] = prv_valid && uops_valid[i];
     end endgenerate
 
     // Encoder to select the reservation station
@@ -42,7 +44,7 @@ import uop_types::*;
             to_intm_rs.valid[i] = '0;
             to_br_rs.valid = '0;
             to_mem_rs.valid = '0;
-            unique case (uops[i].rs_type)
+            unique case (rs_type[i])
                 RS_INT: begin
                     to_int_rs.valid[i] = dispatch_valid[i]; // Dispatch to INT Reservation Stations
                 end
@@ -71,7 +73,7 @@ import uop_types::*;
     // Mux for selecting the ready signal
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
         always_comb begin
-            unique case (uops[i].rs_type)
+            unique case (rs_type[i])
                 RS_INT: begin
                     dispatch_ready[i] = to_int_rs.ready; // Collect ready signal from INT Reservation Stations
                 end

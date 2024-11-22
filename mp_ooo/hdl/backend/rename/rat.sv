@@ -55,6 +55,17 @@ import rat_types::*;
             from_id.rs1_valid[i] = mem[from_id.rs1_arch[i]][PRF_IDX];
             from_id.rs2_valid[i] = mem[from_id.rs2_arch[i]][PRF_IDX];
 
+            for( int j = 0; j < i; j++ ) begin
+                if (from_id.write_en[j] && from_id.rd_arch[j] == from_id.rs1_arch[i]) begin
+                    from_id.rs1_phy[i] = from_id.rd_phy[j];
+                    from_id.rs1_valid[i] = 1'b0;
+                end
+                if (from_id.write_en[j] && from_id.rd_arch[j] == from_id.rs2_arch[i]) begin
+                    from_id.rs2_phy[i] = from_id.rd_phy[j];
+                    from_id.rs2_valid[i] = 1'b0;
+                end
+            end
+
             // transparent RAT
             for( int j = 0; j < CDB_WIDTH; j++ ) begin
                 if( cdb_local[j].valid ) begin

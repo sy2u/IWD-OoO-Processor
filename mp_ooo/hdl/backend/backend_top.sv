@@ -29,6 +29,8 @@ import uop_types::*;
 
     logic                       dispatch_valid;
     logic                       dispatch_ready;
+    logic                       uops_valid[ID_WIDTH];
+    rs_type_t                   rs_type[ID_WIDTH];
     uop_t                       uops[ID_WIDTH];
 
     logic   [PRF_IDX-1:0]       rrf_mem[ARF_DEPTH];
@@ -39,7 +41,8 @@ import uop_types::*;
 
         .nxt_valid              (dispatch_valid),
         .nxt_ready              (dispatch_ready),
-
+        .uops_valid             (uops_valid),
+        .rs_type                (rs_type),
         .uops                   (uops),
 
         .from_fifo              (from_fifo),
@@ -97,7 +100,8 @@ import uop_types::*;
 
         .prv_valid              (dispatch_valid),
         .prv_ready              (dispatch_ready),
-
+        .uops_valid             (uops_valid),
+        .rs_type                (rs_type),
         .uops                   (uops),
 
         .to_int_rs              (ds_int_rs_itf_i),
