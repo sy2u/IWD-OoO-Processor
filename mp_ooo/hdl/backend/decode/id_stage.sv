@@ -156,7 +156,7 @@ import uop_types::*;
 
     // Write to RAT if we do need destination register
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign to_rat.write_en[i] = from_fifo.valid && to_fl.ready && to_rob.ready && nxt_ready && (rd_arch[i] != '0);
+        assign to_rat.write_en[i] = from_fifo.valid && uops_valid[i] && to_fl.ready && to_rob.ready && nxt_ready && (rd_arch[i] != '0);
         assign to_rat.rd_arch[i] = rd_arch[i];
         assign to_rat.rd_phy[i] = to_fl.free_idx[i];
         assign uops[i].rd_phy = (rd_arch[i] != '0) ? to_fl.free_idx[i] : '0;
@@ -165,7 +165,7 @@ import uop_types::*;
     // Notify ROB
     assign to_rob.valid = from_fifo.valid && to_fl.ready && nxt_ready;
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign to_rob.inst_valid[i] = from_fifo.packet.valid[i];
+        assign to_rob.inst_valid[i] = uops_valid[i];
         assign to_rob.rd_phy[i] = uops[i].rd_phy;
         assign to_rob.rd_arch[i] = rd_arch[i];
         assign uops[i].rob_id = to_rob.rob_id[i];
