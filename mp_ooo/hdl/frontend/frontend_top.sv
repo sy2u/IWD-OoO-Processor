@@ -72,10 +72,17 @@ import cpu_params::*;
         assign to_fifo.packet.predict_target[i] = blk_pc + unsigned'(i) * 4 + 4;
     end endgenerate
     assign to_fifo.packet.pc = blk_pc;
-    always_comb begin
-        for (int i = 0; i < ID_WIDTH; i++) begin
-            to_fifo.packet.valid[i] = (i >= ((pc % IF_BLK_SIZE) / 4));
+
+    generate if (ID_WIDTH == 1) begin
+        assign to_fifo.packet.valid[0] = 1'b1;
+    end endgenerate
+
+    generate if (ID_WIDTH > 1) begin
+        always_comb begin
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                to_fifo.packet.valid[i] = (i >= ((pc % IF_BLK_SIZE) / 4));
+            end
         end
-    end
+    end endgenerate
 
 endmodule

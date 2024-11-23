@@ -75,65 +75,76 @@ import uop_types::*;
     //     Filter Stage     //
     //////////////////////////
 
-    logic   [ID_WIDTH-1:0]  already_dispatched;
-    logic   [ID_WIDTH-1:0]  uops_is_br;
-    logic   [ID_WIDTH-1:0]  uops_is_mem;
-    logic   [ID_WIDTH-1:0]  dispatch_mask;
+    generate if (ID_WIDTH == 2) begin : filter_2way
 
-    generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign uops_is_br[i] = (rs_type[i] == RS_BR) && uops_raw_valid[i] && from_fifo.valid;
-        assign uops_is_mem[i] = (rs_type[i] == RS_MEM) && uops_raw_valid[i] && from_fifo.valid;
-    end endgenerate
+        logic   [ID_WIDTH-1:0]  already_dispatched;
+        logic   [ID_WIDTH-1:0]  uops_is_br;
+        logic   [ID_WIDTH-1:0]  uops_is_mem;
+        logic   [ID_WIDTH-1:0]  dispatch_mask;
 
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            already_dispatched <= 2'b11;
-        end else begin
-            if (uops_is_br[0] || (uops_is_mem[0] && uops_is_mem[1])) begin
-                if (already_dispatched == 2'b11 && to_fl.ready && to_rob.ready && nxt_ready) begin
-                    already_dispatched <= 2'b01;
-                end else if (already_dispatched == 2'b01 && to_fl.ready && to_rob.ready && nxt_ready) begin
+        always_comb begin
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                uops_is_br[i] = (rs_type[i] == RS_BR) && uops_raw_valid[i] && from_fifo.valid;
+                uops_is_mem[i] = (rs_type[i] == RS_MEM) && uops_raw_valid[i] && from_fifo.valid;
+            end
+        end
+
+        always_ff @(posedge clk) begin
+            if (rst) begin
+                already_dispatched <= 2'b11;
+            end else begin
+                if (uops_is_br[0] || (uops_is_mem[0] && uops_is_mem[1])) begin
+                    if (already_dispatched == 2'b11 && to_fl.ready && to_rob.ready && nxt_ready) begin
+                        already_dispatched <= 2'b01;
+                    end else if (already_dispatched == 2'b01 && to_fl.ready && to_rob.ready && nxt_ready) begin
+                        already_dispatched <= 2'b11;
+                    end
+                end else begin
                     already_dispatched <= 2'b11;
                 end
-            end else begin
-                already_dispatched <= 2'b11;
             end
         end
-    end
 
-    always_comb begin
-        dispatch_mask = 2'b11;
-        if (uops_is_br[0]) begin
-            if (already_dispatched == 2'b11) begin
-                dispatch_mask = 2'b01;
-            end else begin
-                dispatch_mask = 2'b10;
+        always_comb begin
+            dispatch_mask = 2'b11;
+            if (uops_is_br[0]) begin
+                if (already_dispatched == 2'b11) begin
+                    dispatch_mask = 2'b01;
+                end else begin
+                    dispatch_mask = 2'b10;
+                end
+            end
+            if (uops_is_mem[0] && uops_is_mem[1]) begin
+                if (already_dispatched == 2'b11) begin
+                    dispatch_mask = 2'b01;
+                end else begin
+                    dispatch_mask = 2'b10;
+                end
             end
         end
-        if (uops_is_mem[0] && uops_is_mem[1]) begin
-            if (already_dispatched == 2'b11) begin
-                dispatch_mask = 2'b01;
-            end else begin
-                dispatch_mask = 2'b10;
+
+        always_comb begin
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                uops_valid[i] = uops_raw_valid[i] && dispatch_mask[i];
             end
         end
-    end
 
-    always_comb begin
-        for (int i = 0; i < ID_WIDTH; i++) begin
-            uops_valid[i] = uops_raw_valid[i] && dispatch_mask[i];
+        // Backpressure Ready signal
+        always_comb begin
+            from_fifo.ready = 1'b0;
+            if (uops_is_br[0] || (uops_is_mem[0] && uops_is_mem[1])) begin
+                from_fifo.ready = already_dispatched == 2'b01 && to_fl.ready && to_rob.ready && nxt_ready;
+            end else begin
+                from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
+            end
         end
-    end
 
-    // Backpressure Ready signal
-    always_comb begin
-        from_fifo.ready = 1'b0;
-        if (uops_is_br[0] || (uops_is_mem[0] && uops_is_mem[1])) begin
-            from_fifo.ready = already_dispatched == 2'b01 && to_fl.ready && to_rob.ready && nxt_ready;
-        end else begin
-            from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
-        end
-    end
+    end endgenerate
+
+    generate if (ID_WIDTH == 1) begin : filter_1way
+        assign uops_valid[0] = uops_raw_valid[0];
+        assign from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
+    end endgenerate
 
     //////////////////////////
     //     Rename Stage     //
