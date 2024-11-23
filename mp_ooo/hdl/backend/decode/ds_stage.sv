@@ -45,11 +45,6 @@ import uop_types::*;
             to_intm_rs.valid[i] = '0;
             to_intm_rs.uop[i] = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
         end
-        to_br_rs.valid = '0;
-        to_br_rs.uop = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
-        to_mem_rs.valid = '0;
-        to_mem_rs.uop = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
-
         for (int i = 0; i < ID_WIDTH; i++) begin
             unique case (rs_type[i])
                 RS_INT: begin
@@ -60,17 +55,30 @@ import uop_types::*;
                     to_intm_rs.valid[i] = dispatch_valid[i] && prv_ready; // Dispatch to INTM Reservation Stations
                     to_intm_rs.uop[i] = uops[i];
                 end
-                RS_BR: begin
-                    to_br_rs.valid = dispatch_valid[i] && prv_ready; // Dispatch to BR Reservation Stations
-                    to_br_rs.uop = uops[i];
-                end
-                RS_MEM: begin
-                    to_mem_rs.valid = dispatch_valid[i] && prv_ready; // Dispatch to MEM Reservation Stations
-                    to_mem_rs.uop = uops[i];
-                end
                 default: begin
                 end
             endcase
+        end
+    end
+
+    always_comb begin
+        to_br_rs.valid = '0;
+        to_br_rs.uop = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
+        to_mem_rs.valid = '0;
+        to_mem_rs.uop = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            if (rs_type[i] == RS_BR && dispatch_valid[i]) begin
+                to_br_rs.valid = prv_ready; // Dispatch to BR Reservation Stations
+                to_br_rs.uop = uops[i];
+                break;
+            end
+        end
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            if (rs_type[i] == RS_MEM && dispatch_valid[i]) begin
+                to_mem_rs.valid = prv_ready; // Dispatch to BR Reservation Stations
+                to_mem_rs.uop = uops[i];
+                break;
+            end
         end
     end
 

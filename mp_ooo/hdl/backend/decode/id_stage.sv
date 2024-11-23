@@ -103,7 +103,7 @@ import uop_types::*;
 
     always_comb begin
         dispatch_mask = 2'b11;
-        if (uops_is_br[0] && already_dispatched == 2'b11) begin
+        if (uops_is_br[0]) begin
             if (already_dispatched == 2'b11) begin
                 dispatch_mask = 2'b01;
             end else begin
