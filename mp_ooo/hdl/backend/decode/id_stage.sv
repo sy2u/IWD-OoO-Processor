@@ -125,7 +125,7 @@ import uop_types::*;
 
         always_comb begin
             for (int i = 0; i < ID_WIDTH; i++) begin
-                uops_valid[i] = uops_raw_valid[i] && dispatch_mask[i];
+                uops_valid[i] = uops_raw_valid[i] && dispatch_mask[i] && from_fifo.packet.inst[i] != '0;
             end
         end
 
@@ -142,7 +142,7 @@ import uop_types::*;
     end endgenerate
 
     generate if (ID_WIDTH == 1) begin : filter_1way
-        assign uops_valid[0] = uops_raw_valid[0];
+        assign uops_valid[0] = uops_raw_valid[0] && from_fifo.packet.inst[0] != '0;
         assign from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
     end endgenerate
 
