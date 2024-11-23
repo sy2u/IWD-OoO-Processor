@@ -38,37 +38,41 @@ import uop_types::*;
     end endgenerate
 
     // Encoder to select the reservation station
-    generate for (genvar i = 0; i < ID_WIDTH; i++) begin : valid_encoders
-        always_comb begin
+    always_comb begin
+        for (int i = 0; i < ID_WIDTH; i++) begin
             to_int_rs.valid[i] = '0;
+            to_int_rs.uop[i] = '{default: 'x};
             to_intm_rs.valid[i] = '0;
-            to_br_rs.valid = '0;
-            to_mem_rs.valid = '0;
+            to_intm_rs.uop[i] = '{default: 'x};
+        end
+        to_br_rs.valid = '0;
+        to_br_rs.uop = '{default: 'x};
+        to_mem_rs.valid = '0;
+        to_mem_rs.uop = '{default: 'x};
+
+        for (int i = 0; i < ID_WIDTH; i++) begin
             unique case (rs_type[i])
                 RS_INT: begin
                     to_int_rs.valid[i] = dispatch_valid[i] && prv_ready; // Dispatch to INT Reservation Stations
+                    to_int_rs.uop[i] = uops[i];
                 end
                 RS_INTM: begin
                     to_intm_rs.valid[i] = dispatch_valid[i] && prv_ready; // Dispatch to INTM Reservation Stations
+                    to_intm_rs.uop[i] = uops[i];
                 end
                 RS_BR: begin
                     to_br_rs.valid = dispatch_valid[i] && prv_ready; // Dispatch to BR Reservation Stations
+                    to_br_rs.uop = uops[i];
                 end
                 RS_MEM: begin
                     to_mem_rs.valid = dispatch_valid[i] && prv_ready; // Dispatch to MEM Reservation Stations
+                    to_mem_rs.uop = uops[i];
                 end
                 default: begin
                 end
             endcase
         end
-    end endgenerate
-
-    generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign to_int_rs.uop[i] = uops[i];
-        assign to_intm_rs.uop[i] = uops[i];
-        assign to_br_rs.uop = uops[i];
-        assign to_mem_rs.uop = uops[i];
-    end endgenerate
+    end
 
     // Mux for selecting the ready signal
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
