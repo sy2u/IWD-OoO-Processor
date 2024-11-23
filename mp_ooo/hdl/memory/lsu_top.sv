@@ -10,9 +10,8 @@ import lsu_types::*;
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
-    ls_cdb_itf.lsu              fu_cdb_out_dbg,
+    ls_rob_itf.lsu              fu_cdb_out_dbg,
     cacheline_itf.master        dcache_itf,
-    input   logic   [ROB_IDX-1:0]   rob_head,
 
     // Flush signals
     input   logic               backend_flush
@@ -50,8 +49,7 @@ import lsu_types::*;
         .from_ds                (ds_lsq_i),
         .from_agu               (agu_lsq_i),
         .cdb_out                (fu_cdb_out),
-        .cdb_out_dbg            (fu_cdb_out_dbg),
-        .rob_head               (rob_head),
+        .from_rob               (fu_cdb_out_dbg),
         .lsu_ready              (from_ds.ready),
         .backend_flush          (backend_flush),
 

@@ -33,6 +33,11 @@ import cpu_params::*;
             if( from_rob.valid[i] && (from_rob.rd_arch[i] != '0) ) begin
                 to_fl.valid[i] = '1;
                 to_fl.stale_idx[i] = mem[from_rob.rd_arch[i]];
+                for (int j = 0; j < i; j++) begin
+                    if (from_rob.valid[j] && (from_rob.rd_arch[j] == from_rob.rd_arch[i])) begin
+                        to_fl.stale_idx[i] = from_rob.rd_phy[j];
+                    end
+                end
             end
         end
     end

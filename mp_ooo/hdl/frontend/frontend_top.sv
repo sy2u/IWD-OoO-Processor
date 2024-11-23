@@ -22,6 +22,7 @@ import cpu_params::*;
 
     logic   [31:0]                  pc_next;
     logic   [31:0]                  pc;
+    logic   [31:0]                  blk_pc;
     logic   [IF_WIDTH-1:0]  [31:0]  insts;
 
     logic                   prev_rst;
@@ -66,10 +67,22 @@ import cpu_params::*;
     assign to_fifo.valid = if1_valid;
     assign to_fifo.packet.inst = insts;
     assign to_fifo.packet.predict_taken = '0;
+    assign blk_pc = pc & ~(unsigned'(IF_BLK_SIZE - 1));
     generate for (genvar i = 0; i < IF_WIDTH; i++) begin
-        assign to_fifo.packet.predict_target[i] = pc + unsigned'(i) * 4 + 4;
+        assign to_fifo.packet.predict_target[i] = blk_pc + unsigned'(i) * 4 + 4;
     end endgenerate
-    assign to_fifo.packet.pc = pc;
-    assign to_fifo.packet.valid = '1;
+    assign to_fifo.packet.pc = blk_pc;
+
+    generate if (ID_WIDTH == 1) begin
+        assign to_fifo.packet.valid[0] = 1'b1;
+    end endgenerate
+
+    generate if (ID_WIDTH > 1) begin
+        always_comb begin
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                to_fifo.packet.valid[i] = (unsigned'(i) >= ((pc % IF_BLK_SIZE) / 4));
+            end
+        end
+    end endgenerate
 
 endmodule

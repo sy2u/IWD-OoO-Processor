@@ -11,8 +11,7 @@ import rvfi_types::*;
     rob_rrf_itf.rob             to_rrf,
     cdb_itf.rob                 cdb[CDB_WIDTH],
     cb_rob_itf.rob              from_cb,
-    ls_cdb_itf.rob              from_lsq,
-    output  logic   [ROB_IDX-1:0]   rob_head
+    ls_rob_itf.rob              from_lsq
 );
 
     typedef struct packed {
@@ -32,17 +31,18 @@ import rvfi_types::*;
 
     rob_entry_t             rob_arr [ROB_DEPTH] [ID_WIDTH];
 
-    logic   [ROB_IDX:0]     head_ptr_reg;
-    logic   [ROB_IDX:0]     tail_ptr_reg;
+    logic   [ROB_PTR_IDX:0]     head_ptr_reg;
+    logic   [ROB_PTR_IDX:0]     tail_ptr_reg;
 
-    logic   [ROB_IDX-1:0]   head_ptr;
+    logic   [ROB_PTR_IDX-1:0]   head_ptr;
     logic                   head_ptr_flag;
-    logic   [ROB_IDX-1:0]   tail_ptr;
+    logic   [ROB_PTR_IDX-1:0]   tail_ptr;
     logic                   tail_ptr_flag;
 
     logic                   full;
     logic                   empty;
     logic                   pop;
+    logic   [ID_WIDTH-1:0]  commit_instr;
 
     cdb_rob_t               cdb_rob [CDB_WIDTH];
 
@@ -50,15 +50,14 @@ import rvfi_types::*;
     rvfi_dbg_t              rvfi_itf    [ID_WIDTH];
     rvfi_dbg_t              rvfi_array  [ROB_DEPTH] [ID_WIDTH];
     logic   [63:0]          rvfi_order;
-    logic   [63:0]          valid_instrs;
+    logic   [63:0]          commit_instrs;
 
     // same logic with fifo queue
     assign {head_ptr_flag, head_ptr} = head_ptr_reg;
     assign {tail_ptr_flag, tail_ptr} = tail_ptr_reg;
 
-    assign rob_head = head_ptr;
+    assign from_lsq.rob_head = head_ptr;
 
-    // assign tail_ptr_next = tail_ptr_reg + ROB_IDX'(1);
     assign full = (tail_ptr == head_ptr) && (tail_ptr_flag != head_ptr_flag);
     assign empty = (tail_ptr == head_ptr) && (tail_ptr_flag == head_ptr_flag);
 
@@ -68,7 +67,9 @@ import rvfi_types::*;
         end else begin
             pop = 1'b1;
             for (int i = 0; i < ID_WIDTH; i++) begin
-                pop = pop && (rob_arr[head_ptr][i].ready || ~rob_arr[head_ptr][i].valid);
+                if (rob_arr[head_ptr][i].valid && ~rob_arr[head_ptr][i].ready) begin
+                    pop = 1'b0;
+                end
             end
         end
     end
@@ -94,7 +95,7 @@ import rvfi_types::*;
             tail_ptr_reg <= '0;
         end else begin
             if (from_id.valid && from_id.ready) begin           // push in
-                tail_ptr_reg <= (ROB_IDX+1)'(tail_ptr_reg + 1);
+                tail_ptr_reg <= (ROB_PTR_IDX+1)'(tail_ptr_reg + 1);
                 for (int i = 0; i< ID_WIDTH; i++) begin
                     rob_arr[tail_ptr][i].valid <= from_id.inst_valid[i];
                     rob_arr[tail_ptr][i].ready <= 1'b0;
@@ -105,7 +106,7 @@ import rvfi_types::*;
             end
 
             if (pop) begin                              // pop out
-                head_ptr_reg <= (ROB_IDX+1)'(head_ptr_reg +1);
+                head_ptr_reg <= (ROB_PTR_IDX+1)'(head_ptr_reg +1);
             end
 
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
@@ -127,6 +128,12 @@ import rvfi_types::*;
         end
     end
 
+    always_comb begin
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            commit_instr[i] = pop && rob_arr[head_ptr][i].valid;
+        end
+    end
+
     // interface with dispatch:: input: phys_reg, arch_reg; output: rob_id
     assign from_id.ready = ~full;
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
@@ -135,13 +142,13 @@ import rvfi_types::*;
 
     // interface with rrf:: output: phys_reg, arch_reg
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign to_rrf.valid[i] = pop && rob_arr[head_ptr][i].valid;
+        assign to_rrf.valid[i] = commit_instr[i];
         assign to_rrf.rd_phy[i] = rob_arr[head_ptr][i].rd_phy;
         assign to_rrf.rd_arch[i] = rob_arr[head_ptr][i].rd_arch;
     end endgenerate
 
     // interface with control_buffer
-    assign dequeue = from_cb.ready ? pop && ((ROB_IDX)'(from_cb.rob_id / ID_WIDTH) == head_ptr) : 1'b0;
+    assign dequeue = from_cb.ready ? pop && ((ROB_PTR_IDX)'(from_cb.rob_id / ID_WIDTH) == head_ptr) : 1'b0;
     assign from_cb.dequeue = dequeue;
     assign backend_flush = dequeue && from_cb.miss_predict;
     assign backend_redirect_pc = from_cb.target_address;
@@ -153,7 +160,7 @@ import rvfi_types::*;
     rvfi_dbg_t rvfi_head[ID_WIDTH];
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
         assign rvfi_head[i] = rvfi_array[head_ptr][i];
-        assign rvfi_itf[i].commit = pop && rob_arr[head_ptr][i].valid;
+        assign rvfi_itf[i].commit = commit_instr[i];
         assign rvfi_itf[i].inst = rvfi_head[i].inst;
         assign rvfi_itf[i].rs1_addr = rvfi_head[i].rs1_addr;
         assign rvfi_itf[i].rs2_addr = rvfi_head[i].rs2_addr;
@@ -164,7 +171,7 @@ import rvfi_types::*;
         assign rvfi_itf[i].frd_addr = rvfi_head[i].frd_addr;
         assign rvfi_itf[i].frd_wdata = rvfi_head[i].frd_wdata;
         assign rvfi_itf[i].pc_rdata = rvfi_head[i].pc_rdata;
-        assign rvfi_itf[i].pc_wdata = backend_flush ? backend_redirect_pc : rvfi_head[i].pc_rdata + 4;
+        assign rvfi_itf[i].pc_wdata = (backend_flush && 32'(from_cb.rob_id % ID_WIDTH) == i) ? backend_redirect_pc : rvfi_head[i].pc_wdata;
         assign rvfi_itf[i].mem_addr = rvfi_head[i].mem_addr;
         assign rvfi_itf[i].mem_rmask = rvfi_head[i].mem_rmask;
         assign rvfi_itf[i].mem_wmask = rvfi_head[i].mem_wmask;
@@ -176,16 +183,16 @@ import rvfi_types::*;
         if (rst) begin 
             rvfi_order <= 64'h0;
         end else if (pop) begin 
-            rvfi_order <= rvfi_order + valid_instrs;
+            rvfi_order <= rvfi_order + commit_instrs;
         end
     end
 
     always_comb begin
-        valid_instrs = '0;
+        commit_instrs = '0;
         for (int i = 0; i < ID_WIDTH; i++) begin
-            rvfi_itf[i].order = rvfi_order + valid_instrs;
-            if (rob_arr[head_ptr][i].valid) begin
-                valid_instrs = valid_instrs + 1;
+            rvfi_itf[i].order = rvfi_order + commit_instrs;
+            if (commit_instr[i]) begin
+                commit_instrs = commit_instrs + 1;
             end
         end
     end

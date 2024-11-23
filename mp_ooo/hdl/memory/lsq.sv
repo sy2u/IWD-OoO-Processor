@@ -9,8 +9,7 @@ import lsu_types::*;
     ds_rs_mono_itf.rs           from_ds,
     agu_lsq_itf.lsq             from_agu,
     cdb_itf.fu                  cdb_out,
-    ls_cdb_itf.lsu              cdb_out_dbg,
-    input   logic   [ROB_IDX-1:0]   rob_head,
+    ls_rob_itf.lsu              from_rob,
     dmem_itf.cpu                dmem,
 
     input   logic               lsu_ready,
@@ -98,7 +97,7 @@ import lsu_types::*;
             want_dequeue = 1'b0;
         end else begin
             if (fifo[rd_ptr_actual].is_store) begin
-                want_dequeue = fifo[rd_ptr_actual].ready && (rob_head == fifo[rd_ptr_actual].rob_id); // check ROB
+                want_dequeue = fifo[rd_ptr_actual].ready && (from_rob.rob_head == ROB_PTR_IDX'(fifo[rd_ptr_actual].rob_id / ID_WIDTH)); // check ROB
             end else begin
                 want_dequeue = fifo[rd_ptr_actual].ready;
             end
@@ -173,12 +172,12 @@ import lsu_types::*;
     assign cdb_out.rs1_value_dbg = fifo[rd_ptr_actual].rs1_value_dbg;
     assign cdb_out.rs2_value_dbg = fifo[rd_ptr_actual].rs2_value_dbg;
 
-    assign cdb_out_dbg.valid = dequeue;
-    assign cdb_out_dbg.rob_id = fifo[rd_ptr_actual].rob_id;
-    assign cdb_out_dbg.addr_dbg = {dmem_unaligned_addr[31:2], 2'b00};
-    assign cdb_out_dbg.rmask_dbg = (~fifo[rd_ptr_actual].is_store) ? fifo[rd_ptr_actual].mask : '0;
-    assign cdb_out_dbg.wmask_dbg = (fifo[rd_ptr_actual].is_store) ? fifo[rd_ptr_actual].mask : '0;
-    assign cdb_out_dbg.rdata_dbg = dmem.rdata;
-    assign cdb_out_dbg.wdata_dbg = fifo[rd_ptr_actual].wdata;
+    assign from_rob.valid = dequeue;
+    assign from_rob.rob_id = fifo[rd_ptr_actual].rob_id;
+    assign from_rob.addr_dbg = {dmem_unaligned_addr[31:2], 2'b00};
+    assign from_rob.rmask_dbg = (~fifo[rd_ptr_actual].is_store) ? fifo[rd_ptr_actual].mask : '0;
+    assign from_rob.wmask_dbg = (fifo[rd_ptr_actual].is_store) ? fifo[rd_ptr_actual].mask : '0;
+    assign from_rob.rdata_dbg = dmem.rdata;
+    assign from_rob.wdata_dbg = fifo[rd_ptr_actual].wdata;
 
 endmodule

@@ -25,6 +25,9 @@ import cpu_params::*;
     cacheline_itf.master    icache_itf
 );
 
+    localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
+
+    logic   [31:0]                  blk_pc_next;
     logic                           icache_valid;
     logic                           icache_resp;
     logic                           icache_pending;
@@ -32,6 +35,8 @@ import cpu_params::*;
     logic                           icache_unresponsive;
 
     assign prv_ready = ~icache_valid || (nxt_valid && nxt_ready) || flush;
+
+    assign blk_pc_next = pc_next & ~(unsigned'(IF_BLK_SIZE - 1));
 
     // PC update
     always_ff @(posedge clk) begin
@@ -71,7 +76,7 @@ import cpu_params::*;
         .clk            (clk),
         .rst            (rst),
 
-        .ufp_addr       (pc_next),
+        .ufp_addr       (blk_pc_next),
         .ufp_read       (prv_ready && prv_valid),
         .ufp_rdata      (icache_rdata),
         .ufp_resp       (icache_resp),
