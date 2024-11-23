@@ -2,8 +2,8 @@ module id_stage
 import cpu_params::*;
 import uop_types::*;
 (
-    // input   logic               clk,
-    // input   logic               rst,
+    input   logic               clk,
+    input   logic               rst,
 
     // Instruction queue
     fifo_backend_itf.backend    from_fifo,
@@ -25,6 +25,7 @@ import uop_types::*;
     id_rob_itf.id               to_rob
 
 );
+    logic                       uops_raw_valid[ID_WIDTH];
     fu_type_t                   fu_type[ID_WIDTH];
     logic   [3:0]               fu_opcode[ID_WIDTH];
     op1_sel_t                   op1_sel[ID_WIDTH];
@@ -53,7 +54,7 @@ import uop_types::*;
             .rs2_arch               (rs2_arch[i])
         );
 
-        assign uops_valid[i] = from_fifo.packet.valid[i];
+        assign uops_raw_valid[i] = from_fifo.packet.valid[i];
         assign uops[i].valid = uops_valid[i];
         assign uops[i].pc = from_fifo.packet.pc + unsigned'(i) * 4;
         assign uops[i].inst = from_fifo.packet.inst[i];
@@ -70,6 +71,69 @@ import uop_types::*;
         assign uops[i].predict_target = from_fifo.packet.predict_target[i];
     end endgenerate
 
+    //////////////////////////
+    //     Filter Stage     //
+    //////////////////////////
+
+    logic   [ID_WIDTH-1:0]  already_dispatched;
+    logic   [ID_WIDTH-1:0]  uops_is_br;
+    logic   [ID_WIDTH-1:0]  uops_is_mem;
+    logic   [ID_WIDTH-1:0]  dispatch_mask;
+
+    generate for (genvar i = 0; i < ID_WIDTH; i++) begin
+        assign uops_is_br[i] = (rs_type[i] == RS_BR) && uops_raw_valid[i];
+        assign uops_is_mem[i] = (rs_type[i] == RS_MEM) && uops_raw_valid[i];
+    end endgenerate
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            already_dispatched <= 2'b11;
+        end else begin
+            if (uops_is_br[0] && uops_is_br[1] || uops_is_mem[0] && uops_is_mem[1]) begin
+                if (already_dispatched == 2'b11 && to_fl.ready && to_rob.ready && nxt_ready) begin
+                    already_dispatched <= 2'b10;
+                end else if (already_dispatched == 2'b10 && to_fl.ready && to_rob.ready && nxt_ready) begin
+                    already_dispatched <= 2'b11;
+                end
+            end else begin
+                already_dispatched <= 2'b11;
+            end
+        end
+    end
+
+    always_comb begin
+        dispatch_mask = 2'b11;
+        if (uops_is_br[0] && uops_is_br[1] && already_dispatched == 2'b11) begin
+            if (already_dispatched == 2'b11) begin
+                dispatch_mask = 2'b01;
+            end else begin
+                dispatch_mask = 2'b10;
+            end
+        end
+        if (uops_is_mem[0] && uops_is_mem[1]) begin
+            if (already_dispatched == 2'b11) begin
+                dispatch_mask = 2'b01;
+            end else begin
+                dispatch_mask = 2'b10;
+            end
+        end
+    end
+
+    always_comb begin
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            uops_valid[i] = uops_raw_valid[i] && dispatch_mask[i];
+        end
+    end
+
+    // Backpressure Ready signal
+    always_comb begin
+        from_fifo.ready = 1'b0;
+        if (uops_is_br[0] && uops_is_br[1] || uops_is_mem[0] && uops_is_mem[1]) begin
+            from_fifo.ready = already_dispatched == 2'b10 && to_fl.ready && to_rob.ready && nxt_ready;
+        end else begin
+            from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
+        end
+    end
 
     //////////////////////////
     //     Rename Stage     //
@@ -114,9 +178,6 @@ import uop_types::*;
 
     assign nxt_valid = from_fifo.valid && to_fl.ready && to_rob.ready;
 
-    // Backpressure Ready signal
-    assign from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
-
 
     //////////////////////////
     //          RVFI        //
@@ -134,7 +195,7 @@ import uop_types::*;
         assign to_rob.rvfi_dbg[i].frd_addr = 'x;
         assign to_rob.rvfi_dbg[i].frd_wdata = 'x;
         assign to_rob.rvfi_dbg[i].pc_rdata = uops[i].pc;
-        assign to_rob.rvfi_dbg[i].pc_wdata = 'x;
+        assign to_rob.rvfi_dbg[i].pc_wdata = from_fifo.packet.predict_target[i];
         assign to_rob.rvfi_dbg[i].mem_addr = 'x;
         assign to_rob.rvfi_dbg[i].mem_rmask = '0;
         assign to_rob.rvfi_dbg[i].mem_wmask = '0;

@@ -36,8 +36,8 @@ import uop_types::*;
     logic   [PRF_IDX-1:0]       rrf_mem[ARF_DEPTH];
 
     id_stage id_stage_i(
-        // .clk                    (clk),
-        // .rst                    (rst),
+        .clk                    (clk),
+        .rst                    (rst),
 
         .nxt_valid              (dispatch_valid),
         .nxt_ready              (dispatch_ready),

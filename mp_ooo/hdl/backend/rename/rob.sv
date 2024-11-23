@@ -42,6 +42,7 @@ import rvfi_types::*;
     logic                   full;
     logic                   empty;
     logic                   pop;
+    logic   [ID_WIDTH-1:0]  commit_instr;
 
     cdb_rob_t               cdb_rob [CDB_WIDTH];
 
@@ -49,7 +50,7 @@ import rvfi_types::*;
     rvfi_dbg_t              rvfi_itf    [ID_WIDTH];
     rvfi_dbg_t              rvfi_array  [ROB_DEPTH] [ID_WIDTH];
     logic   [63:0]          rvfi_order;
-    logic   [63:0]          valid_instrs;
+    logic   [63:0]          commit_instrs;
 
     // same logic with fifo queue
     assign {head_ptr_flag, head_ptr} = head_ptr_reg;
@@ -127,6 +128,16 @@ import rvfi_types::*;
         end
     end
 
+    always_comb begin
+        commit_instr = '0;
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            commit_instr[i] = pop && rob_arr[head_ptr][i].valid;
+            if (32'(from_cb.rob_id % ID_WIDTH) == i && dequeue && from_cb.miss_predict) begin
+                break;
+            end
+        end
+    end
+
     // interface with dispatch:: input: phys_reg, arch_reg; output: rob_id
     assign from_id.ready = ~full;
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
@@ -135,7 +146,7 @@ import rvfi_types::*;
 
     // interface with rrf:: output: phys_reg, arch_reg
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign to_rrf.valid[i] = pop && rob_arr[head_ptr][i].valid;
+        assign to_rrf.valid[i] = commit_instr[i];
         assign to_rrf.rd_phy[i] = rob_arr[head_ptr][i].rd_phy;
         assign to_rrf.rd_arch[i] = rob_arr[head_ptr][i].rd_arch;
     end endgenerate
@@ -153,7 +164,7 @@ import rvfi_types::*;
     rvfi_dbg_t rvfi_head[ID_WIDTH];
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
         assign rvfi_head[i] = rvfi_array[head_ptr][i];
-        assign rvfi_itf[i].commit = pop && rob_arr[head_ptr][i].valid;
+        assign rvfi_itf[i].commit = commit_instr[i];
         assign rvfi_itf[i].inst = rvfi_head[i].inst;
         assign rvfi_itf[i].rs1_addr = rvfi_head[i].rs1_addr;
         assign rvfi_itf[i].rs2_addr = rvfi_head[i].rs2_addr;
@@ -164,7 +175,7 @@ import rvfi_types::*;
         assign rvfi_itf[i].frd_addr = rvfi_head[i].frd_addr;
         assign rvfi_itf[i].frd_wdata = rvfi_head[i].frd_wdata;
         assign rvfi_itf[i].pc_rdata = rvfi_head[i].pc_rdata;
-        assign rvfi_itf[i].pc_wdata = backend_flush ? backend_redirect_pc : rvfi_head[i].pc_rdata + 4;
+        assign rvfi_itf[i].pc_wdata = (backend_flush && 32'(from_cb.rob_id % ID_WIDTH) == i) ? backend_redirect_pc : rvfi_head[i].pc_wdata;
         assign rvfi_itf[i].mem_addr = rvfi_head[i].mem_addr;
         assign rvfi_itf[i].mem_rmask = rvfi_head[i].mem_rmask;
         assign rvfi_itf[i].mem_wmask = rvfi_head[i].mem_wmask;
@@ -176,16 +187,16 @@ import rvfi_types::*;
         if (rst) begin 
             rvfi_order <= 64'h0;
         end else if (pop) begin 
-            rvfi_order <= rvfi_order + valid_instrs;
+            rvfi_order <= rvfi_order + commit_instrs;
         end
     end
 
     always_comb begin
-        valid_instrs = '0;
+        commit_instrs = '0;
         for (int i = 0; i < ID_WIDTH; i++) begin
-            rvfi_itf[i].order = rvfi_order + valid_instrs;
-            if (rob_arr[head_ptr][i].valid) begin
-                valid_instrs = valid_instrs + 1;
+            rvfi_itf[i].order = rvfi_order + commit_instrs;
+            if (commit_instr[i]) begin
+                commit_instrs = commit_instrs + 1;
             end
         end
     end
