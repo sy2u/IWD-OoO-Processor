@@ -31,7 +31,7 @@ import int_rs_types::*;
 
     // push logic
     logic                 intm_rs_push_en   [ID_WIDTH];
-    logic [INTRS_IDX-1:0] intm_rs_push_idx  [ID_WIDTH];
+    logic [INTMRS_IDX-1:0] intm_rs_push_idx  [ID_WIDTH];
 
     // issue logic
     logic                   intm_rs_issue_en;
@@ -142,11 +142,11 @@ import int_rs_types::*;
         n_available_slots = '0;
         for (int i = 0; i < INTMRS_DEPTH; i++) begin 
             if (intm_rs_available[i]) begin 
-                n_available_slots = (INTRS_IDX+1)'(n_available_slots + 1);
+                n_available_slots = (INTMRS_IDX+1)'(n_available_slots + 1);
             end
         end
     end
-    assign from_ds.ready = (n_available_slots >= (INTRS_IDX+1)'(ID_WIDTH));
+    assign from_ds.ready = (n_available_slots >= (INTMRS_IDX+1)'(ID_WIDTH));
 
     //---------------------------------------------------------------------------------
     // INTM_RS Reg:
