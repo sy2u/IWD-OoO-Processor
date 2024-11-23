@@ -89,10 +89,10 @@ import uop_types::*;
         if (rst) begin
             already_dispatched <= 2'b11;
         end else begin
-            if (uops_is_br[0] && uops_is_br[1] || uops_is_mem[0] && uops_is_mem[1]) begin
+            if (uops_is_br[0] || (uops_is_mem[0] && uops_is_mem[1])) begin
                 if (already_dispatched == 2'b11 && to_fl.ready && to_rob.ready && nxt_ready) begin
-                    already_dispatched <= 2'b10;
-                end else if (already_dispatched == 2'b10 && to_fl.ready && to_rob.ready && nxt_ready) begin
+                    already_dispatched <= 2'b01;
+                end else if (already_dispatched == 2'b01 && to_fl.ready && to_rob.ready && nxt_ready) begin
                     already_dispatched <= 2'b11;
                 end
             end else begin
@@ -103,7 +103,7 @@ import uop_types::*;
 
     always_comb begin
         dispatch_mask = 2'b11;
-        if (uops_is_br[0] && uops_is_br[1] && already_dispatched == 2'b11) begin
+        if (uops_is_br[0] && already_dispatched == 2'b11) begin
             if (already_dispatched == 2'b11) begin
                 dispatch_mask = 2'b01;
             end else begin
@@ -128,8 +128,8 @@ import uop_types::*;
     // Backpressure Ready signal
     always_comb begin
         from_fifo.ready = 1'b0;
-        if (uops_is_br[0] && uops_is_br[1] || uops_is_mem[0] && uops_is_mem[1]) begin
-            from_fifo.ready = already_dispatched == 2'b10 && to_fl.ready && to_rob.ready && nxt_ready;
+        if (uops_is_br[0] || (uops_is_mem[0] && uops_is_mem[1])) begin
+            from_fifo.ready = already_dispatched == 2'b01 && to_fl.ready && to_rob.ready && nxt_ready;
         end else begin
             from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
         end

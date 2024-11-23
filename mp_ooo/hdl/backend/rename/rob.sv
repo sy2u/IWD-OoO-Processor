@@ -129,12 +129,8 @@ import rvfi_types::*;
     end
 
     always_comb begin
-        commit_instr = '0;
         for (int i = 0; i < ID_WIDTH; i++) begin
             commit_instr[i] = pop && rob_arr[head_ptr][i].valid;
-            if (32'(from_cb.rob_id % ID_WIDTH) == i && dequeue && from_cb.miss_predict) begin
-                break;
-            end
         end
     end
 
