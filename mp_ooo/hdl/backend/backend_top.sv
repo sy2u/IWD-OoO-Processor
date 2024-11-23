@@ -24,23 +24,25 @@ import uop_types::*;
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
     cb_rob_itf                  cb_rob_itf_i();
-    ls_cdb_itf                  ls_cdb_itf();
+    ls_rob_itf                  ls_rob_itf();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
 
     logic                       dispatch_valid;
     logic                       dispatch_ready;
+    logic                       uops_valid[ID_WIDTH];
+    rs_type_t                   rs_type[ID_WIDTH];
     uop_t                       uops[ID_WIDTH];
 
-    logic   [ROB_IDX-1:0]       rob_head;
     logic   [PRF_IDX-1:0]       rrf_mem[ARF_DEPTH];
 
     id_stage id_stage_i(
-        // .clk                    (clk),
-        // .rst                    (rst),
+        .clk                    (clk),
+        .rst                    (rst),
 
         .nxt_valid              (dispatch_valid),
         .nxt_ready              (dispatch_ready),
-
+        .uops_valid             (uops_valid),
+        .rs_type                (rs_type),
         .uops                   (uops),
 
         .from_fifo              (from_fifo),
@@ -79,8 +81,7 @@ import uop_types::*;
         .to_rrf                 (rob_rrf_itf_i),
         .cdb                    (cdb_itfs),
         .from_cb                (cb_rob_itf_i),
-        .from_lsq               (ls_cdb_itf),
-        .rob_head               (rob_head)
+        .from_lsq               (ls_rob_itf)
     );
 
     rrf rrf_i(
@@ -99,7 +100,8 @@ import uop_types::*;
 
         .prv_valid              (dispatch_valid),
         .prv_ready              (dispatch_ready),
-
+        .uops_valid             (uops_valid),
+        .rs_type                (rs_type),
         .uops                   (uops),
 
         .to_int_rs              (ds_int_rs_itf_i),
@@ -148,9 +150,8 @@ import uop_types::*;
         .to_prf                 (rs_prf_itfs[3]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[3]),
-        .fu_cdb_out_dbg         (ls_cdb_itf),
+        .fu_cdb_out_dbg         (ls_rob_itf),
         .dcache_itf             (dcache_itf),
-        .rob_head               (rob_head),
 
         .backend_flush          (backend_flush)
     );
