@@ -80,7 +80,7 @@ import cpu_params::*;
     generate if (ID_WIDTH > 1) begin
         always_comb begin
             for (int i = 0; i < ID_WIDTH; i++) begin
-                to_fifo.packet.valid[i] = (i >= ((pc % IF_BLK_SIZE) / 4));
+                to_fifo.packet.valid[i] = (unsigned'(i) >= ((pc % IF_BLK_SIZE) / 4));
             end
         end
     end endgenerate
