@@ -81,8 +81,8 @@ import uop_types::*;
     logic   [ID_WIDTH-1:0]  dispatch_mask;
 
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign uops_is_br[i] = (rs_type[i] == RS_BR) && uops_raw_valid[i];
-        assign uops_is_mem[i] = (rs_type[i] == RS_MEM) && uops_raw_valid[i];
+        assign uops_is_br[i] = (rs_type[i] == RS_BR) && uops_raw_valid[i] && from_fifo.valid;
+        assign uops_is_mem[i] = (rs_type[i] == RS_MEM) && uops_raw_valid[i] && from_fifo.valid;
     end endgenerate
 
     always_ff @(posedge clk) begin
