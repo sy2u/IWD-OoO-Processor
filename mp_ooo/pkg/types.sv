@@ -3,6 +3,7 @@ package cpu_params;
     localparam  unsigned    IF_WIDTH    = 1;
 
     localparam  unsigned    ID_WIDTH    = 1;
+    localparam  unsigned    ID_IDX      = $clog2(ID_WIDTH);
 
     localparam  unsigned    ROB_DEPTH   = 32;
     localparam  unsigned    ROB_IDX     = $clog2(ROB_DEPTH * ID_WIDTH);
@@ -374,7 +375,6 @@ import uop_types::*;
 
     } fu_br_reg_t;
 
-
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
         logic   [ARF_IDX-1:0]   rd_arch;
@@ -392,6 +392,12 @@ import uop_types::*;
         logic   [31:0]          rs1_value;
         logic   [31:0]          rs2_value;
     } intm_rs_reg_t;
+
+    typedef enum logic [1:0] {  
+        PREV        = 2'b00,
+        SELF        = 2'b10,
+        PUSH_IN     = 2'b11
+    } rs_update_sel_t;
     
 endpackage
 

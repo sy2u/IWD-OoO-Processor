@@ -27,14 +27,16 @@ import int_rs_types::*;
 
     // rs array, store uop+available
     uop_t intm_rs_array     [INTMRS_DEPTH];
+    uop_t rs_array_next     [INTMRS_DEPTH];
     logic intm_rs_available [INTMRS_DEPTH];
+    logic rs_available_next [INTMRS_DEPTH];
 
     // pointer to top of the array (like a fifo queue)
-    logic [INTMRS_IDX-1:0]  int_rs_top;
+    logic [INTMRS_IDX-1:0]  intm_rs_top, rs_top_next;
 
-    // push logic
-    logic                   int_rs_push_en;
-    logic [INTMRS_IDX-1:0]  int_rs_push_idx;
+    // push & pop logic
+    logic                   intm_rs_push_en;
+    logic                   intm_rs_pop_en;
 
     // issue logic
     logic                   intm_rs_issue_en;
@@ -43,28 +45,28 @@ import int_rs_types::*;
     logic                   src2_valid;
     logic                   fu_md_ready, fu_md_valid;
 
-    intm_rs_reg_t   intm_rs_in;
-    logic           intm_rs_in_valid;
+    intm_rs_reg_t           intm_rs_in;
+    logic                   intm_rs_in_valid;
+
+    // update logic
+    rs_update_sel_t         rs_update_sel   [INTMRS_DEPTH];
+    logic                   rs_push_sel;
 
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
         if (rst) begin 
-            int_rs_top <= '0;
+            intm_rs_top <= '0;
             for (int i = 0; i < INTMRS_DEPTH; i++) begin 
                 intm_rs_available[i]         <= 1'b1;
             end
         end else begin 
             // issue > snoop cdb > push
-            // push renamed instruction
-            if (int_rs_push_en) begin 
-                // set rs to unavailable
-                intm_rs_available[int_rs_push_idx]      <= 1'b0;
-                intm_rs_array[int_rs_push_idx]          <= from_ds.uop[0];
-            end
-
-            // snoop CDB to update rs1/rs2 valid
             for (int i = 0; i < INTMRS_DEPTH; i++) begin
+                // compress and push rs array
+                intm_rs_array[i]  <= rs_array_next[i];
+                intm_rs_available[i] <= rs_available_next[i];
+                // snoop CDB to update rs1/rs2 valid
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
                     // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
                     // set rs1/rs2 to valid
@@ -78,70 +80,105 @@ import int_rs_types::*;
                     end
                 end 
             end
-
-            // pop issued instruction
-            if (intm_rs_in_valid && fu_md_ready) begin 
-                // set rs to available
-                intm_rs_available[intm_rs_issue_idx] <= 1'b1;
-                // update top pointer
-                int_rs_top <= intm_rs_issue_idx + 1'd1;
-            end
+            // pop and push pointer tracking
+            intm_rs_top <= rs_top_next;
         end
     end
 
-    // push logic, push instruction to rs if id is valid and rs is ready
-    // loop from top until the first available station
-    always_comb begin
-        int_rs_push_en  = '0;
-        int_rs_push_idx = '0;
-        if (from_ds.valid[0] && from_ds.ready) begin 
-            for (int i = 0; i < INTMRS_DEPTH; i++) begin 
-                if (intm_rs_available[(INTMRS_IDX)'(unsigned'(i))]) begin 
-                    int_rs_push_idx = (INTMRS_IDX)'(unsigned'(i));
-                    int_rs_push_en = 1'b1;
-                    break;
+    // mux select logic
+    always_comb begin : compress_control
+        rs_push_sel = '0;
+        for (int i = 0; i < INTMRS_DEPTH; i++) begin
+            rs_update_sel[i] = SELF;
+            if( intm_rs_pop_en ) begin
+                if( i>=intm_rs_issue_idx ) rs_update_sel[i] = PREV;
+            end
+            if( intm_rs_push_en ) begin
+                for( int j = 0; j < ID_WIDTH; j++ ) begin 
+                    if ( INTMRS_IDX'(i) == rs_top_next - INTMRS_IDX'(j) ) begin
+                        rs_update_sel[i] = PUSH_IN;
+                        rs_push_sel = (ID_IDX+1)'(j);
+                    end
                 end
             end
         end
     end
 
-    // issue enable logic
+    always_comb begin : compress_mux // single issue type, one-slot compress
+        for (int i = 0; i < INTMRS_DEPTH; i++) begin
+            unique case (rs_update_sel[i])
+                PREV: begin       
+                    rs_array_next[i] = intm_rs_array[i+1];
+                    rs_available_next[i] = intm_rs_available[i+1];
+                end
+                SELF: begin
+                    rs_array_next[i] = intm_rs_array[i];
+                    rs_available_next[i] = intm_rs_available[i];
+                end
+                PUSH_IN: begin
+                    rs_array_next[i] = from_ds.uop[rs_push_sel];
+                    rs_available_next[i] = 1'b0;
+                end
+                default: ;
+            endcase
+        end
+    end
+
+    // issue enable logic: oldest first
     // loop from top until src all valid
     always_comb begin
         intm_rs_issue_en = '0;
         intm_rs_issue_idx = '0; 
         src1_valid       = '0;
         src2_valid       = '0;
-        for (int i = 0; i < INTMRS_DEPTH; i++) begin 
-            if (!intm_rs_available[(INTMRS_IDX)'(unsigned'(i))]) begin 
-                src1_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
-                src2_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
-                for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                        src1_valid = 1'b1;
-                    end
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                        src2_valid = 1'b1;
-                    end
+        for (int i = 0; i < intm_rs_top; i++) begin 
+            src1_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
+            src2_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
+            for (int k = 0; k < CDB_WIDTH; k++) begin 
+                if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                    src1_valid = 1'b1;
                 end
-                if (src1_valid && src2_valid) begin
-                    intm_rs_issue_en = '1;
-                    intm_rs_issue_idx = (INTMRS_IDX)'(unsigned'(i));
+                if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                    src2_valid = 1'b1;
                 end
+            end
+            if (src1_valid && src2_valid) begin
+                intm_rs_issue_en = '1;
+                intm_rs_issue_idx = (INTMRS_IDX)'(unsigned'(i));
+            end
+        end
+    end
+
+    // push and pop logic
+    always_comb begin
+        rs_top_next = intm_rs_top;
+        // pop
+        intm_rs_pop_en = '0;
+        if( intm_rs_in_valid && fu_md_ready ) begin 
+            intm_rs_pop_en = '1;
+            rs_top_next = rs_top_next - 1; 
+        end
+        // push
+        intm_rs_push_en = '0;
+        for( int i = 0; i < ID_WIDTH; i++ ) begin
+            if( from_ds.valid[i] && from_ds.ready ) begin 
+                intm_rs_push_en = '1;
+                rs_top_next = rs_top_next + 1;
             end
         end
     end
 
     // full logic, set rs.ready to 0 if rs is full
+    logic   [INTMRS_IDX:0]    n_available_slots;
     always_comb begin 
-        from_ds.ready = '0;
+        n_available_slots = '0;
         for (int i = 0; i < INTMRS_DEPTH; i++) begin 
             if (intm_rs_available[i]) begin 
-                from_ds.ready = '1;
-                break;
+                n_available_slots = (INTRS_IDX+1)'(n_available_slots + 1);
             end
         end
     end
+    assign from_ds.ready = (n_available_slots >= (INTRS_IDX+1)'(ID_WIDTH));
 
     //---------------------------------------------------------------------------------
     // INTM_RS Reg:

@@ -160,7 +160,7 @@ import int_rs_types::*;
     // Instantiation:
     //---------------------------------------------------------------------------------
 
-    localparam                  NUM_CYC = 10;        // minimal possible delay
+    localparam                  NUM_CYC = 3;        // minimal possible delay
     localparam                  TC_MODE = 1;        // signed
     localparam                  RST_MODE = 1;       // sync mode
     localparam                  INPUT_MODE = 0;     // input must be stable during the computation
