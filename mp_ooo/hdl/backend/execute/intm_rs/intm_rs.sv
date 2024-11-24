@@ -91,11 +91,11 @@ import int_rs_types::*;
         for (int i = 0; i < INTMRS_DEPTH; i++) begin
             rs_update_sel[i] = SELF;
             if( intm_rs_pop_en ) begin
-                if( i>=intm_rs_issue_idx ) rs_update_sel[i] = PREV;
+                if( INTMRS_IDX'(i)>=intm_rs_issue_idx ) rs_update_sel[i] = PREV;
             end
             if( intm_rs_push_en ) begin
                 for( int j = 0; j < ID_WIDTH; j++ ) begin 
-                    if ( INTMRS_IDX'(i) == rs_top_next - INTMRS_IDX'(j) ) begin
+                    if ( INTMRS_IDX'(i) == rs_top_next - INTMRS_IDX'(j) - INTMRS_IDX'(1) ) begin
                         rs_update_sel[i] = PUSH_IN;
                         rs_push_sel = (ID_IDX+1)'(j);
                     end
@@ -106,10 +106,14 @@ import int_rs_types::*;
 
     always_comb begin : compress_mux // single issue type, one-slot compress
         for (int i = 0; i < INTMRS_DEPTH; i++) begin
+            rs_array_next[i] = '0;
+            rs_available_next[i] = 1'b1;
             unique case (rs_update_sel[i])
                 PREV: begin       
-                    rs_array_next[i] = intm_rs_array[i+1];
-                    rs_available_next[i] = intm_rs_available[i+1];
+                    if( i < INTMRS_DEPTH-1 ) begin
+                        rs_array_next[i] = intm_rs_array[i+1];
+                        rs_available_next[i] = intm_rs_available[i+1];
+                    end
                 end
                 SELF: begin
                     rs_array_next[i] = intm_rs_array[i];
@@ -131,7 +135,7 @@ import int_rs_types::*;
         intm_rs_issue_idx = '0; 
         src1_valid       = '0;
         src2_valid       = '0;
-        for (int i = 0; i < intm_rs_top; i++) begin 
+        for (int i = 0; INTMRS_IDX'(i) < intm_rs_top; i++) begin 
             src1_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
             src2_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
             for (int k = 0; k < CDB_WIDTH; k++) begin 
@@ -156,14 +160,14 @@ import int_rs_types::*;
         intm_rs_pop_en = '0;
         if( intm_rs_in_valid && fu_md_ready ) begin 
             intm_rs_pop_en = '1;
-            rs_top_next = rs_top_next - 1; 
+            rs_top_next = INTMRS_IDX'(rs_top_next - 1); 
         end
         // push
         intm_rs_push_en = '0;
         for( int i = 0; i < ID_WIDTH; i++ ) begin
             if( from_ds.valid[i] && from_ds.ready ) begin 
                 intm_rs_push_en = '1;
-                rs_top_next = rs_top_next + 1;
+                rs_top_next = INTMRS_IDX'(rs_top_next + 1);
             end
         end
     end
