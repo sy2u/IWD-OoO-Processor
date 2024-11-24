@@ -113,14 +113,14 @@ import int_rs_types::*;
                     if (int_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
                         if ( rs_update_sel[i] == SELF ) begin
                             rs_array_next[i].rs1_valid = 1'b1;
-                        end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
+                        end else if ( (i>0) && rs_update_sel[i-1] == PREV ) begin
                             rs_array_next[i-1].rs1_valid = 1'b1;
                         end
                     end
                     if (int_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
                         if ( rs_update_sel[i] == SELF ) begin
                             rs_array_next[i].rs2_valid = 1'b1;
-                        end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
+                        end else if ( (i>0) && rs_update_sel[i-1] == PREV ) begin
                             rs_array_next[i-1].rs2_valid = 1'b1;
                         end
                     end

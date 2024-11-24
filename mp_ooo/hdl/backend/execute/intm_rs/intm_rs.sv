@@ -112,14 +112,14 @@ import int_rs_types::*;
                     if (intm_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
                         if ( rs_update_sel[i] == SELF ) begin
                             rs_array_next[i].rs1_valid = 1'b1;
-                        end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
+                        end else if ( (i>0) && rs_update_sel[i-1] == PREV ) begin
                             rs_array_next[i-1].rs1_valid = 1'b1;
                         end
                     end
                     if (intm_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
                         if ( rs_update_sel[i] == SELF ) begin
                             rs_array_next[i].rs2_valid = 1'b1;
-                        end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
+                        end else if ( (i>0) && rs_update_sel[i-1] == PREV ) begin
                             rs_array_next[i-1].rs2_valid = 1'b1;
                         end
                     end
@@ -135,7 +135,7 @@ import int_rs_types::*;
     logic   src1_valid  [INTMRS_DEPTH];
     logic   src2_valid  [INTMRS_DEPTH];
     always_comb begin 
-        for (int i = 0; INTMRS_IDX'(i) < intm_rs_top; i++) begin 
+        for (int i = 0; i < INTMRS_DEPTH; i++) begin 
             req_tmp[i] = '0;
             src1_valid[i] = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
             src2_valid[i] = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
@@ -154,7 +154,7 @@ import int_rs_types::*;
     always_comb begin
         intm_rs_issue_en    = '0;
         intm_rs_issue_idx   = '0;
-        for (int i = 0; INTMRS_IDX'(i) < intm_rs_top; i++) begin 
+        for (int i = 0; i < INTMRS_DEPTH; i++) begin 
             prev_assigned[i] = '0;
             for ( int j = 0; j < i; j++ ) begin
                 if( req_tmp[j] ) prev_assigned[i] = '1;
