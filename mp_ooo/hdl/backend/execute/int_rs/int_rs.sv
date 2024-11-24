@@ -23,20 +23,34 @@ import int_rs_types::*;
             assign cdb_rs[i].rd_phy = cdb[i].rd_phy;
         end
     endgenerate
-    // rs array, store uop+available
-    uop_t int_rs_array      [INTRS_DEPTH];
-    logic int_rs_available  [INTRS_DEPTH];
 
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        op1_sel_t               op1_sel;
+        op2_sel_t               op2_sel;
+        logic   [31:0]          imm;
+        logic   [3:0]           fu_opcode;
+    } int_rs_entry_t;
+
+    // rs array, store uop+available
+    int_rs_entry_t          int_rs_array        [INTRS_DEPTH];
+    logic                   int_rs_available    [INTRS_DEPTH];
 
     // push logic
-    logic                 int_rs_push_en    [ID_WIDTH];
-    logic [INTRS_IDX-1:0] int_rs_push_idx   [ID_WIDTH];
+    logic                   int_rs_push_en      [ID_WIDTH];
+    logic [INTRS_IDX-1:0]   int_rs_push_idx     [ID_WIDTH];
 
     // issue logic
-    logic                 int_rs_issue_en;
-    logic [INTRS_IDX-1:0] int_rs_issue_idx;
-    logic                 src1_valid;
-    logic                 src2_valid;
+    logic                   int_rs_issue_en;
+    logic [INTRS_IDX-1:0]   int_rs_issue_idx;
+    logic                   src1_valid;
+    logic                   src2_valid;
 
     // rs array update
     always_ff @(posedge clk) begin 
@@ -52,7 +66,17 @@ import int_rs_types::*;
                 if (int_rs_push_en[i]) begin 
                     // set rs to unavailable
                     int_rs_available[int_rs_push_idx[i]]   <= 1'b0;
-                    int_rs_array[int_rs_push_idx[i]]       <= from_ds.uop[i];
+                    int_rs_array[int_rs_push_idx[i]].rob_id  <= from_ds.uop[i].rob_id;
+                    int_rs_array[int_rs_push_idx[i]].rs1_phy <= from_ds.uop[i].rs1_phy;
+                    int_rs_array[int_rs_push_idx[i]].rs1_valid <= from_ds.uop[i].rs1_valid;
+                    int_rs_array[int_rs_push_idx[i]].rs2_phy <= from_ds.uop[i].rs2_phy;
+                    int_rs_array[int_rs_push_idx[i]].rs2_valid <= from_ds.uop[i].rs2_valid;
+                    int_rs_array[int_rs_push_idx[i]].rd_phy <= from_ds.uop[i].rd_phy;
+                    int_rs_array[int_rs_push_idx[i]].rd_arch <= from_ds.uop[i].rd_arch;
+                    int_rs_array[int_rs_push_idx[i]].op1_sel <= from_ds.uop[i].op1_sel;
+                    int_rs_array[int_rs_push_idx[i]].op2_sel <= from_ds.uop[i].op2_sel;
+                    int_rs_array[int_rs_push_idx[i]].imm <= from_ds.uop[i].imm;
+                    int_rs_array[int_rs_push_idx[i]].fu_opcode <= from_ds.uop[i].fu_opcode;
                 end
             end
 
@@ -183,7 +207,7 @@ import int_rs_types::*;
         fu_alu_reg_in.op2_sel      = int_rs_array[int_rs_issue_idx].op2_sel;
         fu_alu_reg_in.fu_opcode    = int_rs_array[int_rs_issue_idx].fu_opcode;
         fu_alu_reg_in.imm          = int_rs_array[int_rs_issue_idx].imm;
-        fu_alu_reg_in.pc           = int_rs_array[int_rs_issue_idx].pc;
+        fu_alu_reg_in.pc           = 'x;
 
         fu_alu_reg_in.rs1_value    = to_prf.rs1_value;
         fu_alu_reg_in.rs2_value    = to_prf.rs2_value;

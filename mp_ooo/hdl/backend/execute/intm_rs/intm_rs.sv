@@ -25,13 +25,25 @@ import int_rs_types::*;
         end
     endgenerate
 
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [3:0]           fu_opcode;
+    } intm_rs_entry_t;
+
+
     // rs array, store uop+available
-    uop_t intm_rs_array     [INTMRS_DEPTH];
-    logic intm_rs_available [INTMRS_DEPTH];
+    intm_rs_entry_t         intm_rs_array       [INTMRS_DEPTH];
+    logic                   intm_rs_available   [INTMRS_DEPTH];
 
     // push logic
-    logic                 intm_rs_push_en   [ID_WIDTH];
-    logic [INTMRS_IDX-1:0] intm_rs_push_idx  [ID_WIDTH];
+    logic                   intm_rs_push_en     [ID_WIDTH];
+    logic [INTMRS_IDX-1:0]  intm_rs_push_idx    [ID_WIDTH];
 
     // issue logic
     logic                   intm_rs_issue_en;
@@ -57,7 +69,14 @@ import int_rs_types::*;
                 if (intm_rs_push_en[i]) begin 
                     // set rs to unavailable
                     intm_rs_available[intm_rs_push_idx[i]]   <= 1'b0;
-                    intm_rs_array[intm_rs_push_idx[i]]       <= from_ds.uop[i];
+                    intm_rs_array[intm_rs_push_idx[i]].rob_id  <= from_ds.uop[i].rob_id;
+                    intm_rs_array[intm_rs_push_idx[i]].rs1_phy <= from_ds.uop[i].rs1_phy;
+                    intm_rs_array[intm_rs_push_idx[i]].rs1_valid <= from_ds.uop[i].rs1_valid;
+                    intm_rs_array[intm_rs_push_idx[i]].rs2_phy <= from_ds.uop[i].rs2_phy;
+                    intm_rs_array[intm_rs_push_idx[i]].rs2_valid <= from_ds.uop[i].rs2_valid;
+                    intm_rs_array[intm_rs_push_idx[i]].rd_phy <= from_ds.uop[i].rd_phy;
+                    intm_rs_array[intm_rs_push_idx[i]].rd_arch <= from_ds.uop[i].rd_arch;
+                    intm_rs_array[intm_rs_push_idx[i]].fu_opcode <= from_ds.uop[i].fu_opcode;
                 end
             end
 
