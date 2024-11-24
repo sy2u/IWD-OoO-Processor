@@ -71,17 +71,17 @@ import int_rs_types::*;
                     // set rs1/rs2 to valid
                     if (cdb_rs[k].valid && !intm_rs_available[i]) begin 
                         if (intm_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
-                            if( rs_update_sel[i] == PREV ) begin
-                                if( i>0 ) intm_rs_array[i-1].rs1_valid <= 1'b1;
-                            end else begin
+                            if ( rs_update_sel[i] == SELF ) begin
                                 intm_rs_array[i].rs1_valid <= 1'b1;
+                            end else if ( rs_update_sel[i] == PREV ) begin
+                                if( i>0 ) intm_rs_array[i-1].rs1_valid <= 1'b1;
                             end
                         end
                         if (intm_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
-                            if( rs_update_sel[i] == PREV ) begin
-                                if( i>0 ) intm_rs_array[i-1].rs2_valid <= 1'b1;
-                            end else begin
+                            if ( rs_update_sel[i] == SELF ) begin
                                 intm_rs_array[i].rs2_valid <= 1'b1;
+                            end else if ( rs_update_sel[i] == PREV ) begin
+                                if( i>0 ) intm_rs_array[i-1].rs2_valid <= 1'b1;
                             end
                         end
                     end
@@ -111,7 +111,7 @@ import int_rs_types::*;
 
     always_comb begin : compress_mux // single issue type, one-slot compress
         for (int i = 0; i < INTMRS_DEPTH; i++) begin
-            rs_array_next[i] = '0;
+            rs_array_next[i] = 'x;
             rs_available_next[i] = 1'b1;
             unique case (rs_update_sel[i])
                 PREV: begin       
