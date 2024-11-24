@@ -8,6 +8,8 @@ import uop_types::*;
     // handshake with rename stage
     input   logic               prv_valid,
     output  logic               prv_ready,
+    input   logic               uops_valid[ID_WIDTH],
+    input   rs_type_t           rs_type[ID_WIDTH],
     input   uop_t               uops[ID_WIDTH],
 
     // INT Reservation Stations
@@ -32,46 +34,58 @@ import uop_types::*;
 
     // Upstream signals to determine if we can dispatch
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin : dispatch_valids
-        assign dispatch_valid[i] = prv_valid && uops[i].valid;
+        assign dispatch_valid[i] = prv_valid && uops_valid[i];
     end endgenerate
 
     // Encoder to select the reservation station
-    generate for (genvar i = 0; i < ID_WIDTH; i++) begin : valid_encoders
-        always_comb begin
+    always_comb begin
+        for (int i = 0; i < ID_WIDTH; i++) begin
             to_int_rs.valid[i] = '0;
+            to_int_rs.uop[i] = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
             to_intm_rs.valid[i] = '0;
-            to_br_rs.valid = '0;
-            to_mem_rs.valid = '0;
-            unique case (uops[i].rs_type)
+            to_intm_rs.uop[i] = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
+        end
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            unique case (rs_type[i])
                 RS_INT: begin
-                    to_int_rs.valid[i] = dispatch_valid[i]; // Dispatch to INT Reservation Stations
+                    to_int_rs.valid[i] = dispatch_valid[i] && prv_ready; // Dispatch to INT Reservation Stations
+                    to_int_rs.uop[i] = uops[i];
                 end
                 RS_INTM: begin
-                    to_intm_rs.valid[i] = dispatch_valid[i]; // Dispatch to INTM Reservation Stations
-                end
-                RS_BR: begin
-                    to_br_rs.valid = dispatch_valid[i]; // Dispatch to BR Reservation Stations
-                end
-                RS_MEM: begin
-                    to_mem_rs.valid = dispatch_valid[i]; // Dispatch to MEM Reservation Stations
+                    to_intm_rs.valid[i] = dispatch_valid[i] && prv_ready; // Dispatch to INTM Reservation Stations
+                    to_intm_rs.uop[i] = uops[i];
                 end
                 default: begin
                 end
             endcase
         end
-    end endgenerate
+    end
 
-    generate for (genvar i = 0; i < ID_WIDTH; i++) begin
-        assign to_int_rs.uop[i] = uops[i];
-        assign to_intm_rs.uop[i] = uops[i];
-        assign to_br_rs.uop = uops[i];
-        assign to_mem_rs.uop = uops[i];
-    end endgenerate
+    always_comb begin
+        to_br_rs.valid = '0;
+        to_br_rs.uop = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
+        to_mem_rs.valid = '0;
+        to_mem_rs.uop = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            if (rs_type[i] == RS_BR && dispatch_valid[i]) begin
+                to_br_rs.valid = prv_ready; // Dispatch to BR Reservation Stations
+                to_br_rs.uop = uops[i];
+                break;
+            end
+        end
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            if (rs_type[i] == RS_MEM && dispatch_valid[i]) begin
+                to_mem_rs.valid = prv_ready; // Dispatch to BR Reservation Stations
+                to_mem_rs.uop = uops[i];
+                break;
+            end
+        end
+    end
 
     // Mux for selecting the ready signal
     generate for (genvar i = 0; i < ID_WIDTH; i++) begin
         always_comb begin
-            unique case (uops[i].rs_type)
+            unique case (rs_type[i])
                 RS_INT: begin
                     dispatch_ready[i] = to_int_rs.ready; // Collect ready signal from INT Reservation Stations
                 end

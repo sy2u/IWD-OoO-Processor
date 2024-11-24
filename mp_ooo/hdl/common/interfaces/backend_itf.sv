@@ -101,29 +101,38 @@ endinterface
 interface id_rat_itf();
 import cpu_params::*;
 
-    logic   [ARF_IDX-1:0]   read_arch[2];
-    logic   [PRF_IDX-1:0]   read_phy[2];
-    logic                   read_valid[2];
-    logic                   write_en;
-    logic   [ARF_IDX-1:0]   write_arch;
-    logic   [PRF_IDX-1:0]   write_phy;
+    logic   [ARF_IDX-1:0]   rs1_arch    [ID_WIDTH];
+    logic   [ARF_IDX-1:0]   rs2_arch    [ID_WIDTH];
+    logic   [PRF_IDX-1:0]   rs1_phy     [ID_WIDTH];
+    logic   [PRF_IDX-1:0]   rs2_phy     [ID_WIDTH];
+    logic                   rs1_valid   [ID_WIDTH];
+    logic                   rs2_valid   [ID_WIDTH];
+    logic                   write_en    [ID_WIDTH];
+    logic   [ARF_IDX-1:0]   rd_arch     [ID_WIDTH];
+    logic   [PRF_IDX-1:0]   rd_phy      [ID_WIDTH];
 
     modport id (
-        output              read_arch,
-        input               read_phy,
-        input               read_valid,
+        output              rs1_arch,
+        output              rs2_arch,
+        input               rs1_phy,
+        input               rs2_phy,
+        input               rs1_valid,
+        input               rs2_valid,
         output              write_en,
-        output              write_arch,
-        output              write_phy
+        output              rd_arch,
+        output              rd_phy
     );
 
     modport rat (
-        input               read_arch,
-        output              read_phy,
-        output              read_valid,
+        input               rs1_arch,
+        input               rs2_arch,
+        output              rs1_phy,
+        output              rs2_phy,
+        output              rs1_valid,
+        output              rs2_valid,
         input               write_en,
-        input               write_arch,
-        input               write_phy
+        input               rd_arch,
+        input               rd_phy
     );
 
 endinterface
@@ -131,9 +140,9 @@ endinterface
 interface id_fl_itf();
 import cpu_params::*;
 
-    logic                   valid;
+    logic                   valid   [ID_WIDTH];
     logic                   ready;
-    logic   [PRF_IDX-1:0]   free_idx;
+    logic   [PRF_IDX-1:0]   free_idx[ID_WIDTH];
 
     modport id (
         output              valid,
@@ -286,18 +295,20 @@ import cpu_params::*;
     );
 endinterface
 
-interface ls_cdb_itf();
+interface ls_rob_itf();
 import cpu_params::*;
 
-    logic   [ROB_IDX-1:0]   rob_id;
-    logic   [31:0]          addr_dbg;
-    logic   [3:0]           rmask_dbg;
-    logic   [3:0]           wmask_dbg;
-    logic   [31:0]          rdata_dbg;
-    logic   [31:0]          wdata_dbg;
-    logic                   valid;
+    logic   [ROB_PTR_IDX-1:0]   rob_head;
+    logic   [ROB_IDX-1:0]       rob_id;
+    logic   [31:0]              addr_dbg;
+    logic   [3:0]               rmask_dbg;
+    logic   [3:0]               wmask_dbg;
+    logic   [31:0]              rdata_dbg;
+    logic   [31:0]              wdata_dbg;
+    logic                       valid;
 
     modport lsu (
+        input               rob_head,
         output              rob_id,
         output              addr_dbg,
         output              rmask_dbg,
@@ -308,6 +319,7 @@ import cpu_params::*;
     );
 
     modport rob (
+        output              rob_head,
         input               rob_id,
         input               addr_dbg,
         input               rmask_dbg,

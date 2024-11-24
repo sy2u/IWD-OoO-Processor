@@ -35,14 +35,13 @@ import int_rs_types::*;
     logic [INTMRS_IDX-1:0]  intm_rs_top, rs_top_next;
 
     // push & pop logic
-    logic                   intm_rs_push_en;
     logic                   intm_rs_pop_en;
+    logic                   intm_rs_push_en   [ID_WIDTH];
+    logic [INTMRS_IDX-1:0]  intm_rs_push_idx  [ID_WIDTH];
 
     // issue logic
     logic                   intm_rs_issue_en;
     logic [INTMRS_IDX-1:0]  intm_rs_issue_idx;
-    logic                   src1_valid;
-    logic                   src2_valid;
     logic                   fu_md_ready, fu_md_valid;
 
     intm_rs_reg_t           intm_rs_in;
@@ -50,7 +49,7 @@ import int_rs_types::*;
 
     // update logic
     rs_update_sel_t         rs_update_sel   [INTMRS_DEPTH];
-    logic                   rs_push_sel;
+    logic [ID_WIDTH_IDX-1:0]rs_push_sel     [INTMRS_DEPTH];
 
     // rs array update
     always_ff @(posedge clk) begin 
@@ -72,10 +71,18 @@ import int_rs_types::*;
                     // set rs1/rs2 to valid
                     if (cdb_rs[k].valid && !intm_rs_available[i]) begin 
                         if (intm_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
-                            intm_rs_array[i].rs1_valid <= 1'b1;
+                            if( rs_update_sel[i] == PREV ) begin
+                                if( i>0 ) intm_rs_array[i-1].rs1_valid <= 1'b1;
+                            end else begin
+                                intm_rs_array[i].rs1_valid <= 1'b1;
+                            end
                         end
                         if (intm_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
-                            intm_rs_array[i].rs2_valid <= 1'b1;
+                            if( rs_update_sel[i] == PREV ) begin
+                                if( i>0 ) intm_rs_array[i-1].rs2_valid <= 1'b1;
+                            end else begin
+                                intm_rs_array[i].rs2_valid <= 1'b1;
+                            end
                         end
                     end
                 end 
@@ -87,18 +94,16 @@ import int_rs_types::*;
 
     // mux select logic
     always_comb begin : compress_control
-        rs_push_sel = '0;
         for (int i = 0; i < INTMRS_DEPTH; i++) begin
+            rs_push_sel[i] = '0;
             rs_update_sel[i] = SELF;
             if( intm_rs_pop_en ) begin
                 if( INTMRS_IDX'(i)>=intm_rs_issue_idx ) rs_update_sel[i] = PREV;
             end
-            if( intm_rs_push_en ) begin
-                for( int j = 0; j < ID_WIDTH; j++ ) begin 
-                    if ( INTMRS_IDX'(i) == rs_top_next - INTMRS_IDX'(j) - INTMRS_IDX'(1) ) begin
-                        rs_update_sel[i] = PUSH_IN;
-                        rs_push_sel = (ID_IDX+1)'(j);
-                    end
+            for( int j = 0; j < ID_WIDTH; j++ ) begin 
+                if ( intm_rs_push_en[j] && (INTMRS_IDX'(i) == intm_rs_push_idx[j]) ) begin
+                    rs_update_sel[i] = PUSH_IN;
+                    rs_push_sel[i] = ID_WIDTH_IDX'(j);
                 end
             end
         end
@@ -120,7 +125,7 @@ import int_rs_types::*;
                     rs_available_next[i] = intm_rs_available[i];
                 end
                 PUSH_IN: begin
-                    rs_array_next[i] = from_ds.uop[rs_push_sel];
+                    rs_array_next[i] = from_ds.uop[rs_push_sel[i]];
                     rs_available_next[i] = 1'b0;
                 end
                 default: ;
@@ -130,25 +135,38 @@ import int_rs_types::*;
 
     // issue enable logic: oldest first
     // loop from top until src all valid
-    always_comb begin
-        intm_rs_issue_en = '0;
-        intm_rs_issue_idx = '0; 
-        src1_valid       = '0;
-        src2_valid       = '0;
+    logic   req_tmp [INTMRS_DEPTH];
+    logic   prev_assigned [INTMRS_DEPTH];
+    logic   src1_valid  [INTMRS_DEPTH];
+    logic   src2_valid  [INTMRS_DEPTH];
+    always_comb begin 
         for (int i = 0; INTMRS_IDX'(i) < intm_rs_top; i++) begin 
-            src1_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
-            src2_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
+            req_tmp[i] = '0;
+            src1_valid[i] = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
+            src2_valid[i] = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
             for (int k = 0; k < CDB_WIDTH; k++) begin 
                 if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                    src1_valid = 1'b1;
+                    src1_valid[i] = 1'b1;
                 end
                 if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                    src2_valid = 1'b1;
+                    src2_valid[i] = 1'b1;
                 end
             end
-            if (src1_valid && src2_valid) begin
+            if (src1_valid[i] && src2_valid[i]) req_tmp[i] = '1;
+        end
+    end
+    // oldest first
+    always_comb begin
+        intm_rs_issue_en    = '0;
+        intm_rs_issue_idx   = '0;
+        for (int i = 0; INTMRS_IDX'(i) < intm_rs_top; i++) begin 
+            prev_assigned[i] = '0;
+            for ( int j = 0; j < i; j++ ) begin
+                if( req_tmp[j] ) prev_assigned[i] = '1;
+            end
+            if( ~prev_assigned[i] && req_tmp[i] ) begin
                 intm_rs_issue_en = '1;
-                intm_rs_issue_idx = (INTMRS_IDX)'(unsigned'(i));
+                intm_rs_issue_idx = INTMRS_IDX'(i);
             end
         end
     end
@@ -163,10 +181,11 @@ import int_rs_types::*;
             rs_top_next = INTMRS_IDX'(rs_top_next - 1); 
         end
         // push
-        intm_rs_push_en = '0;
         for( int i = 0; i < ID_WIDTH; i++ ) begin
+            intm_rs_push_en[i] = '0;
             if( from_ds.valid[i] && from_ds.ready ) begin 
-                intm_rs_push_en = '1;
+                intm_rs_push_en[i] = '1;
+                intm_rs_push_idx[i] = rs_top_next;
                 rs_top_next = INTMRS_IDX'(rs_top_next + 1);
             end
         end
