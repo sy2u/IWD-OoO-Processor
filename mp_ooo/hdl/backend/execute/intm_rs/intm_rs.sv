@@ -183,6 +183,7 @@ import int_rs_types::*;
         // push
         for( int i = 0; i < ID_WIDTH; i++ ) begin
             intm_rs_push_en[i] = '0;
+            intm_rs_push_idx[i] = 'x;
             if( from_ds.valid[i] && from_ds.ready ) begin 
                 intm_rs_push_en[i] = '1;
                 intm_rs_push_idx[i] = rs_top_next;
