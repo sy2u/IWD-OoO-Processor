@@ -130,38 +130,27 @@ import int_rs_types::*;
 
     // issue enable logic: oldest first
     // loop from top until src all valid
-    logic   req_tmp [INTMRS_DEPTH];
-    logic   prev_assigned [INTMRS_DEPTH];
-    logic   src1_valid  [INTMRS_DEPTH];
-    logic   src2_valid  [INTMRS_DEPTH];
-    always_comb begin 
-        for (int i = 0; i < INTMRS_DEPTH; i++) begin 
-            req_tmp[i] = '0;
-            src1_valid[i] = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
-            src2_valid[i] = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
+    logic   src1_valid, src2_valid;
+    always_comb begin
+        intm_rs_issue_en = '0;
+        intm_rs_issue_idx = '0; 
+        src1_valid       = '0;
+        src2_valid       = '0;
+        for (int i = 0; INTMRS_IDX'(i) < intm_rs_top; i++) begin 
+            src1_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
+            src2_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
             for (int k = 0; k < CDB_WIDTH; k++) begin 
                 if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                    src1_valid[i] = 1'b1;
+                    src1_valid = 1'b1;
                 end
                 if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                    src2_valid[i] = 1'b1;
+                    src2_valid = 1'b1;
                 end
             end
-            if (src1_valid[i] && src2_valid[i]) req_tmp[i] = '1;
-        end
-    end
-    // oldest first
-    always_comb begin
-        intm_rs_issue_en    = '0;
-        intm_rs_issue_idx   = '0;
-        for (int i = 0; i < INTMRS_DEPTH; i++) begin 
-            prev_assigned[i] = '0;
-            for ( int j = 0; j < i; j++ ) begin
-                if( req_tmp[j] ) prev_assigned[i] = '1;
-            end
-            if( ~prev_assigned[i] && req_tmp[i] ) begin
+            if (src1_valid && src2_valid) begin
                 intm_rs_issue_en = '1;
-                intm_rs_issue_idx = INTMRS_IDX'(i);
+                intm_rs_issue_idx = (INTMRS_IDX)'(unsigned'(i));
+                break;
             end
         end
     end
