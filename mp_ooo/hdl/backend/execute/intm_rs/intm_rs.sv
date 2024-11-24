@@ -57,37 +57,13 @@ import int_rs_types::*;
         if (rst) begin 
             intm_rs_top <= '0;
             for (int i = 0; i < INTMRS_DEPTH; i++) begin 
-                intm_rs_available[i]         <= 1'b1;
+                intm_rs_available[i] <= 1'b1;
             end
         end else begin 
-            // issue > snoop cdb > push
             for (int i = 0; i < INTMRS_DEPTH; i++) begin
-                // compress and push rs array
                 intm_rs_array[i]  <= rs_array_next[i];
                 intm_rs_available[i] <= rs_available_next[i];
-                // snoop CDB to update rs1/rs2 valid
-                for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
-                    // set rs1/rs2 to valid
-                    if (cdb_rs[k].valid && !intm_rs_available[i]) begin 
-                        if (intm_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
-                            if ( rs_update_sel[i] == SELF ) begin
-                                intm_rs_array[i].rs1_valid <= 1'b1;
-                            end else if ( rs_update_sel[i] == PREV ) begin
-                                if( i>0 ) intm_rs_array[i-1].rs1_valid <= 1'b1;
-                            end
-                        end
-                        if (intm_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
-                            if ( rs_update_sel[i] == SELF ) begin
-                                intm_rs_array[i].rs2_valid <= 1'b1;
-                            end else if ( rs_update_sel[i] == PREV ) begin
-                                if( i>0 ) intm_rs_array[i-1].rs2_valid <= 1'b1;
-                            end
-                        end
-                    end
-                end 
             end
-            // pop and push pointer tracking
             intm_rs_top <= rs_top_next;
         end
     end
@@ -130,6 +106,25 @@ import int_rs_types::*;
                 end
                 default: ;
             endcase
+            // snoop CDB to update rs1/rs2 valid
+            for (int k = 0; k < CDB_WIDTH; k++) begin 
+                if (cdb_rs[k].valid && !intm_rs_available[i]) begin 
+                    if (intm_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
+                        if ( rs_update_sel[i] == SELF ) begin
+                            rs_array_next[i].rs1_valid = 1'b1;
+                        end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
+                            rs_array_next[i-1].rs1_valid = 1'b1;
+                        end
+                    end
+                    if (intm_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
+                        if ( rs_update_sel[i] == SELF ) begin
+                            rs_array_next[i].rs2_valid = 1'b1;
+                        end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
+                            rs_array_next[i-1].rs2_valid = 1'b1;
+                        end
+                    end
+                end
+            end
         end
     end
 

@@ -63,27 +63,6 @@ import int_rs_types::*;
                 // compress and push rs array
                 int_rs_array[i]  <= rs_array_next[i];
                 int_rs_available[i] <= rs_available_next[i];
-                // snoop CDB to update rs1/rs2 valid
-                for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
-                    // set rs1/rs2 to valid
-                    if (cdb_rs[k].valid && !int_rs_available[i]) begin 
-                        if (int_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
-                            if ( rs_update_sel[i] == SELF ) begin
-                                int_rs_array[i].rs1_valid <= 1'b1;
-                            end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
-                                int_rs_array[i-1].rs1_valid <= 1'b1;
-                            end
-                        end
-                        if (int_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
-                            if ( rs_update_sel[i] == SELF ) begin
-                                int_rs_array[i].rs2_valid <= 1'b1;
-                            end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
-                                int_rs_array[i-1].rs2_valid <= 1'b1;
-                            end
-                        end
-                    end
-                end
             end
             // pop and push pointer tracking
             int_rs_top <= rs_top_next;
@@ -128,6 +107,25 @@ import int_rs_types::*;
                 end
                 default: ;
             endcase
+            // snoop CDB to update rs1/rs2 valid
+            for (int k = 0; k < CDB_WIDTH; k++) begin 
+                if (cdb_rs[k].valid && !int_rs_available[i]) begin 
+                    if (int_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
+                        if ( rs_update_sel[i] == SELF ) begin
+                            rs_array_next[i].rs1_valid = 1'b1;
+                        end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
+                            rs_array_next[i-1].rs1_valid = 1'b1;
+                        end
+                    end
+                    if (int_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
+                        if ( rs_update_sel[i] == SELF ) begin
+                            rs_array_next[i].rs2_valid = 1'b1;
+                        end else if ( rs_update_sel[i] == PREV && (i>0) ) begin
+                            rs_array_next[i-1].rs2_valid = 1'b1;
+                        end
+                    end
+                end
+            end
         end
     end
 
@@ -196,44 +194,6 @@ import int_rs_types::*;
             end
         end
     end
-
-    // issue enable logic: oldest first
-    // loop from top until src all valid
-    // logic   req_tmp [INTRS_DEPTH];
-    // logic   prev_assigned [INTRS_DEPTH];
-    // logic   src1_valid  [INTRS_DEPTH];
-    // logic   src2_valid  [INTRS_DEPTH];
-    // always_comb begin 
-    //     for (int i = 0; INTRS_IDX'(i) < int_rs_top; i++) begin 
-    //         req_tmp[i] = '0;
-    //         src1_valid[i] = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
-    //         src2_valid[i] = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
-    //         for (int k = 0; k < CDB_WIDTH; k++) begin 
-    //             if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-    //                 src1_valid[i] = 1'b1;
-    //             end
-    //             if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-    //                 src2_valid[i] = 1'b1;
-    //             end
-    //         end
-    //         if (src1_valid[i] && src2_valid[i]) req_tmp[i] = '1;
-    //     end
-    // end
-    // // oldest first
-    // always_comb begin
-    //     int_rs_issue_en    = '0;
-    //     int_rs_issue_idx   = '0;
-    //     for (int i = 0; INTRS_IDX'(i) < int_rs_top; i++) begin 
-    //         prev_assigned[i] = '0;
-    //         for ( int j = 0; j < i; j++ ) begin
-    //             if( req_tmp[j] ) prev_assigned[i] = '1;
-    //         end
-    //         if( ~prev_assigned[i] && req_tmp[i] ) begin
-    //             int_rs_issue_en = '1;
-    //             int_rs_issue_idx = INTRS_IDX'(i);
-    //         end
-    //     end
-    // end
 
     // full logic, set rs.ready to 0 if rs is full
     logic   [INTRS_IDX:0]    n_available_slots;
