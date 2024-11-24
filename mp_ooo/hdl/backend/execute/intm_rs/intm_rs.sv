@@ -87,12 +87,12 @@ import int_rs_types::*;
             rs_push_sel[i] = '0;
             rs_update_sel[i] = SELF;
             if( intm_rs_pop_en ) begin
-                if( INTMRS_IDX'(i)>=intm_rs_issue_idx ) rs_update_sel[i] = PREV;
+                if( (INTMRS_IDX)'(unsigned'(i))>=intm_rs_issue_idx ) rs_update_sel[i] = PREV;
             end
             for( int j = 0; j < ID_WIDTH; j++ ) begin 
-                if ( intm_rs_push_en[j] && (INTMRS_IDX'(i) == intm_rs_push_idx[j]) ) begin
+                if ( intm_rs_push_en[j] && ((INTMRS_IDX)'(unsigned'(i)) == intm_rs_push_idx[j]) ) begin
                     rs_update_sel[i] = PUSH_IN;
-                    rs_push_sel[i] = ID_WIDTH_IDX'(j);
+                    rs_push_sel[i] = ID_WIDTH_IDX'(unsigned'(j));
                 end
             end
         end
@@ -132,15 +132,15 @@ import int_rs_types::*;
                     if (intm_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
                         if ( rs_update_sel[i] == SELF ) begin
                             rs_array_next[i].rs1_valid = 1'b1;
-                        end else if ( (i>0) && rs_update_sel[i-1] == PREV ) begin
-                            rs_array_next[i-1].rs1_valid = 1'b1;
+                        end else if ( i > 0 ) begin
+                            if (rs_update_sel[i-1] == PREV) rs_array_next[i-1].rs1_valid = 1'b1;
                         end
                     end
                     if (intm_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
                         if ( rs_update_sel[i] == SELF ) begin
                             rs_array_next[i].rs2_valid = 1'b1;
-                        end else if ( (i>0) && rs_update_sel[i-1] == PREV ) begin
-                            rs_array_next[i-1].rs2_valid = 1'b1;
+                        end else if ( i > 0 ) begin
+                            if (rs_update_sel[i-1] == PREV) rs_array_next[i-1].rs2_valid = 1'b1;
                         end
                     end
                 end
@@ -156,7 +156,7 @@ import int_rs_types::*;
         intm_rs_issue_idx = '0; 
         src1_valid       = '0;
         src2_valid       = '0;
-        for (int i = 0; INTMRS_IDX'(i) < intm_rs_top; i++) begin 
+        for (int i = 0; INTMRS_IDX'(unsigned'(i)) < intm_rs_top; i++) begin 
             src1_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs1_valid;
             src2_valid = intm_rs_array[(INTMRS_IDX)'(unsigned'(i))].rs2_valid;
             for (int k = 0; k < CDB_WIDTH; k++) begin 
