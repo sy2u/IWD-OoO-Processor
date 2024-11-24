@@ -25,11 +25,23 @@ import int_rs_types::*;
         end
     endgenerate
 
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [3:0]           fu_opcode;
+    } intm_rs_entry_t;
+
+
     // rs array, store uop+available
-    uop_t intm_rs_array     [INTMRS_DEPTH];
-    uop_t rs_array_next     [INTMRS_DEPTH];
-    logic intm_rs_available [INTMRS_DEPTH];
-    logic rs_available_next [INTMRS_DEPTH];
+    intm_rs_entry_t         intm_rs_array       [INTMRS_DEPTH];
+    intm_rs_entry_t         rs_array_next       [INTMRS_DEPTH];
+    logic                   intm_rs_available   [INTMRS_DEPTH];
+    logic                   rs_available_next   [INTMRS_DEPTH];
 
     // pointer to top of the array (like a fifo queue)
     logic [INTMRS_IDX-1:0]  intm_rs_top, rs_top_next;
@@ -60,6 +72,7 @@ import int_rs_types::*;
                 intm_rs_available[i] <= 1'b1;
             end
         end else begin 
+            // snoop CDB to update rs1/rs2 valid
             for (int i = 0; i < INTMRS_DEPTH; i++) begin
                 intm_rs_array[i]  <= rs_array_next[i];
                 intm_rs_available[i] <= rs_available_next[i];
@@ -101,8 +114,15 @@ import int_rs_types::*;
                     rs_available_next[i] = intm_rs_available[i];
                 end
                 PUSH_IN: begin
-                    rs_array_next[i] = from_ds.uop[rs_push_sel[i]];
                     rs_available_next[i] = 1'b0;
+                    rs_array_next[i].rob_id  = from_ds.uop[rs_push_sel[i]].rob_id;
+                    rs_array_next[i].rs1_phy = from_ds.uop[rs_push_sel[i]].rs1_phy;
+                    rs_array_next[i].rs1_valid = from_ds.uop[rs_push_sel[i]].rs1_valid;
+                    rs_array_next[i].rs2_phy = from_ds.uop[rs_push_sel[i]].rs2_phy;
+                    rs_array_next[i].rs2_valid = from_ds.uop[rs_push_sel[i]].rs2_valid;
+                    rs_array_next[i].rd_phy = from_ds.uop[rs_push_sel[i]].rd_phy;
+                    rs_array_next[i].rd_arch = from_ds.uop[rs_push_sel[i]].rd_arch;
+                    rs_array_next[i].fu_opcode = from_ds.uop[rs_push_sel[i]].fu_opcode;
                 end
                 default: ;
             endcase
