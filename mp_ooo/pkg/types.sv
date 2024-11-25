@@ -28,7 +28,7 @@ package cpu_params;
 
     // Reservation Station Type: 0 - Normal, 1 - Age-ordered
     localparam unsigned     INT_RS_TYPE     = 1;
-    localparam unsigned     INTM_RS_TYPE    = 1;
+    localparam unsigned     INTM_RS_TYPE    = 0;
 
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
