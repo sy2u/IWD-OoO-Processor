@@ -1,4 +1,4 @@
-module intm_rs
+module intm_rs_ordered
 import cpu_params::*;
 import uop_types::*;
 import int_rs_types::*;

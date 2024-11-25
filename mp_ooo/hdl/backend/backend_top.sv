@@ -110,25 +110,49 @@ import uop_types::*;
         .to_mem_rs              (ds_lsu_itf_i)
     );
 
-    int_rs int_rs_i(
-        .clk                    (clk),
-        .rst                    (rst || backend_flush),
+    generate
+        if( INT_RS_TYPE == 1 ) begin
+            int_rs_ordered int_rs_i(
+                .clk                    (clk),
+                .rst                    (rst || backend_flush),
+                .from_ds                (ds_int_rs_itf_i),
+                .to_prf                 (rs_prf_itfs[0]),
+                .cdb                    (cdb_itfs),
+                .fu_cdb_out             (cdb_itfs[0])
+            );
+        end else begin
+            int_rs_normal int_rs_i(
+                .clk                    (clk),
+                .rst                    (rst || backend_flush),
+                .from_ds                (ds_int_rs_itf_i),
+                .to_prf                 (rs_prf_itfs[0]),
+                .cdb                    (cdb_itfs),
+                .fu_cdb_out             (cdb_itfs[0])
+            );
+        end
+    endgenerate
 
-        .from_ds                (ds_int_rs_itf_i),
-        .to_prf                 (rs_prf_itfs[0]),
-        .cdb                    (cdb_itfs),
-        .fu_cdb_out             (cdb_itfs[0])
-    );
-
-    intm_rs intm_rs_i(
-        .clk                    (clk),
-        .rst                    (rst || backend_flush),
-
-        .from_ds                (ds_intm_rs_itf_i),
-        .to_prf                 (rs_prf_itfs[1]),
-        .cdb                    (cdb_itfs),
-        .fu_cdb_out             (cdb_itfs[1])
-    );
+    generate
+        if ( INTM_RS_TYPE == 1 ) begin
+            intm_rs_ordered intm_rs_i(
+                .clk                    (clk),
+                .rst                    (rst || backend_flush),
+                .from_ds                (ds_intm_rs_itf_i),
+                .to_prf                 (rs_prf_itfs[1]),
+                .cdb                    (cdb_itfs),
+                .fu_cdb_out             (cdb_itfs[1])
+            );
+        end else begin
+            intm_rs_normal intm_rs_i(
+                .clk                    (clk),
+                .rst                    (rst || backend_flush),
+                .from_ds                (ds_intm_rs_itf_i),
+                .to_prf                 (rs_prf_itfs[1]),
+                .cdb                    (cdb_itfs),
+                .fu_cdb_out             (cdb_itfs[1])
+            );
+        end
+    endgenerate
 
     branch_top branch_i(
         .clk                    (clk),

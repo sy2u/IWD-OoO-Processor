@@ -26,6 +26,10 @@ package cpu_params;
     localparam unsigned     MEMRS_IDX       = $clog2(MEMRS_DEPTH);
     localparam  unsigned    LSQ_DEPTH       = 8;
 
+    // Reservation Station Type: 0 - Normal, 1 - Age-ordered
+    localparam unsigned     INT_RS_TYPE     = 1;
+    localparam unsigned     INTM_RS_TYPE    = 1;
+
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
