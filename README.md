@@ -36,8 +36,8 @@
 ### Age-Ordered Reservation Station
 Tested with Superscalar only
 | RS / Benchmark | Coremark | Compression | Mergesort | FFT | aes_sha
-| --- | --- | --- | --- | --- |
-| INT_Normal  w/ INTM_Normal   | 0.409681 | 0.412207 | 0.593525 | 0.541800 | 0.477922
-| INT_Normal  w/ INTM_Ordered  | 0.409681 | 0.412207 | 0.593525 | 0.541800 | 0.477922
-| INT_Ordered w/ INTM_Normal   | 0.425735 | 0.606571 | 0.610516 | 0.558688 | 0.490431
-| INT_Ordered w/ INTM_Ordered  | 0.425735 | 0.606571 | 0.610516 | 0.558688 | 0.490431
+| --- | --- | --- | --- | --- | --- |
+| ALU_Normal  w/ MD_Normal   | 0.409681 | 0.412207 | 0.593525 | 0.541800 | 0.477922
+| ALU_Normal  w/ MD_Ordered  | 0.409681 | 0.412207 | 0.593525 | 0.541800 | 0.477922
+| ALU_Ordered w/ MD_Normal   | 0.425735 | 0.606571 | 0.610516 | 0.558688 | 0.490431
+| ALU_Ordered w/ MD_Ordered  | 0.425735 | 0.606571 | 0.610516 | 0.558688 | 0.490431
