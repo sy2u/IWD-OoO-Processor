@@ -62,8 +62,7 @@ import rv32i_types::*;
     );
 
     inst_queue #(
-        .DEPTH          (16),
-        .WIDTH          (32 * IF_WIDTH)
+        .DEPTH          (8)
     ) inst_queue_i(
         .clk            (clk),
         .rst            (rst || backend_flush),

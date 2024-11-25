@@ -32,6 +32,7 @@ import uop_types::*;
     op2_sel_t                   op2_sel[ID_WIDTH];
     logic   [31:0]              imm[ID_WIDTH];
     logic   [ARF_IDX-1:0]       rd_arch[ID_WIDTH];
+    logic                       rd_en[ID_WIDTH];
     logic   [ARF_IDX-1:0]       rs1_arch[ID_WIDTH];
     logic   [ARF_IDX-1:0]       rs2_arch[ID_WIDTH];
 
@@ -50,6 +51,7 @@ import uop_types::*;
             .op2_sel                (op2_sel[i]),
             .imm                    (imm[i]),
             .rd_arch                (rd_arch[i]),
+            .rd_en                  (rd_en[i]),
             .rs1_arch               (rs1_arch[i]),
             .rs2_arch               (rs2_arch[i])
         );
@@ -77,10 +79,10 @@ import uop_types::*;
 
     generate if (ID_WIDTH == 2) begin : filter_2way
 
-        logic   [ID_WIDTH-1:0]  already_dispatched;
-        logic   [ID_WIDTH-1:0]  uops_is_br;
-        logic   [ID_WIDTH-1:0]  uops_is_mem;
-        logic   [ID_WIDTH-1:0]  dispatch_mask;
+        logic           dispatch_stalled;
+        logic   [1:0]   uops_is_br;
+        logic   [1:0]   uops_is_mem;
+        logic   [1:0]   dispatch_mask;
 
         always_comb begin
             for (int i = 0; i < ID_WIDTH; i++) begin
@@ -91,16 +93,16 @@ import uop_types::*;
 
         always_ff @(posedge clk) begin
             if (rst) begin
-                already_dispatched <= 2'b11;
+                dispatch_stalled <= 1'b0;
             end else begin
                 if (uops_is_br[0] || (uops_is_mem[0] && uops_is_mem[1])) begin
-                    if (already_dispatched == 2'b11 && to_fl.ready && to_rob.ready && nxt_ready) begin
-                        already_dispatched <= 2'b01;
-                    end else if (already_dispatched == 2'b01 && to_fl.ready && to_rob.ready && nxt_ready) begin
-                        already_dispatched <= 2'b11;
+                    if (dispatch_stalled == 1'b0 && to_fl.ready && to_rob.ready && nxt_ready) begin
+                        dispatch_stalled <= 1'b1;
+                    end else if (dispatch_stalled == 1'b1 && to_fl.ready && to_rob.ready && nxt_ready) begin
+                        dispatch_stalled <= 1'b0;
                     end
                 end else begin
-                    already_dispatched <= 2'b11;
+                    dispatch_stalled <= 1'b0;
                 end
             end
         end
@@ -108,14 +110,14 @@ import uop_types::*;
         always_comb begin
             dispatch_mask = 2'b11;
             if (uops_is_br[0]) begin
-                if (already_dispatched == 2'b11) begin
+                if (dispatch_stalled == 1'b0) begin
                     dispatch_mask = 2'b01;
                 end else begin
                     dispatch_mask = 2'b10;
                 end
             end
             if (uops_is_mem[0] && uops_is_mem[1]) begin
-                if (already_dispatched == 2'b11) begin
+                if (dispatch_stalled == 1'b0) begin
                     dispatch_mask = 2'b01;
                 end else begin
                     dispatch_mask = 2'b10;
@@ -133,7 +135,7 @@ import uop_types::*;
         always_comb begin
             from_fifo.ready = 1'b0;
             if (uops_is_br[0] || (uops_is_mem[0] && uops_is_mem[1])) begin
-                from_fifo.ready = already_dispatched == 2'b01 && to_fl.ready && to_rob.ready && nxt_ready;
+                from_fifo.ready = dispatch_stalled == 1'b1 && to_fl.ready && to_rob.ready && nxt_ready;
             end else begin
                 from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
             end
@@ -142,7 +144,7 @@ import uop_types::*;
     end endgenerate
 
     generate if (ID_WIDTH == 1) begin : filter_1way
-        assign uops_valid[0] = uops_raw_valid[0] && from_fifo.packet.inst[0] != '0;
+        assign uops_valid[0] = uops_raw_valid[0];
         assign from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
     end endgenerate
 
