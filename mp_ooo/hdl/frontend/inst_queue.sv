@@ -1,7 +1,6 @@
 module inst_queue
 import fetch_types::*; #(
-            parameter               DEPTH     = 16,
-            parameter               WIDTH     = 32
+            parameter               DEPTH     = 16
 )
 (
     input   logic               clk,

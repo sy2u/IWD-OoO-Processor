@@ -12,6 +12,7 @@ import rv32i_types::*;
     output  op2_sel_t               op2_sel,
     output  logic   [31:0]          imm,
     output  logic   [ARF_IDX-1:0]   rd_arch,
+    output  logic                   rd_en,
     output  logic   [ARF_IDX-1:0]   rs1_arch,
     output  logic   [ARF_IDX-1:0]   rs2_arch
 );
@@ -25,7 +26,8 @@ import rv32i_types::*;
     assign funct7 = inst[31:25];
 
     // If a register is not used, it's set to r0
-    assign rd_arch = (opcode inside {op_b_lui, op_b_auipc, op_b_imm, op_b_reg, op_b_jal, op_b_jalr, op_b_load}) ? inst[11:7] : '0;
+    assign rd_en = opcode inside {op_b_lui, op_b_auipc, op_b_imm, op_b_reg, op_b_jal, op_b_jalr, op_b_load};
+    assign rd_arch = (rd_en) ? inst[11:7] : '0;
     assign rs1_arch = (opcode inside {op_b_imm, op_b_reg, op_b_jalr, op_b_br, op_b_load, op_b_store}) ? inst[19:15] : '0;
     assign rs2_arch = (opcode inside {op_b_reg, op_b_br, op_b_store}) ? inst[24:20] : '0;
 
@@ -97,7 +99,7 @@ import rv32i_types::*;
             op_b_reg    : begin
                 op1_sel = OP1_RS1;
                 op2_sel = OP2_RS2;
-                if (funct7 == muldiv) begin
+                if (funct7[0]) begin
                     rs_type = RS_INTM;
                     fu_type = FU_MDU;
                     fu_opcode = {1'b0, funct3};
