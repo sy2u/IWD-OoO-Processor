@@ -77,9 +77,9 @@ def generate_instruction():
         'add', 'sub', 'sll', 'srl', 'sra', 'and', 'or', 'xor', 
         'slt', 'sltu', 'addi', 'slli', 'srli', 'srai', 'andi', 
         'ori', 'xori', 'slti', 'sltiu', 'lui', 'auipc', 
-        'sb', 'sh', 'sw', 'lb', 'lh', 'lw', 'lbu', 'lhu',
-        'mul', 'mulh', 'mulhu', 'mulhsu', 
-        'div', 'divu', 'rem', 'remu'
+        # 'sb', 'sh', 'sw', 'lb', 'lh', 'lw', 'lbu', 'lhu',
+        # 'mul', 'mulh', 'mulhu', 'mulhsu', 
+        # 'div', 'divu', 'rem', 'remu'
     ])
     
     if instr_type in ['add', 'sub', 'sll', 'srl', 'sra', 'and', 'or', 'xor', 'slt', 'sltu']:
@@ -97,9 +97,15 @@ def generate_instruction():
     elif instr_type in ['lb', 'lh', 'lw', 'lbu', 'lhu']:
         return generate_i_load_type(instr_type)
 
+def init_all_reg(program):
+    for i in range(32):
+        program.append(f"li x{i}, {i}")
+    return
+
 # Generate an assembly program
 def generate_asm_program(num_instructions):
     program = []
+    init_all_reg(program)
     for _ in range(num_instructions):
         program.append(generate_instruction())
         # program.extend(['nop'] * 5)  # Adding 5 nops between instructions

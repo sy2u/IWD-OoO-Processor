@@ -26,6 +26,10 @@ package cpu_params;
     localparam unsigned     MEMRS_IDX       = $clog2(MEMRS_DEPTH);
     localparam  unsigned    LSQ_DEPTH       = 8;
 
+    // Reservation Station Type: 0 - Normal, 1 - Age-ordered
+    localparam unsigned     INT_RS_TYPE     = 1;
+    localparam unsigned     INTM_RS_TYPE    = 0;
+
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
@@ -376,7 +380,6 @@ import uop_types::*;
 
     } fu_br_reg_t;
 
-
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
         logic   [ARF_IDX-1:0]   rd_arch;
@@ -394,6 +397,12 @@ import uop_types::*;
         logic   [31:0]          rs1_value;
         logic   [31:0]          rs2_value;
     } intm_rs_reg_t;
+
+    typedef enum logic [1:0] {  
+        PREV        = 2'b00,
+        SELF        = 2'b10,
+        PUSH_IN     = 2'b11
+    } rs_update_sel_t;
     
 endpackage
 
