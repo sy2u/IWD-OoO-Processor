@@ -37,8 +37,7 @@ import int_rs_types::*;
 
     br_rs br_rs_i(
         .clk                    (clk),
-        .rst                    (rst),
-        .backend_flush          (backend_flush),
+        .rst                    (rst || backend_flush),
 
         .from_ds                (ds_br_rs_itf_i),
         .to_prf                 (to_prf),

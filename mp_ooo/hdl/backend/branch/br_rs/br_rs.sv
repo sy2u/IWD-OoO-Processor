@@ -5,7 +5,6 @@ import int_rs_types::*;
 (
     input   logic               clk,
     input   logic               rst,
-    input   logic               backend_flush,
 
     ds_rs_mono_itf.rs        	from_ds,
     rs_prf_itf.rs               to_prf,
@@ -59,7 +58,7 @@ import int_rs_types::*;
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
-        if (rst || backend_flush) begin 
+        if (rst) begin 
             for (int i = 0; i < BRRS_DEPTH; i++) begin 
                 br_rs_available[i] <= 1'b1;
             end
@@ -201,7 +200,6 @@ import int_rs_types::*;
     fu_br fu_br_i(
         .clk                    (clk),
         .rst                    (rst),
-        .backend_flush          (backend_flush),
 
         .br_rs_valid            (br_rs_valid),
         .fu_br_ready            (fu_br_ready),
