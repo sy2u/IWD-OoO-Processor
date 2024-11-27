@@ -23,9 +23,20 @@ import lsu_types::*;
             assign cdb_rs[i].rd_phy = cdb[i].rd_phy;
         end
     endgenerate
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [31:0]          imm;
+        logic   [3:0]           fu_opcode;
+    } mem_rs_entry_t;
+
     // rs array, store uop+valid
-    uop_t mem_rs_arr    [MEMRS_DEPTH];
-    logic mem_rs_valid  [MEMRS_DEPTH];
+    mem_rs_entry_t  mem_rs_arr    [MEMRS_DEPTH];
+    logic           mem_rs_valid  [MEMRS_DEPTH];
 
     // push logic
     logic                 push_en;
@@ -35,6 +46,19 @@ import lsu_types::*;
     logic                 issue_en;
     logic [MEMRS_IDX-1:0] issue_idx;
 
+    // logic   push_or_issue_or_cdb;
+    // logic   cdb_valid_exist;
+    // assign push_or_issue_or_cdb = push_en || issue_en || cdb_valid_exist;
+    // always_comb begin
+    //     cdb_valid_exist = 1'b0;
+    //     for (int i = 0; i < CDB_WIDTH; i++) begin
+    //         if (cdb_rs[i].valid) begin
+    //             cdb_valid_exist = 1'b1;
+    //             break;
+    //         end
+    //     end
+    // end
+
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
@@ -43,12 +67,19 @@ import lsu_types::*;
                 mem_rs_valid[i] <= 1'b0;
             end
         end else begin 
+        // end else if (push_or_issue_or_cdb) begin 
             // issue > snoop cdb > push
             // push renamed instruction
             if (push_en) begin 
                 // set rs to unavailable
-                mem_rs_valid[push_idx]   <= 1'b1;
-                mem_rs_arr[push_idx]   <= from_ds.uop;
+                mem_rs_valid[push_idx]  <= 1'b1;
+                mem_rs_arr[push_idx].rob_id    <= from_ds.uop.rob_id;
+                mem_rs_arr[push_idx].rs1_phy   <= from_ds.uop.rs1_phy;
+                mem_rs_arr[push_idx].rs1_valid <= from_ds.uop.rs1_valid;
+                mem_rs_arr[push_idx].rs2_phy   <= from_ds.uop.rs2_phy;
+                mem_rs_arr[push_idx].rs2_valid <= from_ds.uop.rs2_valid;
+                mem_rs_arr[push_idx].imm       <= from_ds.uop.imm;
+                mem_rs_arr[push_idx].fu_opcode <= from_ds.uop.fu_opcode;
             end
 
             // snoop CDB to update rs1 valid
