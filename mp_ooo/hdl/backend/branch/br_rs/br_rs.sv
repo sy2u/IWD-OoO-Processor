@@ -26,10 +26,25 @@ import int_rs_types::*;
             assign cdb_rs[i].rd_phy = cdb[i].rd_phy;
         end
     endgenerate
-    // rs array, store uop+available
-    uop_t int_rs_array      [BRRS_DEPTH];
-    logic int_rs_available  [BRRS_DEPTH];
 
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [31:0]          imm;
+        logic   [31:0]          pc;
+        logic   [3:0]           fu_opcode;
+        logic                   predict_taken;
+        logic   [31:0]          predict_target;
+    } br_rs_entry_t;
+
+    // rs array, store uop+available
+    br_rs_entry_t   br_rs_arr      [BRRS_DEPTH];
+    logic           br_rs_available  [BRRS_DEPTH];
 
     // push logic
     logic                   int_rs_push_en;
@@ -46,15 +61,26 @@ import int_rs_types::*;
         // rs array reset to all available, and top point to 0
         if (rst || backend_flush) begin 
             for (int i = 0; i < BRRS_DEPTH; i++) begin 
-                int_rs_available[i] <= 1'b1;
+                br_rs_available[i] <= 1'b1;
             end
         end else begin 
             // issue > snoop cdb > push
             // push renamed instruction
             if (int_rs_push_en) begin 
                 // set rs to unavailable
-                int_rs_available[int_rs_push_idx]   <= 1'b0;
-                int_rs_array[int_rs_push_idx]       <= from_ds.uop;
+                br_rs_available[int_rs_push_idx]           <= 1'b0;
+                br_rs_arr[int_rs_push_idx].rob_id        <= from_ds.uop.rob_id;
+                br_rs_arr[int_rs_push_idx].rs1_phy       <= from_ds.uop.rs1_phy;
+                br_rs_arr[int_rs_push_idx].rs1_valid     <= from_ds.uop.rs1_valid;
+                br_rs_arr[int_rs_push_idx].rs2_phy       <= from_ds.uop.rs2_phy;
+                br_rs_arr[int_rs_push_idx].rs2_valid     <= from_ds.uop.rs2_valid;
+                br_rs_arr[int_rs_push_idx].rd_phy        <= from_ds.uop.rd_phy;
+                br_rs_arr[int_rs_push_idx].rd_arch       <= from_ds.uop.rd_arch;
+                br_rs_arr[int_rs_push_idx].imm           <= from_ds.uop.imm;
+                br_rs_arr[int_rs_push_idx].pc            <= from_ds.uop.pc;
+                br_rs_arr[int_rs_push_idx].fu_opcode     <= from_ds.uop.fu_opcode;
+                br_rs_arr[int_rs_push_idx].predict_taken <= from_ds.uop.predict_taken;
+                br_rs_arr[int_rs_push_idx].predict_target <= from_ds.uop.predict_target;
             end
 
             // snoop CDB to update rs1/rs2 valid
@@ -62,12 +88,12 @@ import int_rs_types::*;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
                     // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
                     // set rs1/rs2 to valid
-                    if (cdb_rs[k].valid && !int_rs_available[i]) begin 
-                        if (int_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
-                            int_rs_array[i].rs1_valid <= 1'b1;
+                    if (cdb_rs[k].valid && !br_rs_available[i]) begin 
+                        if (br_rs_arr[i].rs1_phy == cdb_rs[k].rd_phy) begin 
+                            br_rs_arr[i].rs1_valid <= 1'b1;
                         end
-                        if (int_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
-                            int_rs_array[i].rs2_valid <= 1'b1;
+                        if (br_rs_arr[i].rs2_phy == cdb_rs[k].rd_phy) begin 
+                            br_rs_arr[i].rs2_valid <= 1'b1;
                         end
                     end
                 end 
@@ -76,7 +102,7 @@ import int_rs_types::*;
             // pop issued instruction
             if (int_rs_issue_en) begin 
                 // set rs to available
-                int_rs_available[int_rs_issue_idx] <= 1'b1;
+                br_rs_available[int_rs_issue_idx] <= 1'b1;
             end
         end
     end
@@ -88,7 +114,7 @@ import int_rs_types::*;
         int_rs_push_idx = '0;
         if (from_ds.valid && branch_ready) begin 
             for (int i = 0; i < BRRS_DEPTH; i++) begin 
-                if (int_rs_available[(BRRS_IDX)'(unsigned'(i))]) begin 
+                if (br_rs_available[(BRRS_IDX)'(unsigned'(i))]) begin 
                     int_rs_push_idx = (BRRS_IDX)'(unsigned'(i));
                     int_rs_push_en = 1'b1;
                     break;
@@ -105,18 +131,18 @@ import int_rs_types::*;
         src1_valid       = '0;
         src2_valid       = '0;
         for (int i = 0; i < BRRS_DEPTH; i++) begin 
-            if (!int_rs_available[(BRRS_IDX)'(unsigned'(i))]) begin 
+            if (!br_rs_available[(BRRS_IDX)'(unsigned'(i))]) begin 
                 
-                src1_valid = int_rs_array[(BRRS_IDX)'(unsigned'(i))].rs1_valid;
+                src1_valid = br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs1_valid;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(BRRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
                         src1_valid = 1'b1;
                     end
                 end
                     
-                src2_valid = int_rs_array[(BRRS_IDX)'(unsigned'(i))].rs2_valid;
+                src2_valid = br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs2_valid;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(BRRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
                         src2_valid = 1'b1;
                     end
                 end
@@ -134,16 +160,16 @@ import int_rs_types::*;
     always_comb begin 
     	from_ds.ready = '0;
         for (int i = 0; i < BRRS_DEPTH; i++) begin 
-            if (int_rs_available[i]) begin 
+            if (br_rs_available[i]) begin 
                 from_ds.ready = '1;
             end
         end
     end
-    // assign from_ds.ready = |int_rs_available;
+    // assign from_ds.ready = |br_rs_available;
 
     // communicate with prf
-    assign to_prf.rs1_phy = int_rs_array[int_rs_issue_idx].rs1_phy;
-    assign to_prf.rs2_phy = int_rs_array[int_rs_issue_idx].rs2_phy;
+    assign to_prf.rs1_phy = br_rs_arr[int_rs_issue_idx].rs1_phy;
+    assign to_prf.rs2_phy = br_rs_arr[int_rs_issue_idx].rs2_phy;
 
     //////////////////////
     // BR_RS to FU_ALU //
@@ -157,14 +183,14 @@ import int_rs_types::*;
 
     // send data to fu_alu_reg
     always_comb begin 
-        fu_br_reg_in.rob_id         = int_rs_array[int_rs_issue_idx].rob_id;
-        fu_br_reg_in.rd_phy         = int_rs_array[int_rs_issue_idx].rd_phy;
-        fu_br_reg_in.rd_arch        = int_rs_array[int_rs_issue_idx].rd_arch;
-        fu_br_reg_in.fu_opcode      = int_rs_array[int_rs_issue_idx].fu_opcode;
-        fu_br_reg_in.imm            = int_rs_array[int_rs_issue_idx].imm;
-        fu_br_reg_in.pc             = int_rs_array[int_rs_issue_idx].pc;
-        fu_br_reg_in.predict_taken  = int_rs_array[int_rs_issue_idx].predict_taken;
-        fu_br_reg_in.predict_target = int_rs_array[int_rs_issue_idx].predict_target;
+        fu_br_reg_in.rob_id         = br_rs_arr[int_rs_issue_idx].rob_id;
+        fu_br_reg_in.rd_phy         = br_rs_arr[int_rs_issue_idx].rd_phy;
+        fu_br_reg_in.rd_arch        = br_rs_arr[int_rs_issue_idx].rd_arch;
+        fu_br_reg_in.fu_opcode      = br_rs_arr[int_rs_issue_idx].fu_opcode;
+        fu_br_reg_in.imm            = br_rs_arr[int_rs_issue_idx].imm;
+        fu_br_reg_in.pc             = br_rs_arr[int_rs_issue_idx].pc;
+        fu_br_reg_in.predict_taken  = br_rs_arr[int_rs_issue_idx].predict_taken;
+        fu_br_reg_in.predict_target = br_rs_arr[int_rs_issue_idx].predict_target;
 
         fu_br_reg_in.rs1_value      = to_prf.rs1_value;
         fu_br_reg_in.rs2_value      = to_prf.rs2_value;
