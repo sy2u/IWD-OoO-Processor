@@ -30,7 +30,7 @@ import uop_types::*;
     logic                       dispatch_valid;
     logic                       dispatch_ready;
     logic                       uops_valid[ID_WIDTH];
-    rs_type_t                   rs_type[ID_WIDTH];
+    logic   [1:0]               rs_type[ID_WIDTH];
     uop_t                       uops[ID_WIDTH];
 
     logic   [PRF_IDX-1:0]       rrf_mem[ARF_DEPTH];

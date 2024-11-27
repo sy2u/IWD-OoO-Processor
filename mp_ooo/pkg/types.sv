@@ -177,19 +177,16 @@ package uop_types;
 import cpu_params::*;
 
     typedef enum logic [0:0] {
-        OP1_X       = 1'bx,
         OP1_RS1     = 1'b0,
         OP1_ZERO    = 1'b1
     } op1_sel_t;
 
     typedef enum logic [0:0] {
-        OP2_X       = 1'bx,
         OP2_RS2     = 1'b0,
         OP2_IMM     = 1'b1
     } op2_sel_t;
 
     typedef enum logic [1:0] {
-        RS_X        = 2'bxx,
         RS_INT      = 2'b00,
         RS_INTM     = 2'b01,
         RS_BR       = 2'b10,
@@ -197,7 +194,6 @@ import cpu_params::*;
     } rs_type_t;
 
     typedef enum logic [1:0] {
-        FU_X        = 2'bxx,
         FU_ALU      = 2'b00,
         FU_MDU      = 2'b01,
         FU_BR       = 2'b10,
@@ -259,11 +255,11 @@ import cpu_params::*;
         logic   [31:0]          pc;
         logic   [31:0]          inst;
 
-        rs_type_t               rs_type;    // Reservation Station type
-        fu_type_t               fu_type;    // Functional Unit type
+        logic   [1:0]           rs_type;    // Reservation Station type
+        logic   [1:0]           fu_type;    // Functional Unit type
         logic   [3:0]           fu_opcode;  // FU opcode
-        op1_sel_t               op1_sel;    // Operand 1 select
-        op2_sel_t               op2_sel;    // Operand 2 select
+        logic   [0:0]           op1_sel;    // Operand 1 select
+        logic   [0:0]           op2_sel;    // Operand 2 select
 
         logic   [PRF_IDX-1:0]   rd_phy;     // Destination register (physical)
         logic   [PRF_IDX-1:0]   rs1_phy;    // Source register 1 (physical)
@@ -353,8 +349,8 @@ import uop_types::*;
         logic   [PRF_IDX-1:0]   rd_phy;
 
         logic   [3:0]           fu_opcode;  
-        op1_sel_t               op1_sel;    
-        op2_sel_t               op2_sel;    
+        logic   [0:0]           op1_sel;    
+        logic   [0:0]           op2_sel;    
 
         logic   [31:0]          pc;
         logic   [31:0]          imm;

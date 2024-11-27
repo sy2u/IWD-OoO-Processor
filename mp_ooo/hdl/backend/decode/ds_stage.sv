@@ -9,7 +9,7 @@ import uop_types::*;
     input   logic               prv_valid,
     output  logic               prv_ready,
     input   logic               uops_valid[ID_WIDTH],
-    input   rs_type_t           rs_type[ID_WIDTH],
+    input   logic   [1:0]       rs_type[ID_WIDTH],
     input   uop_t               uops[ID_WIDTH],
 
     // INT Reservation Stations
@@ -41,9 +41,9 @@ import uop_types::*;
     always_comb begin
         for (int i = 0; i < ID_WIDTH; i++) begin
             to_int_rs.valid[i] = '0;
-            to_int_rs.uop[i] = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
+            to_int_rs.uop[i] = '{default: 'x};
             to_intm_rs.valid[i] = '0;
-            to_intm_rs.uop[i] = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
+            to_intm_rs.uop[i] = '{default: 'x};
         end
         for (int i = 0; i < ID_WIDTH; i++) begin
             unique case (rs_type[i])
@@ -63,9 +63,9 @@ import uop_types::*;
 
     always_comb begin
         to_br_rs.valid = '0;
-        to_br_rs.uop = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
+        to_br_rs.uop = '{default: 'x};
         to_mem_rs.valid = '0;
-        to_mem_rs.uop = '{rs_type: RS_X, fu_type: FU_X, op1_sel: OP1_X, op2_sel: OP2_X, default: 'x};
+        to_mem_rs.uop = '{default: 'x};
         for (int i = 0; i < ID_WIDTH; i++) begin
             if (rs_type[i] == RS_BR && dispatch_valid[i]) begin
                 to_br_rs.valid = prv_ready; // Dispatch to BR Reservation Stations
