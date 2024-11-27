@@ -24,7 +24,8 @@ import uop_types::*;
     rrf_fl_itf                  rrf_fl_itf_i();
     cdb_itf                     cdb_itfs[CDB_WIDTH]();
     cb_rob_itf                  cb_rob_itf_i();
-    ls_rob_itf                  ls_rob_itf();
+    ldq_rob_itf                 ldq_rob_itf();
+    stq_rob_itf                 stq_rob_itf();
     rs_prf_itf                  rs_prf_itfs[CDB_WIDTH]();
 
     logic                       dispatch_valid;
@@ -81,7 +82,8 @@ import uop_types::*;
         .to_rrf                 (rob_rrf_itf_i),
         .cdb                    (cdb_itfs),
         .from_cb                (cb_rob_itf_i),
-        .from_lsq               (ls_rob_itf)
+        .from_stq               (stq_rob_itf),
+        .from_ldq               (ldq_rob_itf)
     );
 
     rrf rrf_i(
@@ -174,7 +176,8 @@ import uop_types::*;
         .to_prf                 (rs_prf_itfs[3]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[3]),
-        .fu_cdb_out_dbg         (ls_rob_itf),
+        .ld_to_rob              (ldq_rob_itf),
+        .st_to_rob              (stq_rob_itf),
         .dcache_itf             (dcache_itf),
 
         .backend_flush          (backend_flush)

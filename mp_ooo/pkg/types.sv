@@ -22,9 +22,13 @@ package cpu_params;
     localparam unsigned     BRRS_IDX        = $clog2(BRRS_DEPTH);
     localparam  unsigned    CB_DEPTH        = 8;
 
-    localparam unsigned     MEMRS_DEPTH     = 8;
-    localparam unsigned     MEMRS_IDX       = $clog2(MEMRS_DEPTH);
+    localparam  unsigned    MEMRS_DEPTH     = 16;
+    localparam  unsigned    MEMRS_IDX       = $clog2(MEMRS_DEPTH);
     localparam  unsigned    LSQ_DEPTH       = 8;
+    localparam  unsigned    LDQ_DEPTH       = 8;
+    localparam  unsigned    LDQ_IDX         = $clog2(LDQ_DEPTH);
+    localparam  unsigned    STQ_DEPTH       = 8;
+    localparam  unsigned    STQ_IDX         = $clog2(STQ_DEPTH);
 
     // Reservation Station Type: 0 - Normal, 1 - Age-ordered
     localparam unsigned     INT_RS_TYPE     = 1;
@@ -443,6 +447,42 @@ import cpu_params::*;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
+        logic                   addr_valid;
+        logic   [3:0]           fu_opcode;
+        logic   [31:0]          addr;
+        logic   [3:0]           mask;
+        logic   [31:0]          wdata;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
+    } stq_entry_t;
+
+    typedef struct packed {
+        logic                   valid; // If the entry is valid
+        logic                   addr_valid; // If the addr and mask is ready
+        logic   [STQ_IDX:0]     track_stq_ptr;
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [3:0]           fu_opcode;
+        logic   [31:0]          addr;
+        logic   [3:0]           mask;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
+    } ldq_entry_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [1:0]           addr_2;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          addr_dbg;
+        logic   [3:0]           mask_dbg;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
+    } load_stage_reg_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
         logic   [ARF_IDX-1:0]   rd_arch;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic   [31:0]          rd_value;
@@ -486,14 +526,5 @@ import cpu_params::*;
         logic   [31:0]          mem_rdata;
         logic   [31:0]          mem_wdata;
     } rvfi_dbg_t;
-
-endpackage
-
-package arbiter_types;
-
-    typedef enum logic {
-        PASS_THRU   =   1'b0,
-        WAIT_WRITE  =   1'b1
-    } arbiter_t;
 
 endpackage
