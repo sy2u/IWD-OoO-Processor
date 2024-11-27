@@ -356,7 +356,6 @@ import cpu_params::*;
     logic   [ROB_IDX-1:0]       rob_id;
     logic   [31:0]              addr_dbg;
     logic   [3:0]               rmask_dbg;
-    logic   [3:0]               wmask_dbg;
     logic   [31:0]              rdata_dbg;
     logic                       valid;
 
