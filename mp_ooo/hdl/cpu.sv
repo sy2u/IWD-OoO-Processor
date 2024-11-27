@@ -21,6 +21,7 @@ import rv32i_types::*;
     cacheline_itf               adapter_itf_i();
     frontend_fifo_itf           frontend_fifo_itf_i();
     fifo_backend_itf            fifo_backend_itf_i();
+    cb_bp_itf                   cb_bp_itf_i();
     logic                       backend_flush;
     logic   [31:0]              backend_redirect_pc;
 
@@ -33,7 +34,8 @@ import rv32i_types::*;
 
         .to_fifo                (frontend_fifo_itf_i),
 
-        .icache_itf             (icache_itf_i)
+        .icache_itf             (icache_itf_i),
+        .from_cb                (cb_bp_itf_i)
     );
 
     arbiter arbiter_i(
@@ -80,7 +82,8 @@ import rv32i_types::*;
         .dcache_itf             (dcache_itf_i),
 
         .backend_flush          (backend_flush),
-        .backend_redirect_pc    (backend_redirect_pc)
+        .backend_redirect_pc    (backend_redirect_pc),
+        .to_bp                  (cb_bp_itf_i)
     );
 
 endmodule : cpu

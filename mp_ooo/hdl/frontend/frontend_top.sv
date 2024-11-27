@@ -10,7 +10,9 @@ import cpu_params::*;
     frontend_fifo_itf.frontend  to_fifo,
 
     // I cache connected to arbiter
-    cacheline_itf.master        icache_itf
+    cacheline_itf.master        icache_itf,
+
+    cb_bp_itf.bp                from_cb
 );
 
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
@@ -27,6 +29,8 @@ import cpu_params::*;
 
     logic                   prev_rst;
 
+    logic                   predict_taken;
+    logic   [31:0]          predict_target;
     always_ff @(posedge clk) begin
         prev_rst <= rst;
     end
@@ -37,7 +41,7 @@ import cpu_params::*;
         end else if (backend_flush) begin
             pc_next = backend_redirect_pc;
         end else begin
-            pc_next = (pc + IF_BLK_SIZE) & ~(unsigned'(IF_BLK_SIZE - 1));
+            pc_next = predict_target;
         end
     end
 
@@ -63,13 +67,30 @@ import cpu_params::*;
         .icache_itf             (icache_itf)
     );
 
+    gshare gshare_i(
+        .clk                    (clk),
+        .rst                    (rst),
+        .from_cb                (from_cb),
+        .pc                     (pc), 
+        .predict_taken          (predict_taken)              
+    );
+
+    btb btb_i(
+        .clk                    (clk),
+        .rst                    (rst),
+        .from_cb                (from_cb),
+        .predict_taken          (predict_taken),
+        .pc                     (pc),
+        .predict_target         (predict_target)               
+    );
+
     assign if1_ready = to_fifo.ready;
     assign to_fifo.valid = if1_valid;
     assign to_fifo.packet.inst = insts;
-    assign to_fifo.packet.predict_taken = '0;
+    assign to_fifo.packet.predict_taken = predict_taken;
     assign blk_pc = pc & ~(unsigned'(IF_BLK_SIZE - 1));
     generate for (genvar i = 0; i < IF_WIDTH; i++) begin
-        assign to_fifo.packet.predict_target[i] = blk_pc + unsigned'(i) * 4 + 4;
+        assign to_fifo.packet.predict_target[i] = predict_target;
     end endgenerate
     assign to_fifo.packet.pc = blk_pc;
 

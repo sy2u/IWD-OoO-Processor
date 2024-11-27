@@ -11,6 +11,7 @@ import int_rs_types::*;
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
+    cb_bp_itf.cb                to_bp,
     cb_rob_itf.cb               to_rob
 );
     br_cdb_itf                  br_cdb_itf_i();
@@ -32,7 +33,8 @@ import int_rs_types::*;
         .from_ds                (ds_cb_itf_i),
         .br_cdb_in              (br_cdb_itf_i),
         .to_rob                 (to_rob),
-        .branch_ready           (from_ds.ready)          
+        .branch_ready           (from_ds.ready),
+        .to_bp                  (to_bp)
     );
 
     br_rs br_rs_i(

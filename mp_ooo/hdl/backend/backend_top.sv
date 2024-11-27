@@ -12,6 +12,10 @@ import uop_types::*;
     // Flush signals
     output  logic               backend_flush,
     output  logic   [31:0]      backend_redirect_pc
+
+    // control buffer to branch predictor
+    cb_bp_itf.cb                to_bp
+
 );
     id_rat_itf                  id_rat_itf_i();
     id_fl_itf                   id_fl_itf_i();
@@ -139,7 +143,8 @@ import uop_types::*;
         .to_prf                 (rs_prf_itfs[2]),
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[2]),
-        .to_rob                 (cb_rob_itf_i)
+        .to_rob                 (cb_rob_itf_i),
+        .to_bp                  (to_bp)
     );
 
     lsu_top lsu_i(

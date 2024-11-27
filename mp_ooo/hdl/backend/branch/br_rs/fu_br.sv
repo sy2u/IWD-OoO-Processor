@@ -118,7 +118,7 @@ import int_rs_types::*;
     end
 
     // cdb_reg update
-    
+    logic                   cdb_reg_branch_taken;
     logic                   cdb_reg_miss_predict;
     logic   [31:0]          cdb_reg_target_address;
     always_ff @(posedge clk) begin 
@@ -126,6 +126,7 @@ import int_rs_types::*;
             cdb_reg                     <= '0;
             cdb_reg_miss_predict        <= '0;
             cdb_reg_target_address      <= '0;
+            cdb_reg_branch_taken        <= '0;
         end else begin 
             if (fu_br_valid && cdb_ready) begin 
                 cdb_reg.rob_id          <= fu_br_reg_out.rob_id;
@@ -137,6 +138,7 @@ import int_rs_types::*;
 
                 cdb_reg_miss_predict    <= miss_predict;
                 cdb_reg_target_address  <= target_address;
+                cdb_reg_branch_taken    <= branch_taken;
             end
         end
     end
@@ -153,6 +155,7 @@ import int_rs_types::*;
     assign br_cdb.rob_id         = cdb_reg.rob_id;
     assign br_cdb.miss_predict   = cdb_reg_miss_predict;
     assign br_cdb.target_address = cdb_reg_target_address;
+    assign br_cdb.branch_taken   = cdb_reg_branch_taken;
     assign br_cdb.valid          = br_cdb_valid;
 
     //////////////////////////

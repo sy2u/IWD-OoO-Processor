@@ -8,6 +8,7 @@ import uop_types::*;
     ds_rs_mono_itf.rs           from_ds,
     br_cdb_itf.cb               br_cdb_in,
     cb_rob_itf.cb               to_rob,
+    cb_bp_itf.cb                to_bp,
     input   logic               branch_ready          
 );
 
@@ -17,6 +18,9 @@ import uop_types::*;
         logic   [ROB_IDX-1:0]   rob_id;
         logic                   miss_predict;
         logic   [31:0]          target_address;
+        logic                   branch_taken;
+        logic   [31:0]          pc;
+        logic   [3:0]           fu_opcode;
     } cb_entry_t;
 
     cb_entry_t              fifo[CB_DEPTH];
@@ -44,14 +48,17 @@ import uop_types::*;
         end else begin
             if (enqueue && ~full) begin
                 fifo[wr_ptr_actual].rob_id <= from_ds.uop.rob_id;
+                fifo[wr_ptr_actual].pc <= from_ds.uop.pc;
+                fifo[wr_ptr_actual].fu_opcode <= from_ds.uop.fu_opcode;
                 wr_ptr <= (CB_IDX+1)'(wr_ptr + 1);
             end
 
             if (br_cdb_in.valid) begin
                 for (int i = 0; i < CB_DEPTH; i++) begin
                     if (fifo[i].rob_id == br_cdb_in.rob_id) begin
-                        fifo[i].miss_predict <= br_cdb_in.miss_predict;
-                        fifo[i].target_address <= br_cdb_in.target_address;
+                        fifo[i].miss_predict    <= br_cdb_in.miss_predict;
+                        fifo[i].target_address  <= br_cdb_in.target_address;
+                        fifo[i].branch_taken    <= br_cdb_in.branch_taken;
                     end
                 end
             end
@@ -75,5 +82,12 @@ import uop_types::*;
     assign to_rob.miss_predict = fifo[rd_ptr_actual].miss_predict;
     assign to_rob.target_address = fifo[rd_ptr_actual].target_address;
     assign to_rob.ready = ~empty;
+
+    // to bp
+    assign to_bp.update_en      = dequeue;
+    assign to_bp.pc             = fifo[rd_ptr_actual].pc;
+    assign to_bp.fu_opcode      = fifo[rd_ptr_actual].fu_opcode;
+    assign to_bp.branch_taken   = fifo[rd_ptr_actual].branch_taken;
+    assign to_bp.target_address = fifo[rd_ptr_actual].target_address;
 
 endmodule

@@ -252,19 +252,22 @@ import cpu_params::*;
     logic                   miss_predict;
     logic   [31:0]          target_address;
     logic                   valid;
+    logic                   branch_taken;
 
     modport fu (
         output              rob_id,
         output              miss_predict,
         output              target_address,
-        output              valid
+        output              valid,
+        output              branch_taken
     );
 
     modport cb (
         input              rob_id,
         input              miss_predict,
         input              target_address,
-        input              valid
+        input              valid,
+        input              branch_taken
     );
 
 endinterface
@@ -370,6 +373,33 @@ import lsu_types::*;
     modport lsq (
         input               valid,
         input               data
+    );
+
+endinterface
+
+interface cb_bp_itf();
+import cpu_params::*;
+
+    logic                   update_en;
+    logic   [31:0]          pc;
+    logic   [3:0]           fu_opcode;
+    logic                   branch_taken;
+    logic   [31:0]          target_address;
+
+    modport cb (
+        output              update_en,
+        output              pc,
+        output              fu_opcode,
+        output              branch_taken,
+        output              target_address
+    );
+
+    modport bp (
+        input               update_en,
+        input               pc,
+        input               fu_opcode,
+        input               branch_taken,
+        input               target_address
     );
 
 endinterface
