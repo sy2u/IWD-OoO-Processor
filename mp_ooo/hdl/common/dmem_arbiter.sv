@@ -41,7 +41,7 @@ module dmem_arbiter
     always_ff @(posedge clk) begin
         if (rst) begin
             dmem_flushed <= '0;
-        end else if (dmem_pending && backend_flush) begin
+        end else if (dmem_busy && backend_flush) begin
             dmem_flushed <= '1;
         end else if (cache.resp) begin
             dmem_flushed <= '0;
@@ -57,10 +57,13 @@ module dmem_arbiter
 
     always_comb begin
         unique case ({load.valid, store.valid})
-            2'b01: begin
+            2'b10: begin
                 cache.addr = load.addr;
             end
-            2'b10: begin
+            2'b01: begin
+                cache.addr = store.addr;
+            end
+            2'b11: begin
                 cache.addr = store.addr;
             end
             default: begin
@@ -70,6 +73,5 @@ module dmem_arbiter
     end
 
     assign load.resp = cache.resp && dmem_pending && ~pending_store && ~dmem_flushed;
-    assign store.resp = cache.resp && dmem_pending && pending_store && ~dmem_flushed;
 
 endmodule

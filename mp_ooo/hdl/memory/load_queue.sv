@@ -42,19 +42,9 @@ import lsu_types::*;
 
         if (from_stq.stq_deq) begin
             for (int i = 0; i < LDQ_DEPTH; i++) begin
-                ldq_arr_nxt[push_idx].track_stq_ptr = (ldq_arr[push_idx].track_stq_ptr == '0) ? '0 :
-                                                      (ldq_arr[push_idx].track_stq_ptr - 1);
+                ldq_arr_nxt[i].track_stq_ptr = (ldq_arr[i].track_stq_ptr == '0) ? '0 :
+                                               (ldq_arr[i].track_stq_ptr - 1);
             end
-        end
-
-        if (push_en) begin
-            ldq_arr_nxt[push_idx].valid         = 1'b1;
-            ldq_arr_nxt[push_idx].addr_valid    = 1'b0;
-            ldq_arr_nxt[push_idx].track_stq_ptr = (from_stq.stq_deq) ? (from_stq.stq_tail - 1) : from_stq.stq_tail;
-            ldq_arr_nxt[push_idx].rob_id        = from_ds.uop.rob_id;
-            ldq_arr_nxt[push_idx].fu_opcode     = from_ds.uop.fu_opcode;
-            ldq_arr_nxt[push_idx].rd_arch       = from_ds.uop.rd_arch;
-            ldq_arr_nxt[push_idx].rd_phy        = from_ds.uop.rd_phy;
         end
 
         if (from_agu.valid) begin
@@ -67,6 +57,16 @@ import lsu_types::*;
                     ldq_arr_nxt[i].rs2_value_dbg = from_agu.data.rs2_value_dbg;
                 end
             end
+        end
+
+        if (push_en) begin
+            ldq_arr_nxt[push_idx].valid         = 1'b1;
+            ldq_arr_nxt[push_idx].addr_valid    = 1'b0;
+            ldq_arr_nxt[push_idx].track_stq_ptr = (from_stq.stq_deq) ? (from_stq.stq_tail - 1) : from_stq.stq_tail;
+            ldq_arr_nxt[push_idx].rob_id        = from_ds.uop.rob_id;
+            ldq_arr_nxt[push_idx].fu_opcode     = from_ds.uop.fu_opcode;
+            ldq_arr_nxt[push_idx].rd_arch       = from_ds.uop.rd_arch;
+            ldq_arr_nxt[push_idx].rd_phy        = from_ds.uop.rd_phy;
         end
 
         if (issue_en && dmem.ready) begin
@@ -110,7 +110,7 @@ import lsu_types::*;
         issue_en  = '0;
         issue_idx = '0;
         for (int unsigned i = 0; i < LDQ_DEPTH; i++) begin
-            if (ldq_arr[i].valid && ldq_arr[i].addr_valid && ldq_arr[push_idx].track_stq_ptr == '0) begin
+            if (ldq_arr[i].valid && ldq_arr[i].addr_valid && ldq_arr[i].track_stq_ptr == '0) begin
                 issue_en = 1'b1;
                 issue_idx = (LDQ_IDX)'(i);
                 break;
@@ -130,6 +130,7 @@ import lsu_types::*;
         if (dmem.valid && dmem.ready) begin
             load_stage_reg.rob_id        <= ldq_arr[issue_idx].rob_id;
             load_stage_reg.addr_2        <= ldq_arr[issue_idx].addr[1:0];
+            load_stage_reg.fu_opcode     <= ldq_arr[issue_idx].fu_opcode;
             load_stage_reg.rd_arch       <= ldq_arr[issue_idx].rd_arch;
             load_stage_reg.rd_phy        <= ldq_arr[issue_idx].rd_phy;
             load_stage_reg.addr_dbg      <= dmem.addr;
@@ -147,7 +148,7 @@ import lsu_types::*;
 
     logic   [31:0]  dmem_rdata_wb;
     always_comb begin
-        unique case (ldq_arr[issue_idx].fu_opcode)
+        unique case (load_stage_reg.fu_opcode)
             MEM_LB : dmem_rdata_wb = {{24{dmem.rdata[7 +8 *addr_2[1:0]]}}, dmem.rdata[8 *addr_2[1:0] +: 8 ]};
             MEM_LBU: dmem_rdata_wb = {{24{1'b0}}                         , dmem.rdata[8 *addr_2[1:0] +: 8 ]};
             MEM_LH : dmem_rdata_wb = {{16{dmem.rdata[15+16*addr_2[1]  ]}}, dmem.rdata[16*addr_2[1]   +: 16]};

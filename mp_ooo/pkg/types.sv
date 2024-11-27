@@ -475,6 +475,7 @@ import cpu_params::*;
         logic   [1:0]           addr_2;
         logic   [ARF_IDX-1:0]   rd_arch;
         logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [3:0]           fu_opcode;
         logic   [31:0]          addr_dbg;
         logic   [3:0]           mask_dbg;
         logic   [31:0]          rs1_value_dbg;

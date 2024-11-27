@@ -57,10 +57,10 @@ import lsu_types::*;
     always_comb begin
         counter_nxt = counter;
         if (enqueue) begin
-            counter_nxt = counter_nxt + 1;
+            counter_nxt = (STQ_IDX+1)'(counter_nxt + 1);
         end
         if (dequeue) begin
-            counter_nxt = counter_nxt - 1;
+            counter_nxt = (STQ_IDX+1)'(counter_nxt - 1);
         end
     end
 
@@ -106,7 +106,7 @@ import lsu_types::*;
         end
     end
 
-    assign dequeue = want_dequeue && dmem.resp;
+    assign dequeue = want_dequeue && dmem.ready;
 
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
     assign empty = (wr_ptr == rd_ptr);

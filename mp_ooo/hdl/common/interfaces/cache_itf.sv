@@ -34,15 +34,13 @@ interface stq_dmem_itf();
     logic   [31:0]  addr;
     logic   [3:0]   wmask;
     logic   [31:0]  wdata;
-    logic           resp;
 
     modport stq (
         output              valid,
         input               ready,
         output              addr,
         output              wmask,
-        output              wdata,
-        input               resp
+        output              wdata
     );
 
     modport cache (
@@ -50,8 +48,7 @@ interface stq_dmem_itf();
         output              ready,
         input               addr,
         input               wmask,
-        input               wdata,
-        output              resp
+        input               wdata
     );
 
 endinterface
