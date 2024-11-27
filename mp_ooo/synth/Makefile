@@ -12,6 +12,8 @@ export DESIGN_TOP = cpu
 export STD_CELL_LIB=$(FREEPDK45)/stdcells.db
 export STD_CELL_ALIB=$(FREEPDK45)/alib
 
+export SNPSLMD_QUEUE=true
+
 .PHONY: synth
 synth: clean
 	$(MAKE) outputs/synth.ddc
@@ -40,6 +42,7 @@ outputs/synth.ddc:
 
 .PHONY: power
 power: outputs/synth.ddc ../sim/vcs/dump.fsdb.saif
+	mkdir -p reports outputs
 	dc_shell -f power.tcl |& tee reports/power.log
 
 .PHONY: dv

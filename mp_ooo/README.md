@@ -9,6 +9,7 @@ more details and documentation, visit the `docs` folder. Inside, you will find:
 - [WHAT_IS_AN_OOO.md](./docs/WHAT_IS_AN_OOO.md): Basic overview of an OoO
   processor.
 - [TEST_CASES.md](./docs/TEST_CASES.md): Basic overview of the test cases.
+- [COMPETITION.md](./docs/COMPETITION.md): Basic overview of the competition.
 
 # Introduction
 
@@ -215,7 +216,7 @@ deliverable will be completing a successful run on the leaderboard by
 leaderboard will only begin running on 11/12, we highly recommend you construct
 your own tests prior to this date.
 
-# Final Submission: Competition + Advanced Features (50)
+# Final Submission: Competition + Advanced Features + Report (50)
 ## Competition (20)
 
 This portion of your grade will be determined by how you fare in comparison to a
@@ -229,17 +230,20 @@ announced on the first day of the leaderboard (*11/15*). We will add more
 programs to this suite over the following 3 weeks, and freeze the benchmark list
 on *11/29*.
 
+See [COMPETITION.md](./docs/COMPETITION.md) for more information on grading and the
+leaderboard calculations.
+
+
 ### Leaderboard
 The leaderboard, like AG for past MPs, will run periodically and test a series
-of benchmarks on your processor. If all benchmarks are found to run correctly,
-then the Leaderboard will assign a nonzero score based on staff-picked metrics
-(will be revealed on Leaderboard release). Coremark is confirmed to be in this
-test suite, and you will receive copies of any additional "open" benchmarks when
+of benchmarks on your processor. If a benchmark is found to run correctly,
+then the Leaderboard will assign a nonzero score based on staff-picked metrics. 
+Coremark is confirmed to be in this test suite, and you will receive copies of any additional "open" benchmarks when
 the leaderboard is first deployed.
 
 To show up on the leaderboard, your processor must:
 - Be connected to RVFI
-- Match Spike and RVFI on **all leaderboard test cases**
+- Match Spike and RVFI on **each test case (no points for a testcase you don't match)**
 - Be synthesizable and meet timing at the frequency you specify in options.json
 
 Note that not all leaderboard benchmarks will be public - staff will curate a

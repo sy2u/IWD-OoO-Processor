@@ -38,3 +38,9 @@
 * Performs ray tracing based render of a simple scene with no reflections
 * Expresses good ILP
 * Many loads/stores, with high memory-level parallelism
+
+## CNN
+* Algorthmically similar to the first few layers of a convolutional neural network
+* Includes convolution, maxpooling, and ReLU
+* Large nested loops
+* Lots of multiplication and conditionals
