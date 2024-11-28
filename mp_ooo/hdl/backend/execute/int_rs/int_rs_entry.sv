@@ -87,7 +87,31 @@ import int_rs_types::*;
         end
     end
 
-    assign request = entry_valid && entry_reg.rs1_valid && entry_reg.rs2_valid;
+    logic           src1_ready;
+    logic           src2_ready;
+
+    always_comb begin
+        request = 1'b0;
+        src1_ready = 1'bx;
+        src2_ready = 1'bx;
+        if (entry_valid) begin
+            src1_ready = entry_reg.rs1_valid;
+            src2_ready = entry_reg.rs2_valid;
+
+            for (int k = 0; k < CDB_WIDTH; k++) begin
+                if (cdb_rs[k].valid) begin
+                    if (entry_reg.rs1_phy == cdb_rs[k].rd_phy) begin
+                        src1_ready = 1'b1;
+                    end
+                    if (entry_reg.rs2_phy == cdb_rs[k].rd_phy) begin
+                        src2_ready = 1'b1;
+                    end
+                end
+            end
+
+            request = src1_ready && src2_ready;
+        end
+    end
 
     assign valid = entry_valid;
     assign entry = entry_reg;
