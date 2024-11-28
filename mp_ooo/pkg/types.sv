@@ -403,7 +403,13 @@ import uop_types::*;
         SELF        = 2'b10,
         PUSH_IN     = 2'b11
     } rs_update_sel_t;
-    
+
+    typedef struct packed{
+        logic                   valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+    } bypass_network_t;
+
 endpackage
 
 package lsu_types;

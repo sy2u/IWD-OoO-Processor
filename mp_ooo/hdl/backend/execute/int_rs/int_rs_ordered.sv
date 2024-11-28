@@ -63,6 +63,8 @@ import int_rs_types::*;
     rs_update_sel_t         rs_update_sel   [INTRS_DEPTH];
     logic [ID_WIDTH_IDX-1:0]rs_push_sel     [INTRS_DEPTH];
 
+    bypass_network_t        fu_alu_bypass;
+
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
@@ -187,10 +189,13 @@ import int_rs_types::*;
                     OP1_ZERO: src1_valid = '1;
                     OP1_RS1: begin 
                         src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
-                        for (int k = 0; k < CDB_WIDTH; k++) begin 
+                        for (int k = 0; k < 1; k++) begin 
                             if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
                                 src1_valid = 1'b1;
                             end
+                        end
+                        if (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                            src1_valid = 1'b1;
                         end
                     end
                     default: src1_valid = '0;
@@ -200,10 +205,13 @@ import int_rs_types::*;
                     OP2_IMM: src2_valid = '1;
                     OP2_RS2: begin 
                         src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
-                        for (int k = 0; k < CDB_WIDTH; k++) begin 
+                        for (int k = 0; k < 1; k++) begin 
                             if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
                                 src2_valid = 1'b1;
                             end
+                        end
+                        if (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                            src2_valid = 1'b1;
                         end
                     end
                     default: src2_valid = '0;
@@ -253,18 +261,21 @@ import int_rs_types::*;
         fu_alu_reg_in.imm          = int_rs_array[int_rs_issue_idx].imm;
         fu_alu_reg_in.pc           = 'x;
 
-        fu_alu_reg_in.rs1_value    = to_prf.rs1_value;
-        fu_alu_reg_in.rs2_value    = to_prf.rs2_value;
+        fu_alu_reg_in.rs1_value    = (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[int_rs_issue_idx].rs1_phy)) ?
+                                    fu_alu_bypass.rd_value : to_prf.rs1_value;
+        fu_alu_reg_in.rs2_value    = (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[int_rs_issue_idx].rs2_phy)) ? 
+                                    fu_alu_bypass.rd_value : to_prf.rs2_value;
     end
 
-    
+
     // Functional Units
     fu_alu fu_alu_i(
         .clk                    (clk),
         .rst                    (rst),
-        .int_rs_valid            (int_rs_valid),
+        .int_rs_valid           (int_rs_valid),
         .fu_alu_ready           (fu_alu_ready),
         .fu_alu_reg_in          (fu_alu_reg_in),
+        .bypass                 (fu_alu_bypass),
         .cdb                    (fu_cdb_out)
     );
 
