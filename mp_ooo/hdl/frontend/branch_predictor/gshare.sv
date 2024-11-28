@@ -1,17 +1,19 @@
 module gshare
 import cpu_params::*;
 (
-    input   logic               clk,
-    input   logic               rst,
+    input   logic                   clk,
+    input   logic                   rst,
 
-    cb_bp_itf.bp                from_cb,
-    input   logic [31:0]        pc,
-    output  logic               predict_taken
+    cb_bp_itf.bp                    from_cb,
+    input   logic [31:0]            pc,
+    output  logic [IF_WIDTH-1:0]    predict_taken;
 );
+    localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
+    
     logic   [GHR_DEPTH-1:0] ghr;
     logic   [BIMODAL_DEPTH-1:0] pht[PHT_DEPTH];
 
-
+    logic   [IF_WIDTH-1:0]  [31:0]  pc_in;
     always_ff @(posedge clk) begin
         if (rst) begin 
             ghr <= '0;
@@ -30,5 +32,9 @@ import cpu_params::*;
         end    
     end
 
-    assign predict_taken = pht[ghr[PHT_IDX-1:0] ^ pc[PHT_IDX+1:2]] >= 2'b10;
+    generate for (genvar i = 0; i < IF_WIDTH; i++) begin
+        assign pc_in[i] = pc & ~(unsigned'(IF_BLK_SIZE - 1)) + unsigned'(i) * 4;
+        assign predict_taken[i] = pht[ghr[PHT_IDX-1:0] ^ pc_in[i][PHT_IDX+1:2]] >= 2'b10;
+    end endgenerate
+
 endmodule

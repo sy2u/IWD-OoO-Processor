@@ -16,6 +16,7 @@ import cpu_params::*;
 );
 
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
+    localparam  unsigned    IF_WIDTH_IDX= $clog2(IF_WIDTH);
 
     logic                   if1_valid;
     logic                   if1_ready;
@@ -29,8 +30,12 @@ import cpu_params::*;
 
     logic                   prev_rst;
 
-    logic                   predict_taken;
-    logic   [31:0]          predict_target;
+    logic   [IF_WIDTH-1:0]          predict_taken;
+    logic   [IF_WIDTH-1:0]  [31:0]  predict_target;
+
+    logic   predict_taken_en;
+    logic   [IF_WIDTH_IDX-1:0]  predict_taken_idx;
+
     always_ff @(posedge clk) begin
         prev_rst <= rst;
     end
@@ -40,11 +45,24 @@ import cpu_params::*;
             pc_next = 32'h1eceb000;
         end else if (backend_flush) begin
             pc_next = backend_redirect_pc;
-        end else begin
-            pc_next = predict_target;
+        end else if (predict_taken_en) begin
+            pc_next = predict_target[predict_taken_idx];
+        end else begin 
+            pc_next = (pc + IF_BLK_SIZE) & ~(unsigned'(IF_BLK_SIZE - 1));
         end
     end
 
+    always_comb begin 
+        predict_taken_en = '0;
+        predict_taken_idx = '0;
+        for (int i = 0; i < IF_WIDTH; i++) begin
+            if (predict_taken[i]) begin 
+                predict_taken_en = 1'b1;
+                predict_taken_idx = unsigned'(i);
+                break;
+            end
+        end
+    end
     // Stage IF1 = Read ICache and send to FIFO
 
     if1_stage if1_stage_i(
@@ -87,10 +105,11 @@ import cpu_params::*;
     assign if1_ready = to_fifo.ready;
     assign to_fifo.valid = if1_valid;
     assign to_fifo.packet.inst = insts;
-    assign to_fifo.packet.predict_taken = predict_taken;
+    // assign to_fifo.packet.predict_taken = predict_taken_en;
     assign blk_pc = pc & ~(unsigned'(IF_BLK_SIZE - 1));
     generate for (genvar i = 0; i < IF_WIDTH; i++) begin
-        assign to_fifo.packet.predict_target[i] = predict_target;
+        assign to_fifo.packet.predict_taken[i] = predict_taken[i];
+        assign to_fifo.packet.predict_target[i] = predict_target[i];
     end endgenerate
     assign to_fifo.packet.pc = blk_pc;
 

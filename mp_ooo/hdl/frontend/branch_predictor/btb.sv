@@ -2,14 +2,14 @@ module btb
 import cpu_params::*;
 import uop_types::*;
 (
-    input   logic               clk,
-    input   logic               rst,
+    input   logic                           clk,
+    input   logic                           rst,
 
-    cb_bp_itf.bp                from_cb,
+    cb_bp_itf.bp                            from_cb,
 
-    input   logic               predict_taken,
-    input   logic [31:0]        pc,
-    output  logic [31:0]        predict_target
+    input   logic                           predict_taken,
+    input   logic [31:0]                    pc,
+    output  logic [IF_WIDTH-1:0]  [31:0]    predict_target;
 );
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
     
@@ -36,6 +36,8 @@ import uop_types::*;
     logic [BTB_IDX-1:0] j_update_index;
     logic [BTB_IDX-1:0] j_insert_index;
     logic [BTB_IDX-1:0] j_counter;
+
+    logic   [IF_WIDTH-1:0]  [31:0]  pc_in;
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -111,17 +113,20 @@ import uop_types::*;
         end
     end
 
-    always_comb begin
-        predict_target = pc + 4;
-        for (int i = 0; i < BTB_DEPTH; i++) begin
-            if (predict_taken && br_btb[i].valid && (br_btb[i].pc == pc)) begin
-                predict_target = br_btb[i].target_address;
-                break;
-            end
-            if (j_btb[i].valid && (j_btb[i].pc == pc)) begin
-                predict_target = j_btb[i].target_address;
-                break;
+    generate for (genvar i = 0; i < IF_WIDTH; i++) begin
+        always_comb begin
+            pc_in[i] = pc & ~(unsigned'(IF_BLK_SIZE - 1)) + unsigned'(i) * 4;
+            predict_target[i] = pc_in[i] + unsigned'(i) * 4 + 4;
+            for (int i = 0; i < BTB_DEPTH; i++) begin
+                if (predict_taken && br_btb[i].valid && (br_btb[i].pc == pc_in[i])) begin
+                    predict_target = br_btb[i].target_address;
+                    break;
+                end
+                if (j_btb[i].valid && (j_btb[i].pc == pc_in[i])) begin
+                    predict_target = j_btb[i].target_address;
+                    break;
+                end
             end
         end
-    end   
+    end endgenerate
 endmodule
