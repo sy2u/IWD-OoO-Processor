@@ -51,7 +51,9 @@ import int_rs_types::*;
 
             .push_en    (rs_push_en[i]),
             .entry_in   (rs_entry_in[i]),
+            .entry_out  (),
             .entry      (rs_entry[i]),
+            .clear      (1'b0),
             .wakeup_cdb (cdb)
         );
     end endgenerate
