@@ -40,10 +40,11 @@ import int_rs_types::*;
     end
 
     always_comb begin
+        next_valid = entry_valid;
         if (push_en) begin
             next_valid = 1'b1;
-        end else begin
-            next_valid = ~grant;
+        end else if (grant) begin
+            next_valid = 1'b0;
         end
     end
 
@@ -69,7 +70,7 @@ import int_rs_types::*;
         end
     end
 
-    assign request = entry_reg.rs1_valid && entry_reg.rs2_valid;
+    assign request = entry_valid && entry_reg.rs1_valid && entry_reg.rs2_valid;
 
     assign valid = entry_valid;
     assign entry = entry_reg;

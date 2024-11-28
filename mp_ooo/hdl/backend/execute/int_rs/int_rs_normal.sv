@@ -59,25 +59,23 @@ import int_rs_types::*;
     // Push Logic
     // A bit nasty
     logic   [INTRS_DEPTH-1:0]   [ID_WIDTH-1:0]  entry_push_en_arr;
-    logic   [ID_WIDTH-1:0]                      allocated;
-    logic   [ID_WIDTH-1:0]                      next_allocated;
-    logic                                       may_allocate;
+    logic   [INTRS_DEPTH-1:0]                   allocated;
 
     always_comb begin
-        for (int i = 0; i < ID_WIDTH; i++) begin
+        for (int i = 0; i < INTRS_DEPTH; i++) begin
             entry_push_en_arr[i] = '0;
-            allocated[i] = '0;
         end
-        if (from_ds.ready) begin
-            for (int i = 0; i < INTRS_DEPTH; i++) begin
-                next_allocated = allocated;
-                may_allocate = !rs_valid[i] && from_ds.valid[i];
-                for (int w = 0; w < ID_WIDTH; w++) begin
-                    entry_push_en_arr[i][w] = may_allocate && !allocated[w];
-                    next_allocated[w] = may_allocate || allocated[w];
-                    may_allocate = may_allocate && allocated[w];
+        allocated = '0;
+        for (int w = 0; w < ID_WIDTH; w++) begin
+            if (from_ds.valid[w] && from_ds.ready) begin
+                // Look for first available RS entry not already allocated this cycle
+                for (int i = 0; i < INTRS_DEPTH; i++) begin
+                    if (!rs_valid[(INTRS_IDX)'(unsigned'(i))] && !allocated[i]) begin
+                        entry_push_en_arr[i][w] = 1'b1;
+                        allocated[i] = 1'b1;  // Mark this entry as allocated
+                        break;
+                    end
                 end
-                allocated = next_allocated;
             end
         end
     end
@@ -102,12 +100,11 @@ import int_rs_types::*;
     // Issue Logic
     // loop from top and issue the first entry requesting for issue
     always_comb begin
+        rs_grant = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             if (rs_request[i]) begin
                 rs_grant[i] = 1'b1;
                 break;
-            end else begin
-                rs_grant[i] = 1'b0;
             end
         end
     end
