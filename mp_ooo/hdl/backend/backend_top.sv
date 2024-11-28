@@ -11,7 +11,7 @@ import uop_types::*;
 
     // Flush signals
     output  logic               backend_flush,
-    output  logic   [31:0]      backend_redirect_pc
+    output  logic   [31:0]      backend_redirect_pc,
 
     // control buffer to branch predictor
     cb_bp_itf.cb                to_bp

@@ -28,7 +28,7 @@ package cpu_params;
 
     localparam  unsigned    GHR_DEPTH       = 30;
     localparam  unsigned    PHT_IDX         = 10;
-    localparam  unsigned    PHT_DEPTH       = 2 ** PHT_IDX
+    localparam  unsigned    PHT_DEPTH       = 2 ** PHT_IDX;
     localparam  unsigned    BIMODAL_DEPTH   = 2;
 
     localparam  unsigned    BTB_DEPTH       = 8;

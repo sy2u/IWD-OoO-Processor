@@ -5,7 +5,7 @@ import cpu_params::*;
     input   logic               rst,
 
     cb_bp_itf.bp                from_cb,
-    input   logic               pc,
+    input   logic [31:0]        pc,
     output  logic               predict_taken
 );
     logic   [GHR_DEPTH-1:0] ghr;
@@ -21,10 +21,10 @@ import cpu_params::*;
         end else begin 
             if (from_cb.update_en) begin 
                 ghr <= {ghr[GHR_DEPTH-2:0], from_cb.branch_taken};
-                if (branch_taken) begin 
-                    pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] <= (pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] == 2'b11) ? 2'b11 : pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] + 1;
+                if (from_cb.branch_taken) begin 
+                    pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] <= (pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] == 2'b11) ? 2'b11 : pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] + 2'd1;
                 end else begin 
-                    pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] <= (pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] == 2'b00) ? 2'b00 : pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] - 1;
+                    pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] <= (pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] == 2'b00) ? 2'b00 : pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] - 2'd1;
                 end
             end
         end    

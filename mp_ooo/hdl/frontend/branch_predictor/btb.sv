@@ -1,5 +1,6 @@
 module btb
 import cpu_params::*;
+import uop_types::*;
 (
     input   logic               clk,
     input   logic               rst,
@@ -7,8 +8,8 @@ import cpu_params::*;
     cb_bp_itf.bp                from_cb,
 
     input   logic               predict_taken,
-    input   logic               pc,
-    output  logic               predict_target
+    input   logic [31:0]        pc,
+    output  logic [31:0]        predict_target
 );
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
     
@@ -41,8 +42,8 @@ import cpu_params::*;
             br_counter <= '0;
             j_counter  <= '0;
             for (int i = 0; i < BTB_DEPTH; i++) begin
-                br_btb  <= '0;
-                j_btb   <= '0;
+                br_btb[i]  <= '0;
+                j_btb[i]   <= '0;
             end
         end else begin
             if (from_cb.update_en && from_cb.branch_taken) begin
@@ -111,7 +112,7 @@ import cpu_params::*;
     end
 
     always_comb begin
-        predict_target = (pc + IF_BLK_SIZE) & ~(unsigned'(IF_BLK_SIZE - 1));
+        predict_target = pc + 4;
         for (int i = 0; i < BTB_DEPTH; i++) begin
             if (predict_taken && br_btb[i].valid && (br_btb[i].pc == pc)) begin
                 predict_target = br_btb[i].target_address;
