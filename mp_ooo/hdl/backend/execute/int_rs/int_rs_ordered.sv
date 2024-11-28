@@ -140,11 +140,12 @@ import int_rs_types::*;
 
     always_comb begin : compress_mux // single issue type, one-slot compress
         for (int i = 0; i < INTRS_DEPTH; i++) begin
-            rs_entry_in[i] = 'x;
             unique case (rs_update_sel[i])
                 PREV: begin
-                    if( i < INTRS_DEPTH-1 ) begin
+                    if (i < INTRS_DEPTH-1) begin
                         rs_entry_in[i] = rs_entry_out[i+1];
+                    end else begin
+                        rs_entry_in[i] = 'x;
                     end
                 end
                 SELF: begin
@@ -153,7 +154,9 @@ import int_rs_types::*;
                 PUSH_IN: begin
                     rs_entry_in[i] = from_ds_entry[rs_push_sel[i]];
                 end
-                default: ;
+                default: begin
+                    rs_entry_in[i] = 'x;
+                end
             endcase
         end
     end
@@ -183,6 +186,7 @@ import int_rs_types::*;
     // loop from top and issue the first entry requesting for issue
     always_comb begin
         rs_grant = '0;
+        int_rs_issue_idx = 'x;
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             if (rs_request[i]) begin
                 rs_grant[i] = 1'b1;

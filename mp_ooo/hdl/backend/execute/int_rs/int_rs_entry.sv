@@ -73,7 +73,19 @@ import int_rs_types::*;
         end
     end
 
-    assign entry_out = next_entry;
+    always_comb begin
+        entry_out = entry_reg;
+        for (int k = 0; k < CDB_WIDTH; k++) begin
+            if (cdb_rs[k].valid) begin
+                if (entry_reg.rs1_phy == cdb_rs[k].rd_phy) begin
+                    entry_out.rs1_valid = 1'b1;
+                end
+                if (entry_reg.rs2_phy == cdb_rs[k].rd_phy) begin
+                    entry_out.rs2_valid = 1'b1;
+                end
+            end
+        end
+    end
 
     assign request = entry_valid && entry_reg.rs1_valid && entry_reg.rs2_valid;
 
