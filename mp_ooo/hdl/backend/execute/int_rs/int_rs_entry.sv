@@ -6,16 +6,16 @@ import int_rs_types::*;
     input   logic               clk,
     input   logic               rst,
 
-    output  logic               valid,
+    output  logic               valid, // if the entry is valid
     // output  logic               will_be_valid,
-    output  logic               request,
-    input   logic               grant,
+    output  logic               request, // if the entry is ready to be issued
+    input   logic               grant, // permission to issue the entry
 
-    input   logic               push_en,
-    input   int_rs_entry_t      entry_in,
-    output  int_rs_entry_t      entry_out,
-    output  int_rs_entry_t      entry,
-    input   logic               clear,
+    input   logic               push_en, // push a new entry
+    input   int_rs_entry_t      entry_in, // new entry
+    output  int_rs_entry_t      entry_out, // current entry but with CDB forwarding (useful in shifting queues)
+    output  int_rs_entry_t      entry, // current entry
+    input   logic               clear, // clear this entry (useful in shifting queues)
 
     cdb_itf.rs                  wakeup_cdb[CDB_WIDTH]
 );
@@ -59,7 +59,7 @@ import int_rs_types::*;
         next_entry = entry_reg;
         if (push_en) begin
             next_entry = entry_in;
-        end else begin
+        end else if (entry_valid) begin
             for (int k = 0; k < CDB_WIDTH; k++) begin
                 if (cdb_rs[k].valid) begin
                     if (entry_reg.rs1_phy == cdb_rs[k].rd_phy) begin
