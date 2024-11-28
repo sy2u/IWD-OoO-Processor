@@ -15,20 +15,52 @@ import int_rs_types::*;
     // Reservation Stations  //
     ///////////////////////////
 
-    // local copy of cdb
-    cdb_rs_t cdb_rs[CDB_WIDTH];
-    generate 
-        for (genvar i = 0; i < CDB_WIDTH; i++) begin 
-            assign cdb_rs[i].valid  = cdb[i].valid;
-            assign cdb_rs[i].rd_phy = cdb[i].rd_phy;
-        end
-    endgenerate
+    logic   [INTRS_DEPTH-1:0]           rs_valid;
+    // logic   [INTRS_DEPTH-1:0]           rs_will_be_valid;
+    logic   [INTRS_DEPTH-1:0]           rs_request;
+    logic   [INTRS_DEPTH-1:0]           rs_grant;
+    logic   [INTRS_DEPTH-1:0]           rs_push_en;
+    logic   [INTRS_DEPTH-1:0]           rs_clear;
+    int_rs_entry_t  [INTRS_DEPTH-1:0]   rs_entry;
+    int_rs_entry_t  [INTRS_DEPTH-1:0]   rs_entry_in;
+    int_rs_entry_t  [INTRS_DEPTH-1:0]   rs_entry_out;
+    int_rs_entry_t  [ID_WIDTH-1:0]      from_ds_entry;
+    int_rs_entry_t                      issued_entry;
 
-    // rs array, store uop+available
-    int_rs_entry_t          int_rs_array        [INTRS_DEPTH];
-    logic                   int_rs_available    [INTRS_DEPTH];
-    int_rs_entry_t          rs_array_next       [INTRS_DEPTH];
-    logic                   rs_available_next   [INTRS_DEPTH];
+    always_comb begin
+        for (int w = 0; w < ID_WIDTH; w++) begin
+            from_ds_entry[w].rob_id     = from_ds.uop[w].rob_id;
+            from_ds_entry[w].rs1_phy    = from_ds.uop[w].rs1_phy;
+            from_ds_entry[w].rs1_valid  = from_ds.uop[w].rs1_valid;
+            from_ds_entry[w].rs2_phy    = from_ds.uop[w].rs2_phy;
+            from_ds_entry[w].rs2_valid  = from_ds.uop[w].rs2_valid;
+            from_ds_entry[w].rd_phy     = from_ds.uop[w].rd_phy;
+            from_ds_entry[w].rd_arch    = from_ds.uop[w].rd_arch;
+            from_ds_entry[w].op1_sel    = from_ds.uop[w].op1_sel;
+            from_ds_entry[w].op2_sel    = from_ds.uop[w].op2_sel;
+            from_ds_entry[w].imm        = from_ds.uop[w].imm;
+            from_ds_entry[w].fu_opcode  = from_ds.uop[w].fu_opcode;
+        end
+    end
+
+    generate for (genvar i = 0; i < INTRS_DEPTH; i++) begin : rs_array
+        int_rs_entry int_rs_entry_i (
+            .clk            (clk),
+            .rst            (rst),
+
+            .valid          (rs_valid[i]),
+            // .will_be_valid  (rs_will_be_valid[i]),
+            .request        (rs_request[i]),
+            .grant          (rs_grant[i]),
+
+            .push_en        (rs_push_en[i]),
+            .entry_in       (rs_entry_in[i]),
+            .entry_out      (rs_entry_out[i]),
+            .entry          (rs_entry[i]),
+            .clear          (rs_clear[i]),
+            .wakeup_cdb     (cdb)
+        );
+    end endgenerate
 
     // pointer to top of the array (like a fifo queue)
     logic [INTRS_IDX-1:0]   int_rs_top, rs_top_next;
@@ -56,27 +88,8 @@ import int_rs_types::*;
         // rs array reset to all available, and top point to 0
         if (rst) begin
             int_rs_top <= '0;
-            for (int i = 0; i < INTRS_DEPTH; i++) begin 
-                int_rs_available[i] <= 1'b1;
-            end
         end else begin
-            // pop and push pointer tracking
             int_rs_top <= rs_top_next;
-            for (int i = 0; i < INTRS_DEPTH; i++) begin
-                // compress and push rs array
-                int_rs_available[i] <= rs_available_next[i];
-            end
-        end
-    end
-
-    // rs array update
-    always_ff @(posedge clk) begin
-        if (rst) begin
-        end else begin
-            for (int i = 0; i < INTRS_DEPTH; i++) begin
-                // compress and push rs array
-                int_rs_array[i]  <= rs_array_next[i];
-            end
         end
     end
 
@@ -102,19 +115,24 @@ import int_rs_types::*;
             unique case (rs_update_sel[i])
                 PREV: begin
                     if( i < INTRS_DEPTH-1 ) begin
-                        rs_available_next[i] = int_rs_available[i+1];
+                        rs_push_en[i] = rs_valid[i+1];
+                        rs_clear[i] = !rs_valid[i+1];
                     end else begin
-                        rs_available_next[i] = 1'b1;
+                        rs_push_en[i] = 1'b0;
+                        rs_clear[i] = 1'b1;
                     end
                 end
                 SELF: begin
-                    rs_available_next[i] = int_rs_available[i];
+                    rs_push_en[i] = 1'b0;
+                    rs_clear[i] = 1'b0;
                 end
                 PUSH_IN: begin
-                    rs_available_next[i] = 1'b0;
+                    rs_push_en[i] = 1'b1;
+                    rs_clear[i] = 1'b0;
                 end
                 default: begin
-                    rs_available_next[i] = 1'bx;
+                    rs_push_en[i] = 1'bx;
+                    rs_clear[i] = 1'bx;
                 end
             endcase
         end
@@ -122,50 +140,21 @@ import int_rs_types::*;
 
     always_comb begin : compress_mux // single issue type, one-slot compress
         for (int i = 0; i < INTRS_DEPTH; i++) begin
-            rs_array_next[i] = 'x;
+            rs_entry_in[i] = 'x;
             unique case (rs_update_sel[i])
                 PREV: begin
                     if( i < INTRS_DEPTH-1 ) begin
-                        rs_array_next[i] = int_rs_array[i+1];
+                        rs_entry_in[i] = rs_entry_out[i+1];
                     end
                 end
                 SELF: begin
-                    rs_array_next[i] = int_rs_array[i];
+                    rs_entry_in[i] = 'x;
                 end
                 PUSH_IN: begin
-                    rs_array_next[i].rob_id  = from_ds.uop[rs_push_sel[i]].rob_id;
-                    rs_array_next[i].rs1_phy = from_ds.uop[rs_push_sel[i]].rs1_phy;
-                    rs_array_next[i].rs1_valid = from_ds.uop[rs_push_sel[i]].rs1_valid;
-                    rs_array_next[i].rs2_phy = from_ds.uop[rs_push_sel[i]].rs2_phy;
-                    rs_array_next[i].rs2_valid = from_ds.uop[rs_push_sel[i]].rs2_valid;
-                    rs_array_next[i].rd_phy = from_ds.uop[rs_push_sel[i]].rd_phy;
-                    rs_array_next[i].rd_arch = from_ds.uop[rs_push_sel[i]].rd_arch;
-                    rs_array_next[i].op1_sel = from_ds.uop[rs_push_sel[i]].op1_sel;
-                    rs_array_next[i].op2_sel = from_ds.uop[rs_push_sel[i]].op2_sel;
-                    rs_array_next[i].imm = from_ds.uop[rs_push_sel[i]].imm;
-                    rs_array_next[i].fu_opcode = from_ds.uop[rs_push_sel[i]].fu_opcode;
+                    rs_entry_in[i] = from_ds_entry[rs_push_sel[i]];
                 end
                 default: ;
             endcase
-            // snoop CDB to update rs1/rs2 valid
-            for (int k = 0; k < CDB_WIDTH; k++) begin 
-                if (cdb_rs[k].valid && !int_rs_available[i]) begin 
-                    if (int_rs_array[i].rs1_phy == cdb_rs[k].rd_phy) begin 
-                        if ( rs_update_sel[i] == SELF ) begin
-                            rs_array_next[i].rs1_valid = 1'b1;
-                        end else if ( i > 0 ) begin
-                            if ( rs_update_sel[i-1] == PREV ) rs_array_next[i-1].rs1_valid = 1'b1;
-                        end
-                    end
-                    if (int_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
-                        if ( rs_update_sel[i] == SELF ) begin
-                            rs_array_next[i].rs2_valid = 1'b1;
-                        end else if ( i > 0 ) begin
-                            if ( rs_update_sel[i-1] == PREV ) rs_array_next[i-1].rs2_valid = 1'b1;
-                        end
-                    end
-                end
-            end
         end
     end
 
@@ -190,63 +179,35 @@ import int_rs_types::*;
         end
     end
 
-    // issue enable logic, already oldest first
-    // loop from top until src all valid
-    logic   src1_valid, src2_valid;
+    // Issue Logic
+    // loop from top and issue the first entry requesting for issue
     always_comb begin
-        int_rs_issue_en  = '0;
-        int_rs_issue_idx = '0; 
-        src1_valid       = '0;
-        src2_valid       = '0;
-        for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (!int_rs_available[(INTRS_IDX)'(unsigned'(i))]) begin 
-                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op1_sel)
-                    OP1_ZERO: src1_valid = '1;
-                    OP1_RS1: begin 
-                        src1_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_valid;
-                        for (int k = 0; k < 1; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                                src1_valid = 1'b1;
-                            end
-                        end
-                        // if (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                        //     src1_valid = 1'b1;
-                        // end
-                    end
-                    default: src1_valid = '0;
-                endcase
-
-                unique case (int_rs_array[(INTRS_IDX)'(unsigned'(i))].op2_sel)
-                    OP2_IMM: src2_valid = '1;
-                    OP2_RS2: begin 
-                        src2_valid = int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_valid;
-                        for (int k = 0; k < 1; k++) begin 
-                            if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                                src2_valid = 1'b1;
-                            end
-                        end
-                        // if (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                        //     src2_valid = 1'b1;
-                        // end
-                    end
-                    default: src2_valid = '0;
-                endcase
-
-                if (src1_valid && src2_valid) begin 
-                    int_rs_issue_en = '1;
-                    int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i));
-                    break;
-                end
+        rs_grant = '0;
+        for (int i = 0; i < INTRS_DEPTH; i++) begin
+            if (rs_request[i]) begin
+                rs_grant[i] = 1'b1;
+                int_rs_issue_idx = (INTRS_IDX)'(unsigned'(i));
+                break;
             end
         end
     end
 
-    // full logic, set rs.ready to 0 if rs is full
+    // One-hot mux to select the issued entry
+    one_hot_mux #(
+        .T          (int_rs_entry_t),
+        .NUM_INPUTS (INTRS_DEPTH)
+    ) ohm (
+        .data_in    (rs_entry),
+        .select     (rs_grant),
+        .data_out   (issued_entry)
+    );
+
+    // ready logic
     logic   [INTRS_IDX:0]    n_available_slots;
-    always_comb begin 
+    always_comb begin
         n_available_slots = '0;
         for (int i = 0; i < INTRS_DEPTH; i++) begin 
-            if (int_rs_available[i]) begin 
+            if (~rs_valid[i]) begin 
                 n_available_slots = (INTRS_IDX+1)'(n_available_slots + 1);
             end
         end
@@ -254,8 +215,8 @@ import int_rs_types::*;
     assign from_ds.ready = (n_available_slots >= (INTRS_IDX+1)'(ID_WIDTH));
 
     // communicate with prf
-    assign to_prf.rs1_phy = int_rs_array[int_rs_issue_idx].rs1_phy;
-    assign to_prf.rs2_phy = int_rs_array[int_rs_issue_idx].rs2_phy;
+    assign to_prf.rs1_phy = issued_entry.rs1_phy;
+    assign to_prf.rs2_phy = issued_entry.rs2_phy;
 
     //////////////////////
     // INT_RS to FU_ALU //
@@ -263,22 +224,20 @@ import int_rs_types::*;
     fu_alu_reg_t    fu_alu_reg_in;
 
     // handshake with fu_alu_reg:
-    assign int_rs_valid = int_rs_issue_en;
+    assign int_rs_valid = |rs_grant;
 
     // send data to fu_alu_reg
-    always_comb begin 
-        fu_alu_reg_in.rob_id       = int_rs_array[int_rs_issue_idx].rob_id;
-        fu_alu_reg_in.rd_phy       = int_rs_array[int_rs_issue_idx].rd_phy;
-        fu_alu_reg_in.rd_arch      = int_rs_array[int_rs_issue_idx].rd_arch;
-        fu_alu_reg_in.op1_sel      = int_rs_array[int_rs_issue_idx].op1_sel;
-        fu_alu_reg_in.op2_sel      = int_rs_array[int_rs_issue_idx].op2_sel;
-        fu_alu_reg_in.fu_opcode    = int_rs_array[int_rs_issue_idx].fu_opcode;
-        fu_alu_reg_in.imm          = int_rs_array[int_rs_issue_idx].imm;
+    always_comb begin
+        fu_alu_reg_in.rob_id       = issued_entry.rob_id;
+        fu_alu_reg_in.rd_phy       = issued_entry.rd_phy;
+        fu_alu_reg_in.rd_arch      = issued_entry.rd_arch;
+        fu_alu_reg_in.op1_sel      = issued_entry.op1_sel;
+        fu_alu_reg_in.op2_sel      = issued_entry.op2_sel;
+        fu_alu_reg_in.fu_opcode    = issued_entry.fu_opcode;
+        fu_alu_reg_in.imm          = issued_entry.imm;
 
-        fu_alu_reg_in.rs1_value    = (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[int_rs_issue_idx].rs1_phy)) ?
-                                    fu_alu_bypass.rd_value : to_prf.rs1_value;
-        fu_alu_reg_in.rs2_value    = (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[int_rs_issue_idx].rs2_phy)) ? 
-                                    fu_alu_bypass.rd_value : to_prf.rs2_value;
+        fu_alu_reg_in.rs1_value    = to_prf.rs1_value;
+        fu_alu_reg_in.rs2_value    = to_prf.rs2_value;
     end
 
 

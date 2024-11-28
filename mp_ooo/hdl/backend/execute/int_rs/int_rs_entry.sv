@@ -7,12 +7,15 @@ import int_rs_types::*;
     input   logic               rst,
 
     output  logic               valid,
+    // output  logic               will_be_valid,
     output  logic               request,
     input   logic               grant,
 
     input   logic               push_en,
     input   int_rs_entry_t      entry_in,
+    output  int_rs_entry_t      entry_out,
     output  int_rs_entry_t      entry,
+    input   logic               clear,
 
     cdb_itf.rs                  wakeup_cdb[CDB_WIDTH]
 );
@@ -32,7 +35,7 @@ import int_rs_types::*;
     int_rs_entry_t              next_entry;
 
     always_ff @(posedge clk) begin
-        if (rst) begin
+        if (rst || clear) begin
             entry_valid <= 1'b0;
         end else begin
             entry_valid <= next_valid;
@@ -69,6 +72,8 @@ import int_rs_types::*;
             end
         end
     end
+
+    assign entry_out = next_entry;
 
     assign request = entry_valid && entry_reg.rs1_valid && entry_reg.rs2_valid;
 
