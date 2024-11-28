@@ -127,23 +127,25 @@ import uop_types::*;
             perf_intm_rs_block <= '0;
             perf_br_rs_block <= '0;
             perf_mem_rs_block <= '0;
-        end else if (!dispatch_ready[0]) begin
-            unique case (uops[0].rs_type)
-                RS_INT: begin
-                    perf_int_rs_block <= perf_int_rs_block + 1;
-                end
-                RS_INTM: begin
-                    perf_intm_rs_block <= perf_intm_rs_block + 1;
-                end
-                RS_BR: begin
-                    perf_br_rs_block <= perf_br_rs_block + 1;
-                end
-                RS_MEM: begin
-                    perf_mem_rs_block <= perf_mem_rs_block + 1;
-                end
-                default: begin
-                end
-            endcase
+        end else if (!prv_ready) begin
+            for (int i = 0; i < ID_WIDTH; i++) begin
+                unique case (uops[i].rs_type)
+                    RS_INT: begin
+                        perf_int_rs_block <= perf_int_rs_block + 1;
+                    end
+                    RS_INTM: begin
+                        perf_intm_rs_block <= perf_intm_rs_block + 1;
+                    end
+                    RS_BR: begin
+                        perf_br_rs_block <= perf_br_rs_block + 1;
+                    end
+                    RS_MEM: begin
+                        perf_mem_rs_block <= perf_mem_rs_block + 1;
+                    end
+                    default: begin
+                    end
+                endcase
+            end
         end
     end
 
