@@ -62,7 +62,7 @@ import cpu_params::*;
         end else if (backend_flush) begin
             for (int i = 0; i < ID_WIDTH; i++) begin
                 if (from_rrf.valid[i]) begin
-                    free_list[wr_ptr] <= from_rrf.stale_idx[i];
+                    free_list[(FREELIST_IDX)'(wr_ptrs[i])] <= from_rrf.stale_idx[i];
                 end
             end
         end else begin

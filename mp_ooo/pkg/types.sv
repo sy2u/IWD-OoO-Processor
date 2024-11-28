@@ -1,8 +1,8 @@
 package cpu_params;
 
-    localparam  unsigned    IF_WIDTH    = 1;
+    localparam  unsigned    IF_WIDTH    = 2;
 
-    localparam  unsigned    ID_WIDTH    = 1;
+    localparam  unsigned    ID_WIDTH    = 2;
     localparam  unsigned    ID_WIDTH_IDX= $clog2(ID_WIDTH);
 
     localparam  unsigned    ROB_DEPTH   = 32;
@@ -31,7 +31,7 @@ package cpu_params;
     localparam  unsigned    STQ_IDX         = $clog2(STQ_DEPTH);
 
     // Reservation Station Type: 0 - Normal, 1 - Age-ordered
-    localparam unsigned     INT_RS_TYPE     = 0;
+    localparam unsigned     INT_RS_TYPE     = 1;
     localparam unsigned     INTM_RS_TYPE    = 0;
 
     // Do not change this
