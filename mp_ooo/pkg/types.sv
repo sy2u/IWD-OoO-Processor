@@ -31,7 +31,7 @@ package cpu_params;
     localparam  unsigned    STQ_IDX         = $clog2(STQ_DEPTH);
 
     // Reservation Station Type: 0 - Normal, 1 - Age-ordered
-    localparam unsigned     INT_RS_TYPE     = 1;
+    localparam unsigned     INT_RS_TYPE     = 0;
     localparam unsigned     INTM_RS_TYPE    = 0;
 
     // Do not change this
@@ -343,6 +343,20 @@ import cpu_params::*;
 import uop_types::*;
 
     typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [0:0]           op1_sel;
+        logic   [0:0]           op2_sel;
+        logic   [31:0]          imm;
+        logic   [3:0]           fu_opcode;
+    } int_rs_entry_t;
+
+    typedef struct packed {
         logic   [PRF_IDX-1:0]   rd_phy;
         logic                   valid;
     } cdb_rs_t;
@@ -356,7 +370,6 @@ import uop_types::*;
         logic   [0:0]           op1_sel;    
         logic   [0:0]           op2_sel;    
 
-        logic   [31:0]          pc;
         logic   [31:0]          imm;
         logic   [31:0]          rs1_value;
         logic   [31:0]          rs2_value;

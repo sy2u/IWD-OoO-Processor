@@ -24,20 +24,6 @@ import int_rs_types::*;
         end
     endgenerate
 
-    typedef struct packed {
-        logic   [ROB_IDX-1:0]   rob_id;
-        logic   [PRF_IDX-1:0]   rs1_phy;
-        logic                   rs1_valid;
-        logic   [PRF_IDX-1:0]   rs2_phy;
-        logic                   rs2_valid;
-        logic   [PRF_IDX-1:0]   rd_phy;
-        logic   [ARF_IDX-1:0]   rd_arch;
-        logic   [0:0]           op1_sel;
-        logic   [0:0]           op2_sel;
-        logic   [31:0]          imm;
-        logic   [3:0]           fu_opcode;
-    } int_rs_entry_t;
-
     // rs array, store uop+available
     int_rs_entry_t          int_rs_array        [INTRS_DEPTH];
     logic                   int_rs_available    [INTRS_DEPTH];
@@ -73,13 +59,13 @@ import int_rs_types::*;
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 int_rs_available[i] <= 1'b1;
             end
-        end else begin 
+        end else begin
+            // pop and push pointer tracking
+            int_rs_top <= rs_top_next;
             for (int i = 0; i < INTRS_DEPTH; i++) begin
                 // compress and push rs array
                 int_rs_available[i] <= rs_available_next[i];
             end
-            // pop and push pointer tracking
-            int_rs_top <= rs_top_next;
         end
     end
 
@@ -113,11 +99,12 @@ import int_rs_types::*;
 
     always_comb begin
         for (int i = 0; i < INTRS_DEPTH; i++) begin
-            rs_available_next[i] = 1'b1;
             unique case (rs_update_sel[i])
                 PREV: begin
                     if( i < INTRS_DEPTH-1 ) begin
                         rs_available_next[i] = int_rs_available[i+1];
+                    end else begin
+                        rs_available_next[i] = 1'b1;
                     end
                 end
                 SELF: begin
@@ -126,7 +113,9 @@ import int_rs_types::*;
                 PUSH_IN: begin
                     rs_available_next[i] = 1'b0;
                 end
-                default: ;
+                default: begin
+                    rs_available_next[i] = 1'bx;
+                end
             endcase
         end
     end
@@ -285,7 +274,6 @@ import int_rs_types::*;
         fu_alu_reg_in.op2_sel      = int_rs_array[int_rs_issue_idx].op2_sel;
         fu_alu_reg_in.fu_opcode    = int_rs_array[int_rs_issue_idx].fu_opcode;
         fu_alu_reg_in.imm          = int_rs_array[int_rs_issue_idx].imm;
-        fu_alu_reg_in.pc           = 'x;
 
         fu_alu_reg_in.rs1_value    = (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[int_rs_issue_idx].rs1_phy)) ?
                                     fu_alu_bypass.rd_value : to_prf.rs1_value;
