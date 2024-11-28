@@ -65,10 +65,10 @@ import int_rs_types::*;
 
     bypass_network_t        fu_alu_bypass;
 
-    // rs array update
-    always_ff @(posedge clk) begin 
+    // rs available update
+    always_ff @(posedge clk) begin
         // rs array reset to all available, and top point to 0
-        if (rst) begin 
+        if (rst) begin
             int_rs_top <= '0;
             for (int i = 0; i < INTRS_DEPTH; i++) begin 
                 int_rs_available[i] <= 1'b1;
@@ -76,11 +76,21 @@ import int_rs_types::*;
         end else begin 
             for (int i = 0; i < INTRS_DEPTH; i++) begin
                 // compress and push rs array
-                int_rs_array[i]  <= rs_array_next[i];
                 int_rs_available[i] <= rs_available_next[i];
             end
             // pop and push pointer tracking
             int_rs_top <= rs_top_next;
+        end
+    end
+
+    // rs array update
+    always_ff @(posedge clk) begin
+        if (rst) begin
+        end else begin
+            for (int i = 0; i < INTRS_DEPTH; i++) begin
+                // compress and push rs array
+                int_rs_array[i]  <= rs_array_next[i];
+            end
         end
     end
 
@@ -101,23 +111,39 @@ import int_rs_types::*;
         end
     end
 
-    always_comb begin : compress_mux // single issue type, one-slot compress
+    always_comb begin
         for (int i = 0; i < INTRS_DEPTH; i++) begin
-            rs_array_next[i] = 'x;
             rs_available_next[i] = 1'b1;
             unique case (rs_update_sel[i])
-                PREV: begin       
+                PREV: begin
                     if( i < INTRS_DEPTH-1 ) begin
-                        rs_array_next[i] = int_rs_array[i+1];
                         rs_available_next[i] = int_rs_available[i+1];
                     end
                 end
                 SELF: begin
-                    rs_array_next[i] = int_rs_array[i];
                     rs_available_next[i] = int_rs_available[i];
                 end
                 PUSH_IN: begin
                     rs_available_next[i] = 1'b0;
+                end
+                default: ;
+            endcase
+        end
+    end
+
+    always_comb begin : compress_mux // single issue type, one-slot compress
+        for (int i = 0; i < INTRS_DEPTH; i++) begin
+            rs_array_next[i] = 'x;
+            unique case (rs_update_sel[i])
+                PREV: begin
+                    if( i < INTRS_DEPTH-1 ) begin
+                        rs_array_next[i] = int_rs_array[i+1];
+                    end
+                end
+                SELF: begin
+                    rs_array_next[i] = int_rs_array[i];
+                end
+                PUSH_IN: begin
                     rs_array_next[i].rob_id  = from_ds.uop[rs_push_sel[i]].rob_id;
                     rs_array_next[i].rs1_phy = from_ds.uop[rs_push_sel[i]].rs1_phy;
                     rs_array_next[i].rs1_valid = from_ds.uop[rs_push_sel[i]].rs1_valid;
@@ -194,9 +220,9 @@ import int_rs_types::*;
                                 src1_valid = 1'b1;
                             end
                         end
-                        if (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                            src1_valid = 1'b1;
-                        end
+                        // if (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                        //     src1_valid = 1'b1;
+                        // end
                     end
                     default: src1_valid = '0;
                 endcase
@@ -210,9 +236,9 @@ import int_rs_types::*;
                                 src2_valid = 1'b1;
                             end
                         end
-                        if (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                            src2_valid = 1'b1;
-                        end
+                        // if (fu_alu_bypass.valid && (fu_alu_bypass.rd_phy == int_rs_array[(INTRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                        //     src2_valid = 1'b1;
+                        // end
                     end
                     default: src2_valid = '0;
                 endcase
