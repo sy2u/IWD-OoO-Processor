@@ -22,7 +22,7 @@ package cpu_params;
     localparam unsigned     BRRS_IDX        = $clog2(BRRS_DEPTH);
     localparam  unsigned    CB_DEPTH        = 8;
 
-    localparam  unsigned    MEMRS_DEPTH     = 16;
+    localparam  unsigned    MEMRS_DEPTH     = 8;
     localparam  unsigned    MEMRS_IDX       = $clog2(MEMRS_DEPTH);
     localparam  unsigned    LSQ_DEPTH       = 8;
     localparam  unsigned    LDQ_DEPTH       = 8;
