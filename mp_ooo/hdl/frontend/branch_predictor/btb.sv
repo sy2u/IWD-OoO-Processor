@@ -7,9 +7,10 @@ import uop_types::*;
 
     cb_bp_itf.bp                            from_cb,
 
-    input   logic                           predict_taken,
+    input   logic [IF_WIDTH-1:0]            predict_taken_gshare,
     input   logic [31:0]                    pc,
-    output  logic [IF_WIDTH-1:0]  [31:0]    predict_target;
+    output  logic [IF_WIDTH-1:0]  [31:0]    predict_target,
+    output  logic [IF_WIDTH-1:0]	    predict_taken
 );
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
     
@@ -113,17 +114,20 @@ import uop_types::*;
         end
     end
 
-    generate for (genvar i = 0; i < IF_WIDTH; i++) begin
+    generate for (genvar k = 0; k < IF_WIDTH; k++) begin
         always_comb begin
-            pc_in[i] = pc & ~(unsigned'(IF_BLK_SIZE - 1)) + unsigned'(i) * 4;
-            predict_target[i] = pc_in[i] + unsigned'(i) * 4 + 4;
+	    predict_taken[k] = 1'b0;
+            pc_in[k] = (pc & ~(unsigned'(IF_BLK_SIZE - 1))) + unsigned'(k) * 4;
+            predict_target[k] = (pc & ~(unsigned'(IF_BLK_SIZE - 1))) + unsigned'(k) * 4 + 4;
             for (int i = 0; i < BTB_DEPTH; i++) begin
-                if (predict_taken && br_btb[i].valid && (br_btb[i].pc == pc_in[i])) begin
-                    predict_target = br_btb[i].target_address;
+                if (predict_taken_gshare[k] && br_btb[i].valid && (br_btb[i].pc == pc_in[k])) begin
+                    predict_target[k] = br_btb[i].target_address;
+		    predict_taken[k]  = 1'b1;
                     break;
                 end
-                if (j_btb[i].valid && (j_btb[i].pc == pc_in[i])) begin
-                    predict_target = j_btb[i].target_address;
+                if (j_btb[i].valid && (j_btb[i].pc == pc_in[k])) begin
+                    predict_target[k] = j_btb[i].target_address;
+		    predict_taken[k] = 1'b1;
                     break;
                 end
             end

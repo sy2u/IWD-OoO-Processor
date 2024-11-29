@@ -31,6 +31,7 @@ import cpu_params::*;
     logic                   prev_rst;
 
     logic   [IF_WIDTH-1:0]          predict_taken;
+    logic   [IF_WIDTH-1:0]          predict_taken_gshare;
     logic   [IF_WIDTH-1:0]  [31:0]  predict_target;
 
     logic   predict_taken_en;
@@ -58,7 +59,7 @@ import cpu_params::*;
         for (int i = 0; i < IF_WIDTH; i++) begin
             if (predict_taken[i]) begin 
                 predict_taken_en = 1'b1;
-                predict_taken_idx = unsigned'(i);
+                predict_taken_idx = (IF_WIDTH_IDX)'(i);
                 break;
             end
         end
@@ -90,16 +91,17 @@ import cpu_params::*;
         .rst                    (rst),
         .from_cb                (from_cb),
         .pc                     (pc), 
-        .predict_taken          (predict_taken)              
+        .predict_taken          (predict_taken_gshare)              
     );
 
     btb btb_i(
         .clk                    (clk),
         .rst                    (rst),
         .from_cb                (from_cb),
-        .predict_taken          (predict_taken),
+        .predict_taken_gshare   (predict_taken_gshare),
         .pc                     (pc),
-        .predict_target         (predict_target)               
+        .predict_target         (predict_target),
+	.predict_taken		(predict_taken)	
     );
 
     assign if1_ready = to_fifo.ready;

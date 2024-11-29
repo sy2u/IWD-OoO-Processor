@@ -6,7 +6,7 @@ import cpu_params::*;
 
     cb_bp_itf.bp                    from_cb,
     input   logic [31:0]            pc,
-    output  logic [IF_WIDTH-1:0]    predict_taken;
+    output  logic [IF_WIDTH-1:0]    predict_taken
 );
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
     
