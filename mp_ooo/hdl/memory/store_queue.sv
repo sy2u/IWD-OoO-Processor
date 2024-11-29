@@ -159,7 +159,7 @@ import lsu_types::*;
             potential_conflict[i] = '0;
             for (int unsigned j = 0; j < STQ_DEPTH; j++) begin
                 // Determine if j is between the head and the tracked tail by LDQ
-                tracked_tail[i] = (rd_ptr + from_ldq.ldq_tracker[i] - 1);
+                tracked_tail[i] = (STQ_IDX+1)'(rd_ptr + from_ldq.ldq_tracker[i] - 1);
                 if (tracked_tail[i][STQ_IDX] == rd_ptr[STQ_IDX]) begin // no wrapping
                     potential_conflict[i][j] = (rd_ptr[STQ_IDX-1:0] <= (STQ_IDX)'(j)) && ((STQ_IDX)'(j) <= tracked_tail[i][STQ_IDX-1:0]);
                 end else begin // wrapping
