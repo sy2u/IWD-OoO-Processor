@@ -336,15 +336,24 @@ import cpu_params::*;
 
     logic   [STQ_IDX:0]     stq_tail; // Index from 1, 0 means empty
     logic                   stq_deq;
+    logic   [STQ_IDX:0]     ldq_tracker[LDQ_DEPTH];
+    logic   [31:0]          ldq_addr[LDQ_DEPTH];
+    logic                   has_conflicting_store[LDQ_DEPTH];
 
     modport ldq (
         input               stq_tail,
-        input               stq_deq
+        input               stq_deq,
+        output              ldq_tracker,
+        output              ldq_addr,
+        input               has_conflicting_store
     );
 
     modport stq (
         output              stq_tail,
-        output              stq_deq
+        output              stq_deq,
+        input               ldq_tracker,
+        input               ldq_addr,
+        output              has_conflicting_store
     );
 
 endinterface

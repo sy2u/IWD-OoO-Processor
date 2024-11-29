@@ -28,7 +28,6 @@ import lsu_types::*;
     logic   [STQ_IDX:0]     counter;
     logic   [STQ_IDX:0]     counter_nxt;
 
-    assign from_ldq.stq_tail = counter;
 
     assign {wr_ptr_flag, wr_ptr_actual} = wr_ptr;
     assign {rd_ptr_flag, rd_ptr_actual} = rd_ptr;
@@ -36,7 +35,6 @@ import lsu_types::*;
     logic                   enqueue;
     logic                   dequeue;
 
-    assign from_ldq.stq_deq = dequeue;
 
     always_ff @(posedge clk) begin
         if (rst || backend_flush) begin
@@ -132,5 +130,49 @@ import lsu_types::*;
     assign to_rob.wdata_dbg = fifo[rd_ptr_actual].wdata;
     assign to_rob.rs1_value_dbg = fifo[rd_ptr_actual].rs1_value_dbg;
     assign to_rob.rs2_value_dbg = fifo[rd_ptr_actual].rs2_value_dbg;
+
+    /////////////////////////
+    // LDQ Interface Logic //
+    /////////////////////////
+
+    assign from_ldq.stq_tail = counter;
+    assign from_ldq.stq_deq = dequeue;
+
+    logic   [STQ_DEPTH-1:0] same_addr[LDQ_DEPTH]; // either the address is invalid or the address is the same
+    logic   [STQ_DEPTH-1:0] potential_conflict[LDQ_DEPTH]; // the store is between the head and the tracked tail
+
+    always_comb begin
+        for (int i = 0; i < LDQ_DEPTH; i++) begin
+            same_addr[i] = '0;
+            for (int j = 0; j < STQ_DEPTH; j++) begin
+                if (~fifo[j].addr_valid || (fifo[j].addr == from_ldq.ldq_addr[i])) begin
+                    same_addr[i][j] = 1'b1;
+                end
+            end
+        end
+    end
+
+    logic   [STQ_IDX:0]     tracked_tail[LDQ_DEPTH];
+
+    always_comb begin
+        for (int i = 0; i < LDQ_DEPTH; i++) begin
+            potential_conflict[i] = '0;
+            for (int unsigned j = 0; j < STQ_DEPTH; j++) begin
+                // Determine if j is between the head and the tracked tail by LDQ
+                tracked_tail[i] = (rd_ptr + from_ldq.ldq_tracker[i] - 1);
+                if (tracked_tail[i][STQ_IDX] == rd_ptr[STQ_IDX]) begin // no wrapping
+                    potential_conflict[i][j] = (rd_ptr[STQ_IDX-1:0] <= (STQ_IDX)'(j)) && ((STQ_IDX)'(j) <= tracked_tail[i][STQ_IDX-1:0]);
+                end else begin // wrapping
+                    potential_conflict[i][j] = (rd_ptr[STQ_IDX-1:0] <= (STQ_IDX)'(j)) || ((STQ_IDX)'(j) <= tracked_tail[i][STQ_IDX-1:0]);
+                end
+            end
+        end
+    end
+
+    always_comb begin
+        for (int i = 0; i < LDQ_DEPTH; i++) begin
+            from_ldq.has_conflicting_store[i] = |(same_addr[i] & potential_conflict[i]);
+        end
+    end
 
 endmodule
