@@ -40,6 +40,14 @@ package cpu_params;
 
     localparam  unsigned    CDB_WIDTH   = 4;
 
+    // DCache Parameters
+    localparam  unsigned    D_OFFSET_IDX  = 5;
+    localparam  unsigned    D_SET_IDX     = 5;
+    localparam  unsigned    D_TAG_IDX     = 22;
+    localparam  unsigned    D_NUM_WAYS    = 4;
+    localparam  unsigned    D_PLRU_BITS   = D_NUM_WAYS - 1;
+    localparam  unsigned    D_WAY_BITS    = $clog2(D_NUM_WAYS);
+
 endpackage
 
 package rv32i_types;
@@ -301,14 +309,15 @@ package icache_types;
 endpackage
 
 package dcache_types;
+import cpu_params::*;
 
     typedef struct packed {
         logic   [3:0]   rmask;
         logic   [3:0]   wmask;
         logic   [31:0]  wdata;
-        logic   [4:0]   offset;
-        logic   [3:0]   set_i;
-        logic   [22:0]  tag;
+        logic   [D_OFFSET_IDX-1:0]   offset;
+        logic   [D_SET_IDX-1:0]   set_i;
+        logic   [D_TAG_IDX-1:0]  tag;
     } dcache_stage_reg_t;
 
     typedef enum logic [1:0] {

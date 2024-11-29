@@ -1,4 +1,5 @@
-module dcache 
+module dcache
+import cpu_params::*;
 import dcache_types::*;
 (
     input   logic           clk,
@@ -11,62 +12,55 @@ import dcache_types::*;
     // memory side signals, dfp -> downward facing port
     cacheline_itf.master    dfp
 );
-            localparam      OFFSET_IDX  = 5;
-            localparam      SET_IDX     = 4;
-            localparam      TAG_IDX     = 23;
-            localparam      NUM_WAYS    = 4;
-            localparam      PLRU_BITS   = NUM_WAYS - 1;
-            localparam      WAY_BITS    = $clog2(NUM_WAYS);
+    logic                       data_csb0   [D_NUM_WAYS];
+    logic                       tag_csb0    [D_NUM_WAYS];
+    logic                       valid_csb0  [D_NUM_WAYS];
+    logic                       plru_csb0;
+    logic                       plru_csb1;
 
-    logic                   data_csb0[NUM_WAYS];
-    logic                   tag_csb0[NUM_WAYS];
-    logic                   valid_csb0[NUM_WAYS];
-    logic                   plru_csb0;
-    logic                   plru_csb1;
+    logic                       data_web0   [D_NUM_WAYS];
+    logic                       tag_web0    [D_NUM_WAYS];
+    logic                       valid_web0  [D_NUM_WAYS];
+    logic                       plru_web1;
 
-    logic                   data_web0[NUM_WAYS];
-    logic                   tag_web0[NUM_WAYS];
-    logic                   valid_web0[NUM_WAYS];
-    logic                   plru_web1;
+    logic   [31:0]              data_wmask0;
+    logic   [255:0]             data_din0;
+    logic   [D_TAG_IDX:0]       tag_din0;
+    logic                       valid_din0;
+    logic   [D_PLRU_BITS-1:0]   plru_din1;
 
-    logic   [31:0]          data_wmask0;
-    logic   [255:0]         data_din0;
-    logic   [TAG_IDX:0]     tag_din0;
-    logic                   valid_din0;
-    logic   [PLRU_BITS-1:0] plru_din1;
+    logic   [255:0]             data_dout0  [D_NUM_WAYS];
+    logic   [D_TAG_IDX:0]       tag_dout0   [D_NUM_WAYS];
+    logic                       valid_dout0 [D_NUM_WAYS];
+    logic   [D_PLRU_BITS-1:0]   plru_dout0;
 
-    logic   [255:0]         data_dout0[NUM_WAYS];
-    logic   [TAG_IDX:0]     tag_dout0[NUM_WAYS];
-    logic                   valid_dout0[NUM_WAYS];
-    logic   [PLRU_BITS-1:0] plru_dout0;
+    logic   [D_OFFSET_IDX-1:0]  ufp_offset;
+    logic   [D_SET_IDX-1:0]     ufp_set;
+    logic   [D_TAG_IDX-1:0]     ufp_tag;
 
-    logic   [OFFSET_IDX-1:0] ufp_offset;
-    logic   [SET_IDX-1:0]   ufp_set;
-    logic   [TAG_IDX-1:0]   ufp_tag;
+    logic   [D_SET_IDX-1:0]     next_set;
+    logic   [D_SET_IDX-1:0]     sram_operating_set;
 
-    logic   [SET_IDX-1:0]   next_set;
-    logic   [SET_IDX-1:0]   sram_operating_set;
+    dcache_stage_reg_t          stage_reg;
 
-    dcache_stage_reg_t      stage_reg;
-
-    logic                   hit;
-    logic   [WAY_BITS-1:0]  hit_way;
-    logic   [WAY_BITS-1:0]  replace_way;
-    logic                   replace_way_dirty;
-    logic                   hit_way_dirty;
+    logic                       hit;
+    logic   [D_WAY_BITS-1:0]    hit_way;
+    logic   [D_WAY_BITS-1:0]    replace_way;
+    logic                       replace_way_dirty;
+    logic                       hit_way_dirty;
 
     logic                   stall;
     logic                   allocate_done;
     logic                   write_hit_rec;
     logic                   write_hit;
 
-    assign ufp_offset = ufp.addr[OFFSET_IDX-1:0];
-    assign ufp_set = ufp.addr[SET_IDX+OFFSET_IDX-1:OFFSET_IDX];
-    assign ufp_tag = ufp.addr[TAG_IDX+SET_IDX+OFFSET_IDX-1:SET_IDX+OFFSET_IDX];
+    assign ufp_offset = ufp.addr[D_OFFSET_IDX-1:0];
+    assign ufp_set = ufp.addr[D_SET_IDX+D_OFFSET_IDX-1:D_OFFSET_IDX];
+    assign ufp_tag = ufp.addr[D_TAG_IDX+D_SET_IDX+D_OFFSET_IDX-1:D_SET_IDX+D_OFFSET_IDX];
 
     assign sram_operating_set = (write_hit || stall) ? stage_reg.set_i : ufp_set;
 
-    generate for (genvar i = 0; i < NUM_WAYS; i++) begin : arrays
+    generate for (genvar i = 0; i < D_NUM_WAYS; i++) begin : arrays
         dcache_data_array data_array (
             .clk0       (clk),
             .csb0       (data_csb0[i]),
@@ -85,7 +79,7 @@ import dcache_types::*;
             .dout0      (tag_dout0[i])
         );
         valid_array #(
-            .S_INDEX (SET_IDX),
+            .S_INDEX (D_SET_IDX),
             .WIDTH   (1)
         ) valid_array (
             .clk0       (clk),
@@ -99,8 +93,8 @@ import dcache_types::*;
     end endgenerate
 
     lru_array #(
-        .S_INDEX (SET_IDX),
-        .WIDTH   (PLRU_BITS)
+        .S_INDEX (D_SET_IDX),
+        .WIDTH   (D_PLRU_BITS)
     ) lru_array (
         .clk0       (clk),
         .rst0       (rst),
@@ -115,9 +109,9 @@ import dcache_types::*;
     );
 
     hit_detection #(
-        .TAG_IDX     (TAG_IDX),
-        .NUM_WAYS    (NUM_WAYS),
-        .WAY_BITS    (WAY_BITS)
+        .TAG_IDX     (D_TAG_IDX),
+        .NUM_WAYS    (D_NUM_WAYS),
+        .WAY_BITS    (D_WAY_BITS)
     ) hit_detection_i (
         .tag            (stage_reg.tag),
         .tag_arr_out    (tag_dout0),
@@ -149,9 +143,9 @@ import dcache_types::*;
     );
 
     plru_update #(
-        .NUM_WAYS    (NUM_WAYS),
-        .PLRU_BITS   (PLRU_BITS),
-        .WAY_BITS    (WAY_BITS)
+        .NUM_WAYS    (D_NUM_WAYS),
+        .PLRU_BITS   (D_PLRU_BITS),
+        .WAY_BITS    (D_WAY_BITS)
     ) plru_update_i (
         .current_plru   (plru_dout0),
         .next_plru      (plru_din1),
@@ -180,14 +174,14 @@ import dcache_types::*;
     // Chip-Select signals
 
     always_comb begin
-        for (int i = 0; i < NUM_WAYS; i++) begin
+        for (int i = 0; i < D_NUM_WAYS; i++) begin
             data_csb0[i] = 1'b1;
             tag_csb0[i] = 1'b1;
             valid_csb0[i] = 1'b1;
         end
 
         if (~stall || write_hit_rec) begin
-            for (int i = 0; i < NUM_WAYS; i++) begin
+            for (int i = 0; i < D_NUM_WAYS; i++) begin
                 data_csb0[i] = 1'b0;
                 tag_csb0[i] = 1'b0;
                 valid_csb0[i] = 1'b0;
@@ -206,7 +200,7 @@ import dcache_types::*;
 
     // Write-Enable signals
     always_comb begin
-        for (int i = 0; i < NUM_WAYS; i++) begin
+        for (int i = 0; i < D_NUM_WAYS; i++) begin
             data_web0[i] = 1'b1;
             tag_web0[i] = 1'b1;
             valid_web0[i] = 1'b1;
@@ -233,7 +227,7 @@ import dcache_types::*;
             data_wmask0 = '0;
             for (int i = 0; i < 4; i++) begin
                 if (stage_reg.wmask[i]) begin
-                    data_wmask0[stage_reg.offset + (OFFSET_IDX)'(unsigned'(i))] = 1'b1;
+                    data_wmask0[stage_reg.offset + (D_OFFSET_IDX)'(unsigned'(i))] = 1'b1;
                 end
             end
             for (int i = 0; i < 256; i++) begin
@@ -257,14 +251,14 @@ import dcache_types::*;
     // ========================================================================
 
     assign dfp.addr = (dfp.write) ? 
-                    {tag_dout0[replace_way][22:0],  stage_reg.set_i,  {OFFSET_IDX{1'b0}}} : 
-                    {stage_reg.tag,                 stage_reg.set_i,  {OFFSET_IDX{1'b0}}};
+                    {tag_dout0[replace_way][D_TAG_IDX-1:0], stage_reg.set_i,  {D_OFFSET_IDX{1'b0}}} : 
+                    {stage_reg.tag,                         stage_reg.set_i,  {D_OFFSET_IDX{1'b0}}};
     assign dfp.wdata = data_dout0[replace_way];
 
     assign ufp.rdata = data_dout0[hit_way][8 * stage_reg.offset +: 32];
     assign ufp.resp = ((|stage_reg.rmask || |stage_reg.wmask) && ~stall);
 
-    assign replace_way_dirty = tag_dout0[replace_way][23] && valid_dout0[replace_way];
-    assign hit_way_dirty = tag_dout0[hit_way][23] && valid_dout0[hit_way];
+    assign replace_way_dirty = tag_dout0[replace_way][D_TAG_IDX] && valid_dout0[replace_way];
+    assign hit_way_dirty = tag_dout0[hit_way][D_TAG_IDX] && valid_dout0[hit_way];
 
 endmodule
