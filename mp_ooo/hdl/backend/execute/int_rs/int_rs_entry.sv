@@ -59,7 +59,7 @@ import int_rs_types::*;
         next_entry = entry_reg;
         if (push_en) begin
             next_entry = entry_in;
-        end else if (entry_valid) begin
+        end else begin
             for (int k = 0; k < CDB_WIDTH; k++) begin
                 if (cdb_rs[k].valid) begin
                     if (entry_reg.rs1_phy == cdb_rs[k].rd_phy) begin
