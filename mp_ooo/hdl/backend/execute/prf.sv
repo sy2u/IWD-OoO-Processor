@@ -45,11 +45,11 @@ import prf_types::*;
             end else begin
                 from_rs_local_out[j].rs1_value = prf_data[from_rs_local_in[j].rs1_phy];
                 for (int i = 0; i < CDB_WIDTH; i++) begin
-                    if (PRF_FORWARDING[j][i]) begin
+                    // if (PRF_FORWARDING[j][i]) begin
                         if (cdb_local[i].valid && (cdb_local[i].rd_phy == from_rs_local_in[j].rs1_phy)) begin 
                             from_rs_local_out[j].rs1_value = cdb_local[i].rd_value;
                         end
-                    end
+                    // end
                 end
             end
         end
@@ -62,11 +62,11 @@ import prf_types::*;
             end else begin
                 from_rs_local_out[j].rs2_value = prf_data[from_rs_local_in[j].rs2_phy];
                 for (int i = 0; i < CDB_WIDTH; i++) begin
-                    if (PRF_FORWARDING[j][i]) begin
+                    // if (PRF_FORWARDING[j][i]) begin
                         if (cdb_local[i].valid && (cdb_local[i].rd_phy == from_rs_local_in[j].rs2_phy)) begin 
                             from_rs_local_out[j].rs2_value = cdb_local[i].rd_value;
                         end
-                    end
+                    // end
                 end
             end
         end
