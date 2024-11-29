@@ -34,11 +34,27 @@ package cpu_params;
     localparam unsigned     INT_RS_TYPE     = 1;
     localparam unsigned     INTM_RS_TYPE    = 0;
 
+    // Bypass Network
+    localparam  unsigned    NUM_RS      = 4; // Number of RS
+    localparam  unsigned    CDB_WIDTH   = 4; // Number of CDB, could be different from NUM_RS
+
+    localparam unsigned     RS_CDB_BYPASS[NUM_RS][CDB_WIDTH] =
+        '{'{1, 1, 0, 1}, // INTRS
+          '{1, 1, 0, 1}, // INTMRS
+          '{1, 1, 0, 1}, // BRRS
+          '{1, 1, 0, 1}  // MEMRS
+          };
+
+    localparam unsigned     PRF_FORWARDING[CDB_WIDTH][CDB_WIDTH] =
+        '{'{1, 1, 0, 1}, // FU_ALU
+          '{1, 1, 0, 1}, // FU_MDU
+          '{1, 1, 0, 1}, // FU_BR
+          '{1, 1, 0, 1}  // FU_AGU
+          };
+
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
-
-    localparam  unsigned    CDB_WIDTH   = 4;
 
     // DCache Parameters
     localparam  unsigned    D_OFFSET_IDX  = 5;

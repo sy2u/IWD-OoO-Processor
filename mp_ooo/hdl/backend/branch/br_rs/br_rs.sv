@@ -131,21 +131,20 @@ import int_rs_types::*;
         src2_valid       = '0;
         for (int i = 0; i < BRRS_DEPTH; i++) begin 
             if (!br_rs_available[(BRRS_IDX)'(unsigned'(i))]) begin 
-                
+
                 src1_valid = br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs1_valid;
-                for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                        src1_valid = 1'b1;
-                    end
-                end
-                    
                 src2_valid = br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs2_valid;
                 for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                        src2_valid = 1'b1;
+                    if (RS_CDB_BYPASS[2][k]) begin
+                        if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
+                            src1_valid = 1'b1;
+                        end
+                        if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
+                            src2_valid = 1'b1;
+                        end
                     end
                 end
-                    
+
                 if (src1_valid && src2_valid) begin 
                     int_rs_issue_en = '1;
                     int_rs_issue_idx = (BRRS_IDX)'(unsigned'(i));
