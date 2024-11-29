@@ -160,20 +160,21 @@ import int_rs_types::*;
     // Instantiation:
     //---------------------------------------------------------------------------------
 
-    localparam                  NUM_CYC = 10;        // minimal possible delay
+    localparam                  NUM_CYC_DIV = 10;        // minimal possible delay
+    localparam                  NUM_CYC_MUL = 3;        // minimal possible delay
     localparam                  TC_MODE = 1;        // signed
     localparam                  RST_MODE = 1;       // sync mode
     localparam                  INPUT_MODE = 0;     // input must be stable during the computation
     localparam                  OUTPUT_MODE = 0;    // output must be stable during the computation
     localparam                  EARLY_START = 0;    // start computation in cycle 0
 
-    DW_mult_seq #(A_WIDTH, B_WIDTH, TC_MODE, NUM_CYC, 
+    DW_mult_seq #(A_WIDTH, B_WIDTH, TC_MODE, NUM_CYC_MUL, 
                 RST_MODE, INPUT_MODE, OUTPUT_MODE, EARLY_START)
     signed_mul (.clk(clk), .rst_n(~rst), .hold('0),
                 .start(mul_start), .a(a), .b(b),
                 .complete(mul_complete), .product(product) );
 
-    DW_div_seq #(A_WIDTH, B_WIDTH, TC_MODE, NUM_CYC,
+    DW_div_seq #(A_WIDTH, B_WIDTH, TC_MODE, NUM_CYC_DIV,
                 RST_MODE, INPUT_MODE, OUTPUT_MODE, EARLY_START)
     divider (.clk(clk), .rst_n(~rst), .hold('0),
             .start(div_start), .a(a), .b(b),

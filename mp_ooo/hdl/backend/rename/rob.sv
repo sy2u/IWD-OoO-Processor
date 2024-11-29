@@ -11,7 +11,8 @@ import rvfi_types::*;
     rob_rrf_itf.rob             to_rrf,
     cdb_itf.rob                 cdb[CDB_WIDTH],
     cb_rob_itf.rob              from_cb,
-    ls_rob_itf.rob              from_lsq
+    stq_rob_itf.rob             from_stq,
+    ldq_rob_itf.rob             from_ldq
 );
 
     typedef struct packed {
@@ -35,9 +36,9 @@ import rvfi_types::*;
     logic   [ROB_PTR_IDX:0]     tail_ptr_reg;
 
     logic   [ROB_PTR_IDX-1:0]   head_ptr;
-    logic                   head_ptr_flag;
+    logic                       head_ptr_flag;
     logic   [ROB_PTR_IDX-1:0]   tail_ptr;
-    logic                   tail_ptr_flag;
+    logic                       tail_ptr_flag;
 
     logic                   full;
     logic                   empty;
@@ -56,7 +57,7 @@ import rvfi_types::*;
     assign {head_ptr_flag, head_ptr} = head_ptr_reg;
     assign {tail_ptr_flag, tail_ptr} = tail_ptr_reg;
 
-    assign from_lsq.rob_head = head_ptr;
+    assign from_stq.rob_head = head_ptr;
 
     assign full = (tail_ptr == head_ptr) && (tail_ptr_flag != head_ptr_flag);
     assign empty = (tail_ptr == head_ptr) && (tail_ptr_flag == head_ptr_flag);
@@ -111,19 +112,30 @@ import rvfi_types::*;
 
             for (int i = 0; i < CDB_WIDTH; i++) begin   // snoop CDB
                 if (cdb_rob[i].valid) begin
-                    rob_arr[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].ready <= 1'b1;
+                    rob_arr   [cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].ready <= 1'b1;
                     rvfi_array[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].rd_wdata <= cdb_rob[i].rd_value;
                     rvfi_array[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].rs1_rdata <= cdb_rob[i].rs1_value_dbg;
                     rvfi_array[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].rs2_rdata <= cdb_rob[i].rs2_value_dbg;
                 end
             end
 
-            if (from_lsq.valid) begin
-                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_addr <= from_lsq.addr_dbg;
-                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_rmask <= from_lsq.rmask_dbg;
-                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_wmask <= from_lsq.wmask_dbg;
-                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_rdata <= from_lsq.rdata_dbg;
-                rvfi_array[from_lsq.rob_id / ID_WIDTH][from_lsq.rob_id % ID_WIDTH].mem_wdata <= from_lsq.wdata_dbg;
+            if (from_stq.valid) begin
+                rob_arr   [from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].ready <= 1'b1;
+                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].rs1_rdata <= from_stq.rs1_value_dbg;
+                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].rs2_rdata <= from_stq.rs2_value_dbg;
+                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_addr <= from_stq.addr_dbg;
+                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_rmask <= '0;
+                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_wmask <= from_stq.wmask_dbg;
+                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_rdata <= '0;
+                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_wdata <= from_stq.wdata_dbg;
+            end
+
+            if (from_ldq.valid) begin
+                rvfi_array[from_ldq.rob_id / ID_WIDTH][from_ldq.rob_id % ID_WIDTH].mem_addr <= from_ldq.addr_dbg;
+                rvfi_array[from_ldq.rob_id / ID_WIDTH][from_ldq.rob_id % ID_WIDTH].mem_rmask <= from_ldq.rmask_dbg;
+                rvfi_array[from_ldq.rob_id / ID_WIDTH][from_ldq.rob_id % ID_WIDTH].mem_wmask <= '0;
+                rvfi_array[from_ldq.rob_id / ID_WIDTH][from_ldq.rob_id % ID_WIDTH].mem_rdata <= from_ldq.rdata_dbg;
+                rvfi_array[from_ldq.rob_id / ID_WIDTH][from_ldq.rob_id % ID_WIDTH].mem_wdata <= '0;
             end
         end
     end

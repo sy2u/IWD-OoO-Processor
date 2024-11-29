@@ -22,9 +22,35 @@ package cpu_params;
     localparam unsigned     BRRS_IDX        = $clog2(BRRS_DEPTH);
     localparam  unsigned    CB_DEPTH        = 8;
 
-    localparam unsigned     MEMRS_DEPTH     = 8;
-    localparam unsigned     MEMRS_IDX       = $clog2(MEMRS_DEPTH);
+    localparam  unsigned    MEMRS_DEPTH     = 8;
+    localparam  unsigned    MEMRS_IDX       = $clog2(MEMRS_DEPTH);
     localparam  unsigned    LSQ_DEPTH       = 8;
+    localparam  unsigned    LDQ_DEPTH       = 8;
+    localparam  unsigned    LDQ_IDX         = $clog2(LDQ_DEPTH);
+    localparam  unsigned    STQ_DEPTH       = 8;
+    localparam  unsigned    STQ_IDX         = $clog2(STQ_DEPTH);
+
+    // Reservation Station Type: 0 - Normal, 1 - Age-ordered
+    localparam unsigned     INT_RS_TYPE     = 1;
+    localparam unsigned     INTM_RS_TYPE    = 0;
+
+    // Bypass Network
+    localparam  unsigned    NUM_RS      = 4; // Number of RS
+    localparam  unsigned    CDB_WIDTH   = 4; // Number of CDB, could be different from NUM_RS
+
+    localparam logic        RS_CDB_BYPASS[NUM_RS][CDB_WIDTH] =
+        '{'{1, 1, 0, 1}, // INTRS
+          '{1, 1, 0, 1}, // INTMRS
+          '{1, 1, 0, 1}, // BRRS
+          '{1, 1, 0, 1}  // MEMRS
+          };
+
+    localparam logic        PRF_FORWARDING[CDB_WIDTH][CDB_WIDTH] =
+        '{'{1, 1, 0, 1}, // FU_ALU
+          '{1, 1, 0, 1}, // FU_MDU
+          '{1, 1, 0, 1}, // FU_BR
+          '{1, 1, 0, 1}  // FU_AGU
+          };
 
     localparam  unsigned    GHR_DEPTH       = 30;
     localparam  unsigned    PHT_IDX         = 10;
@@ -38,7 +64,13 @@ package cpu_params;
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
 
-    localparam  unsigned    CDB_WIDTH   = 4;
+    // DCache Parameters
+    localparam  unsigned    D_OFFSET_IDX  = 5;
+    localparam  unsigned    D_SET_IDX     = 5;
+    localparam  unsigned    D_TAG_IDX     = 22;
+    localparam  unsigned    D_NUM_WAYS    = 4;
+    localparam  unsigned    D_PLRU_BITS   = D_NUM_WAYS - 1;
+    localparam  unsigned    D_WAY_BITS    = $clog2(D_NUM_WAYS);
 
 endpackage
 
@@ -181,19 +213,16 @@ package uop_types;
 import cpu_params::*;
 
     typedef enum logic [0:0] {
-        OP1_X       = 1'bx,
         OP1_RS1     = 1'b0,
         OP1_ZERO    = 1'b1
     } op1_sel_t;
 
     typedef enum logic [0:0] {
-        OP2_X       = 1'bx,
         OP2_RS2     = 1'b0,
         OP2_IMM     = 1'b1
     } op2_sel_t;
 
     typedef enum logic [1:0] {
-        RS_X        = 2'bxx,
         RS_INT      = 2'b00,
         RS_INTM     = 2'b01,
         RS_BR       = 2'b10,
@@ -201,7 +230,6 @@ import cpu_params::*;
     } rs_type_t;
 
     typedef enum logic [1:0] {
-        FU_X        = 2'bxx,
         FU_ALU      = 2'b00,
         FU_MDU      = 2'b01,
         FU_BR       = 2'b10,
@@ -263,11 +291,11 @@ import cpu_params::*;
         logic   [31:0]          pc;
         logic   [31:0]          inst;
 
-        rs_type_t               rs_type;    // Reservation Station type
-        fu_type_t               fu_type;    // Functional Unit type
+        logic   [1:0]           rs_type;    // Reservation Station type
+        logic   [1:0]           fu_type;    // Functional Unit type
         logic   [3:0]           fu_opcode;  // FU opcode
-        op1_sel_t               op1_sel;    // Operand 1 select
-        op2_sel_t               op2_sel;    // Operand 2 select
+        logic   [0:0]           op1_sel;    // Operand 1 select
+        logic   [0:0]           op2_sel;    // Operand 2 select
 
         logic   [PRF_IDX-1:0]   rd_phy;     // Destination register (physical)
         logic   [PRF_IDX-1:0]   rs1_phy;    // Source register 1 (physical)
@@ -305,14 +333,15 @@ package icache_types;
 endpackage
 
 package dcache_types;
+import cpu_params::*;
 
     typedef struct packed {
         logic   [3:0]   rmask;
         logic   [3:0]   wmask;
         logic   [31:0]  wdata;
-        logic   [4:0]   offset;
-        logic   [3:0]   set_i;
-        logic   [22:0]  tag;
+        logic   [D_OFFSET_IDX-1:0]   offset;
+        logic   [D_SET_IDX-1:0]   set_i;
+        logic   [D_TAG_IDX-1:0]  tag;
     } dcache_stage_reg_t;
 
     typedef enum logic [1:0] {
@@ -347,6 +376,20 @@ import cpu_params::*;
 import uop_types::*;
 
     typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [0:0]           op1_sel;
+        logic   [0:0]           op2_sel;
+        logic   [31:0]          imm;
+        logic   [3:0]           fu_opcode;
+    } int_rs_entry_t;
+
+    typedef struct packed {
         logic   [PRF_IDX-1:0]   rd_phy;
         logic                   valid;
     } cdb_rs_t;
@@ -357,10 +400,9 @@ import uop_types::*;
         logic   [PRF_IDX-1:0]   rd_phy;
 
         logic   [3:0]           fu_opcode;  
-        op1_sel_t               op1_sel;    
-        op2_sel_t               op2_sel;    
+        logic   [0:0]           op1_sel;    
+        logic   [0:0]           op2_sel;    
 
-        logic   [31:0]          pc;
         logic   [31:0]          imm;
         logic   [31:0]          rs1_value;
         logic   [31:0]          rs2_value;
@@ -384,7 +426,6 @@ import uop_types::*;
 
     } fu_br_reg_t;
 
-
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
         logic   [ARF_IDX-1:0]   rd_arch;
@@ -402,7 +443,19 @@ import uop_types::*;
         logic   [31:0]          rs1_value;
         logic   [31:0]          rs2_value;
     } intm_rs_reg_t;
-    
+
+    typedef enum logic [1:0] {  
+        PREV        = 2'b00,
+        SELF        = 2'b10,
+        PUSH_IN     = 2'b11
+    } rs_update_sel_t;
+
+    typedef struct packed{
+        logic                   valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+    } bypass_network_t;
+
 endpackage
 
 package lsu_types;
@@ -443,6 +496,47 @@ import cpu_params::*;
         logic   [31:0]          rs1_value_dbg;
         logic   [31:0]          rs2_value_dbg;
     } lsq_entry_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic                   addr_valid;
+        logic   [3:0]           fu_opcode;
+        logic   [31:0]          addr;
+        logic   [3:0]           mask;
+        logic   [31:0]          wdata;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
+    } stq_entry_t;
+
+    typedef struct packed {
+        logic                   valid; // If the entry is valid
+        logic                   addr_valid; // If the addr and mask is ready
+        logic                   load_exec; // If the load is executed
+        logic                   load_success; // If the load is successful
+        logic   [STQ_IDX:0]     track_stq_ptr;
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [3:0]           fu_opcode;
+        logic   [31:0]          addr;
+        logic   [3:0]           mask;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
+    } ldq_entry_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [1:0]           addr_2;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [3:0]           fu_opcode;
+        logic   [31:0]          addr_dbg;
+        logic   [3:0]           mask_dbg;
+        logic   [31:0]          rs1_value_dbg;
+        logic   [31:0]          rs2_value_dbg;
+        // logic                   forward_en;
+        // logic   [31:0]          forward_wdata;
+    } load_stage_reg_t;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
@@ -489,14 +583,5 @@ import cpu_params::*;
         logic   [31:0]          mem_rdata;
         logic   [31:0]          mem_wdata;
     } rvfi_dbg_t;
-
-endpackage
-
-package arbiter_types;
-
-    typedef enum logic {
-        PASS_THRU   =   1'b0,
-        WAIT_WRITE  =   1'b1
-    } arbiter_t;
 
 endpackage

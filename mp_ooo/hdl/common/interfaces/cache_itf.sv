@@ -26,3 +26,59 @@ interface dmem_itf();
     );
 
 endinterface
+
+interface stq_dmem_itf();
+
+    logic           valid;
+    logic           ready;
+    logic   [31:0]  addr;
+    logic   [3:0]   wmask;
+    logic   [31:0]  wdata;
+
+    modport stq (
+        output              valid,
+        input               ready,
+        output              addr,
+        output              wmask,
+        output              wdata
+    );
+
+    modport cache (
+        input               valid,
+        output              ready,
+        input               addr,
+        input               wmask,
+        input               wdata
+    );
+
+endinterface
+
+interface ldq_dmem_itf();
+
+    logic           valid;
+    logic           ready;
+    logic   [31:0]  addr;
+    logic   [3:0]   rmask;
+
+    logic           resp;
+    logic   [31:0]  rdata;
+
+    modport ldq (
+        output              valid,
+        input               ready,
+        output              addr,
+        output              rmask,
+        input               resp,
+        input               rdata
+    );
+
+    modport cache (
+        input               valid,
+        output              ready,
+        input               addr,
+        input               rmask,
+        output              resp,
+        output              rdata
+    );
+
+endinterface

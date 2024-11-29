@@ -12,7 +12,7 @@ import uop_types::*;
     output  logic               nxt_valid,
     input   logic               nxt_ready,
     output  logic               uops_valid[ID_WIDTH],
-    output  rs_type_t           rs_type[ID_WIDTH],
+    output  logic   [1:0]       rs_type[ID_WIDTH],
     output  uop_t               uops[ID_WIDTH],
 
     // RAT
@@ -26,10 +26,10 @@ import uop_types::*;
 
 );
     logic                       uops_raw_valid[ID_WIDTH];
-    fu_type_t                   fu_type[ID_WIDTH];
+    logic   [1:0]               fu_type[ID_WIDTH];
     logic   [3:0]               fu_opcode[ID_WIDTH];
-    op1_sel_t                   op1_sel[ID_WIDTH];
-    op2_sel_t                   op2_sel[ID_WIDTH];
+    logic   [0:0]               op1_sel[ID_WIDTH];
+    logic   [0:0]               op2_sel[ID_WIDTH];
     logic   [31:0]              imm[ID_WIDTH];
     logic   [ARF_IDX-1:0]       rd_arch[ID_WIDTH];
     logic                       rd_en[ID_WIDTH];
@@ -144,6 +144,12 @@ import uop_types::*;
     end endgenerate
 
     generate if (ID_WIDTH == 1) begin : filter_1way
+        logic   garbage_clk;
+        logic   garbage_rst;
+        
+        assign garbage_clk = clk;
+        assign garbage_rst = rst;
+
         assign uops_valid[0] = uops_raw_valid[0];
         assign from_fifo.ready = to_fl.ready && to_rob.ready && nxt_ready;
     end endgenerate

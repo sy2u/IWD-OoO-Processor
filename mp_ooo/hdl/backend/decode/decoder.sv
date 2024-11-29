@@ -5,11 +5,11 @@ import rv32i_types::*;
 (
     input   logic   [31:0]          inst,
 
-    output  rs_type_t               rs_type,
-    output  fu_type_t               fu_type,
+    output  logic   [1:0]           rs_type,
+    output  logic   [1:0]           fu_type,
     output  logic   [3:0]           fu_opcode,
-    output  op1_sel_t               op1_sel,
-    output  op2_sel_t               op2_sel,
+    output  logic   [0:0]           op1_sel,
+    output  logic   [0:0]           op2_sel,
     output  logic   [31:0]          imm,
     output  logic   [ARF_IDX-1:0]   rd_arch,
     output  logic                   rd_en,

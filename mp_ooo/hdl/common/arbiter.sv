@@ -1,5 +1,4 @@
-module arbiter 
-import arbiter_types::*;
+module arbiter
 (
     input   logic                   clk,
     input   logic                   rst,
@@ -9,6 +8,10 @@ import arbiter_types::*;
     cacheline_itf.master            adapter
 );
 
+    typedef enum logic {
+        PASS_THRU   =   1'b0,
+        WAIT_WRITE  =   1'b1
+    } arbiter_t;
 
     //---------------------------------------------------------------------------------
     // Record Write Info

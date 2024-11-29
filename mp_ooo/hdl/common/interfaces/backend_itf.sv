@@ -334,6 +334,100 @@ import cpu_params::*;
 
 endinterface
 
+interface ldq_stq_itf();
+import cpu_params::*;
+
+    logic   [STQ_IDX:0]     stq_tail; // Index from 1, 0 means empty
+    logic                   stq_deq;
+    logic   [STQ_IDX:0]     ldq_tracker[LDQ_DEPTH];
+    logic   [31:0]          ldq_addr[LDQ_DEPTH];
+    // logic   [3:0]           ldq_fu_opcode[LDQ_DEPTH];
+    logic                   has_conflicting_store[LDQ_DEPTH];
+    // logic                   forward_en[LDQ_DEPTH];
+    // logic   [31:0]          forward_wdata[LDQ_DEPTH];
+
+    modport ldq (
+        input               stq_tail,
+        input               stq_deq,
+        output              ldq_tracker,
+        output              ldq_addr,
+        input               has_conflicting_store
+    );
+
+    modport stq (
+        output              stq_tail,
+        output              stq_deq,
+        input               ldq_tracker,
+        input               ldq_addr,
+        output              has_conflicting_store
+    );
+
+endinterface
+
+
+interface ldq_rob_itf();
+import cpu_params::*;
+
+    logic   [ROB_IDX-1:0]       rob_id;
+    logic   [31:0]              addr_dbg;
+    logic   [3:0]               rmask_dbg;
+    logic   [31:0]              rdata_dbg;
+    logic                       valid;
+
+    modport ldq (
+        output              rob_id,
+        output              addr_dbg,
+        output              rmask_dbg,
+        output              rdata_dbg,
+        output              valid
+    );
+
+    modport rob (
+        input               rob_id,
+        input               addr_dbg,
+        input               rmask_dbg,
+        input               rdata_dbg,
+        input               valid
+    );
+
+endinterface
+
+interface stq_rob_itf();
+import cpu_params::*;
+
+    logic   [ROB_PTR_IDX-1:0]   rob_head;
+    logic   [ROB_IDX-1:0]       rob_id;
+    logic   [31:0]              addr_dbg;
+    logic   [3:0]               wmask_dbg;
+    logic   [31:0]              wdata_dbg;
+    logic   [31:0]              rs1_value_dbg;
+    logic   [31:0]              rs2_value_dbg;
+    logic                       valid;
+
+    modport stq (
+        input               rob_head,
+        output              rob_id,
+        output              addr_dbg,
+        output              wmask_dbg,
+        output              wdata_dbg,
+        output              rs1_value_dbg,
+        output              rs2_value_dbg,
+        output              valid
+    );
+
+    modport rob (
+        output              rob_head,
+        input               rob_id,
+        input               addr_dbg,
+        input               wmask_dbg,
+        input               wdata_dbg,
+        input               rs1_value_dbg,
+        input               rs2_value_dbg,
+        input               valid
+    );
+
+endinterface
+
 interface rs_prf_itf();
 import cpu_params::*;
 

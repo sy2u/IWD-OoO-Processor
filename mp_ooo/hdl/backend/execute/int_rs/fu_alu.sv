@@ -8,6 +8,7 @@ import int_rs_types::*;
     input   logic               int_rs_valid,
     output  logic               fu_alu_ready,
     input   fu_alu_reg_t        fu_alu_reg_in,
+    output  bypass_network_t    bypass,
     cdb_itf.fu                  cdb
 );
 
@@ -87,6 +88,10 @@ import int_rs_types::*;
 	    default : alu_out = 'x;
         endcase
     end
+
+    assign bypass.valid     = fu_alu_valid;
+    assign bypass.rd_phy    = fu_alu_reg_out.rd_phy;
+    assign bypass.rd_value  = alu_out;
 
     ///////////////////
     // FU_ALU TO CDB //
