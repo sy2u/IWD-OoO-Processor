@@ -38,14 +38,14 @@ package cpu_params;
     localparam  unsigned    NUM_RS      = 4; // Number of RS
     localparam  unsigned    CDB_WIDTH   = 4; // Number of CDB, could be different from NUM_RS
 
-    localparam unsigned     RS_CDB_BYPASS[NUM_RS][CDB_WIDTH] =
+    localparam logic        RS_CDB_BYPASS[NUM_RS][CDB_WIDTH] =
         '{'{1, 1, 0, 1}, // INTRS
           '{1, 1, 0, 1}, // INTMRS
           '{1, 1, 0, 1}, // BRRS
           '{1, 1, 0, 1}  // MEMRS
           };
 
-    localparam unsigned     PRF_FORWARDING[CDB_WIDTH][CDB_WIDTH] =
+    localparam logic        PRF_FORWARDING[CDB_WIDTH][CDB_WIDTH] =
         '{'{1, 1, 0, 1}, // FU_ALU
           '{1, 1, 0, 1}, // FU_MDU
           '{1, 1, 0, 1}, // FU_BR
