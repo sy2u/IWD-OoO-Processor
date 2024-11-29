@@ -338,10 +338,10 @@ import cpu_params::*;
     logic                   stq_deq;
     logic   [STQ_IDX:0]     ldq_tracker[LDQ_DEPTH];
     logic   [31:0]          ldq_addr[LDQ_DEPTH];
-    logic   [3:0]           ldq_fu_opcode[LDQ_DEPTH];
+    // logic   [3:0]           ldq_fu_opcode[LDQ_DEPTH];
     logic                   has_conflicting_store[LDQ_DEPTH];
-    logic                   forward_en[LDQ_DEPTH];
-    logic   [31:0]          forward_wdata[LDQ_DEPTH];
+    // logic                   forward_en[LDQ_DEPTH];
+    // logic   [31:0]          forward_wdata[LDQ_DEPTH];
 
     modport ldq (
         input               stq_tail,

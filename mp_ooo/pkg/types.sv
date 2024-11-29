@@ -501,8 +501,8 @@ import cpu_params::*;
         logic   [3:0]           mask_dbg;
         logic   [31:0]          rs1_value_dbg;
         logic   [31:0]          rs2_value_dbg;
-        logic                   forward_en;
-        logic   [31:0]          forward_wdata;
+        // logic                   forward_en;
+        // logic   [31:0]          forward_wdata;
     } load_stage_reg_t;
 
     typedef struct packed {
