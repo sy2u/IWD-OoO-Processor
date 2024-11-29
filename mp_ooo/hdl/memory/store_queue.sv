@@ -145,7 +145,7 @@ import lsu_types::*;
         for (int i = 0; i < LDQ_DEPTH; i++) begin
             same_addr[i] = '0;
             for (int j = 0; j < STQ_DEPTH; j++) begin
-                if (~fifo[j].addr_valid || (fifo[j].addr == from_ldq.ldq_addr[i])) begin
+                if (~fifo[j].addr_valid || (fifo[j].addr[31:2] == from_ldq.ldq_addr[i][31:2])) begin
                     same_addr[i][j] = 1'b1;
                 end
             end
