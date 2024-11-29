@@ -59,7 +59,7 @@ import cpu_params::*;
         for (int i = 0; i < IF_WIDTH; i++) begin
             if ((unsigned'(i) >= ((pc % IF_BLK_SIZE) / 4)) & predict_taken[i]) begin 
                 predict_taken_en = 1'b1;
-                predict_taken_idx = (IF_WIDTH_IDX)'(i);
+                predict_taken_idx = (IF_WIDTH_IDX)'(unsigned'(i));
                 break;
             end
         end
@@ -122,7 +122,7 @@ import cpu_params::*;
     generate if (ID_WIDTH > 1) begin
         always_comb begin
             for (int i = 0; i < ID_WIDTH; i++) begin
-                to_fifo.packet.valid[i] = (~(predict_taken_en & ((IF_WIDTH_IDX)'(i) > predict_taken_idx))) & (unsigned'(i) >= ((pc % IF_BLK_SIZE) / 4));
+                to_fifo.packet.valid[i] = (~(predict_taken_en & ((IF_WIDTH_IDX)'(unsigned'(i)) > predict_taken_idx))) & (unsigned'(i) >= ((pc % IF_BLK_SIZE) / 4));
             end
         end
     end endgenerate
