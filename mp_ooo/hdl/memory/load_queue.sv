@@ -114,6 +114,17 @@ import lsu_types::*;
     always_comb begin
         issue_en  = '0;
         issue_idx = '0;
+        // First consider forwarding from STQ, this requires no interaction with DCache
+        // for (int unsigned i = 0; i < LDQ_DEPTH; i++) begin
+        //     if (ldq_arr[i].valid && ldq_arr[i].addr_valid) begin
+        //         if ((ldq_arr[i].track_stq_ptr != '0) && from_stq.has_conflicting_store[i] && from_stq.forward_en[i]) begin
+        //             issue_en = 1'b1;
+        //             issue_idx = (LDQ_IDX)'(i);
+        //             break;
+        //         end
+        //     end
+        // end
+        // Then consider the case where there is no conflicting store
         for (int unsigned i = 0; i < LDQ_DEPTH; i++) begin
             if (ldq_arr[i].valid && ldq_arr[i].addr_valid) begin
                 // if (ldq_arr[i].track_stq_ptr == '0) begin
@@ -154,14 +165,18 @@ import lsu_types::*;
     logic   [1:0]           addr_2;
     assign addr_2 = load_stage_reg.addr_2;
 
+    logic   [31:0]  dmem_rdata;
     logic   [31:0]  dmem_rdata_wb;
+
+    assign dmem_rdata = dmem.rdata;
+
     always_comb begin
         unique case (load_stage_reg.fu_opcode)
-            MEM_LB : dmem_rdata_wb = {{24{dmem.rdata[7 +8 *addr_2[1:0]]}}, dmem.rdata[8 *addr_2[1:0] +: 8 ]};
-            MEM_LBU: dmem_rdata_wb = {{24{1'b0}}                         , dmem.rdata[8 *addr_2[1:0] +: 8 ]};
-            MEM_LH : dmem_rdata_wb = {{16{dmem.rdata[15+16*addr_2[1]  ]}}, dmem.rdata[16*addr_2[1]   +: 16]};
-            MEM_LHU: dmem_rdata_wb = {{16{1'b0}}                         , dmem.rdata[16*addr_2[1]   +: 16]};
-            MEM_LW : dmem_rdata_wb = dmem.rdata;
+            MEM_LB : dmem_rdata_wb = {{24{dmem_rdata[7 +8 *addr_2[1:0]]}}, dmem_rdata[8 *addr_2[1:0] +: 8 ]};
+            MEM_LBU: dmem_rdata_wb = {{24{1'b0}}                         , dmem_rdata[8 *addr_2[1:0] +: 8 ]};
+            MEM_LH : dmem_rdata_wb = {{16{dmem_rdata[15+16*addr_2[1]  ]}}, dmem_rdata[16*addr_2[1]   +: 16]};
+            MEM_LHU: dmem_rdata_wb = {{16{1'b0}}                         , dmem_rdata[16*addr_2[1]   +: 16]};
+            MEM_LW : dmem_rdata_wb = dmem_rdata;
             default: dmem_rdata_wb = 'x;
         endcase
     end
@@ -182,6 +197,6 @@ import lsu_types::*;
     assign to_rob.rob_id    = load_stage_reg.rob_id;
     assign to_rob.addr_dbg  = load_stage_reg.addr_dbg;
     assign to_rob.rmask_dbg = load_stage_reg.mask_dbg;
-    assign to_rob.rdata_dbg = dmem.rdata;
+    assign to_rob.rdata_dbg = dmem_rdata;
 
 endmodule

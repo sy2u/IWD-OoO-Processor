@@ -478,6 +478,8 @@ import cpu_params::*;
     typedef struct packed {
         logic                   valid; // If the entry is valid
         logic                   addr_valid; // If the addr and mask is ready
+        logic                   load_exec; // If the load is executed
+        logic                   load_success; // If the load is successful
         logic   [STQ_IDX:0]     track_stq_ptr;
         logic   [ROB_IDX-1:0]   rob_id;
         logic   [3:0]           fu_opcode;
@@ -499,6 +501,8 @@ import cpu_params::*;
         logic   [3:0]           mask_dbg;
         logic   [31:0]          rs1_value_dbg;
         logic   [31:0]          rs2_value_dbg;
+        logic                   forward_en;
+        logic   [31:0]          forward_wdata;
     } load_stage_reg_t;
 
     typedef struct packed {
