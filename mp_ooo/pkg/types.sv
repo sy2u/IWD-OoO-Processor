@@ -38,19 +38,19 @@ package cpu_params;
     localparam  unsigned    NUM_RS      = 4; // Number of RS
     localparam  unsigned    CDB_WIDTH   = 4; // Number of CDB, could be different from NUM_RS
 
-    localparam logic        RS_CDB_BYPASS[NUM_RS][CDB_WIDTH] =
-        '{'{1, 1, 0, 1}, // INTRS
-          '{1, 1, 0, 1}, // INTMRS
-          '{1, 1, 0, 1}, // BRRS
-          '{1, 1, 0, 1}  // MEMRS
-          };
+    // localparam logic        RS_CDB_BYPASS[NUM_RS][CDB_WIDTH] =
+    //     '{'{1, 1, 1, 1}, // INTRS
+    //       '{1, 1, 1, 1}, // INTMRS
+    //       '{1, 1, 1, 1}, // BRRS
+    //       '{1, 1, 1, 1}  // MEMRS
+    //       };
 
-    localparam logic        PRF_FORWARDING[CDB_WIDTH][CDB_WIDTH] =
-        '{'{1, 1, 0, 1}, // FU_ALU
-          '{1, 1, 0, 1}, // FU_MDU
-          '{1, 1, 0, 1}, // FU_BR
-          '{1, 1, 0, 1}  // FU_AGU
-          };
+    // localparam logic        PRF_FORWARDING[CDB_WIDTH][CDB_WIDTH] =
+    //     '{'{1, 1, 1, 1}, // FU_ALU
+    //       '{1, 1, 1, 1}, // FU_MDU
+    //       '{1, 1, 1, 1}, // FU_BR
+    //       '{1, 1, 1, 1}  // FU_AGU
+    //       };
 
     localparam  unsigned    GHR_DEPTH       = 30;
     localparam  unsigned    PHT_IDX         = 10;
@@ -388,6 +388,21 @@ import uop_types::*;
         logic   [31:0]          imm;
         logic   [3:0]           fu_opcode;
     } int_rs_entry_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [31:0]          imm;
+        logic   [31:0]          pc;
+        logic   [3:0]           fu_opcode;
+        logic                   predict_taken;
+        logic   [31:0]          predict_target;
+    } br_rs_entry_t;
 
     typedef struct packed {
         logic   [PRF_IDX-1:0]   rd_phy;

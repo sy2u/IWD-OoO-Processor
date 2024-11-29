@@ -99,7 +99,7 @@ import int_rs_types::*;
             src2_ready = entry_reg.rs2_valid;
 
             for (int k = 0; k < CDB_WIDTH; k++) begin
-                if (RS_CDB_BYPASS[0][k]) begin
+                // if (RS_CDB_BYPASS[0][k]) begin
                     if (cdb_rs[k].valid) begin
                         if (entry_reg.rs1_phy == cdb_rs[k].rd_phy) begin
                             src1_ready = 1'b1;
@@ -108,7 +108,7 @@ import int_rs_types::*;
                             src2_ready = 1'b1;
                         end
                     end
-                end
+                // end
             end
 
             request = src1_ready && src2_ready;
