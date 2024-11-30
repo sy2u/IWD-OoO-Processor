@@ -16,4 +16,6 @@ import lsu_types::*;
     assign to_ldq.valid    = from_ds.valid && to_mem_rs.ready && to_stq.ready;
     assign to_ldq.uop      = from_ds.uop;
 
+    assign from_ds.ready = to_mem_rs.ready && to_ldq.ready && to_stq.ready;
+
 endmodule
