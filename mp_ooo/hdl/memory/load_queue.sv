@@ -190,26 +190,32 @@ import lsu_types::*;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic   [ARF_IDX-1:0]   rd_arch;
         logic   [31:0]          rd_value;
+    } ldq_cdb_reg_t;
+
+    typedef struct packed {
         logic   [31:0]          rs1_value_dbg;
         logic   [31:0]          rs2_value_dbg;
         logic   [31:0]          addr_dbg;
         logic   [3:0]           mask_dbg;
         logic   [31:0]          rdata_dbg;
-    } ldq_cdb_reg_t;
+    } ldq_rvfi_reg_t;
 
     ldq_cdb_reg_t       cdb_reg_in;
     ldq_cdb_reg_t       cdb_reg_out;
+    ldq_rvfi_reg_t      rvfi_reg_in;
+    ldq_rvfi_reg_t      rvfi_reg_out;
     logic               cdb_out_valid;
+    logic               rvfi_out_valid;
 
     assign cdb_reg_in.rob_id        = load_stage_reg.rob_id;
     assign cdb_reg_in.rd_phy        = load_stage_reg.rd_phy;
     assign cdb_reg_in.rd_arch       = load_stage_reg.rd_arch;
     assign cdb_reg_in.rd_value      = dmem_rdata_wb;
-    assign cdb_reg_in.rs1_value_dbg = load_stage_reg.rs1_value_dbg;
-    assign cdb_reg_in.rs2_value_dbg = load_stage_reg.rs2_value_dbg;
-    assign cdb_reg_in.addr_dbg      = load_stage_reg.addr_dbg;
-    assign cdb_reg_in.mask_dbg      = load_stage_reg.mask_dbg;
-    assign cdb_reg_in.rdata_dbg     = dmem_rdata;
+    assign rvfi_reg_in.rs1_value_dbg = load_stage_reg.rs1_value_dbg;
+    assign rvfi_reg_in.rs2_value_dbg = load_stage_reg.rs2_value_dbg;
+    assign rvfi_reg_in.addr_dbg      = load_stage_reg.addr_dbg;
+    assign rvfi_reg_in.mask_dbg      = load_stage_reg.mask_dbg;
+    assign rvfi_reg_in.rdata_dbg     = dmem_rdata;
 
     // Option 1: Pipeline Register
     pipeline_reg #(
@@ -226,8 +232,23 @@ import lsu_types::*;
         .nxt_data   (cdb_reg_out)
     );
 
+    pipeline_reg #(
+        .DATA_T (ldq_rvfi_reg_t)
+    ) rvfi_reg (
+        .clk        (clk),
+        .rst        (rst),
+        .flush      (backend_flush),
+        .prv_valid  (dmem.resp),
+        .prv_ready  (),
+        .nxt_valid  (rvfi_out_valid),
+        .nxt_ready  (1'b1),
+        .prv_data   (rvfi_reg_in),
+        .nxt_data   (rvfi_reg_out)
+    );
+
     // Option 2: Pass-through (could be a bit bad for timing)
     // assign cdb_reg_out = cdb_reg_in;
+    // assign rvfi_reg_out = rvfi_reg_in;
     // assign cdb_out_valid = dmem.resp;
 
     assign cdb_out.valid         = cdb_out_valid;
@@ -235,13 +256,13 @@ import lsu_types::*;
     assign cdb_out.rd_phy        = cdb_reg_out.rd_phy;
     assign cdb_out.rd_arch       = cdb_reg_out.rd_arch;
     assign cdb_out.rd_value      = cdb_reg_out.rd_value;
-    assign cdb_out.rs1_value_dbg = cdb_reg_out.rs1_value_dbg;
-    assign cdb_out.rs2_value_dbg = cdb_reg_out.rs2_value_dbg;
+    assign cdb_out.rs1_value_dbg = rvfi_reg_out.rs1_value_dbg;
+    assign cdb_out.rs2_value_dbg = rvfi_reg_out.rs2_value_dbg;
 
-    assign to_rob.valid     = cdb_out_valid;
-    assign to_rob.rob_id    = cdb_reg_out.rob_id;
-    assign to_rob.addr_dbg  = cdb_reg_out.addr_dbg;
-    assign to_rob.rmask_dbg = cdb_reg_out.mask_dbg;
-    assign to_rob.rdata_dbg = cdb_reg_out.rdata_dbg;
+    assign to_rob.valid     = rvfi_out_valid;
+    assign to_rob.rob_id    = rvfi_reg_out.rob_id;
+    assign to_rob.addr_dbg  = rvfi_reg_out.addr_dbg;
+    assign to_rob.rmask_dbg = rvfi_reg_out.mask_dbg;
+    assign to_rob.rdata_dbg = rvfi_reg_out.rdata_dbg;
 
 endmodule
