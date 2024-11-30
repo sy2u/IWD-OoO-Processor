@@ -21,10 +21,10 @@ import int_rs_types::*;
     logic   [INTRS_DEPTH-1:0]           rs_grant;
     logic   [INTRS_DEPTH-1:0]           rs_push_en;
     logic   [INTRS_DEPTH-1:0]           rs_clear;
-    int_rs_entry_t  [INTRS_DEPTH-1:0]   rs_entry;
-    int_rs_entry_t  [INTRS_DEPTH-1:0]   rs_entry_in;
-    int_rs_entry_t  [INTRS_DEPTH-1:0]   rs_entry_out;
-    int_rs_entry_t  [ID_WIDTH-1:0]      from_ds_entry;
+    int_rs_entry_t                      rs_entry[INTRS_DEPTH];
+    int_rs_entry_t                      rs_entry_in[INTRS_DEPTH];
+    int_rs_entry_t                      rs_entry_out[INTRS_DEPTH];
+    int_rs_entry_t                      from_ds_entry[ID_WIDTH];
     int_rs_entry_t                      issued_entry;
 
     always_comb begin
@@ -196,15 +196,7 @@ import int_rs_types::*;
         end
     end
 
-    // One-hot mux to select the issued entry
-    one_hot_mux #(
-        .T          (int_rs_entry_t),
-        .NUM_INPUTS (INTRS_DEPTH)
-    ) ohm (
-        .data_in    (rs_entry),
-        .select     (rs_grant),
-        .data_out   (issued_entry)
-    );
+    assign issued_entry = rs_entry[int_rs_issue_idx];
 
     // ready logic
     logic   [INTRS_IDX:0]    n_available_slots;

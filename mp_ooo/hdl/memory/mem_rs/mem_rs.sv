@@ -46,19 +46,6 @@ import lsu_types::*;
     logic                 issue_en;
     logic [MEMRS_IDX-1:0] issue_idx;
 
-    // logic   push_or_issue_or_cdb;
-    // logic   cdb_valid_exist;
-    // assign push_or_issue_or_cdb = push_en || issue_en || cdb_valid_exist;
-    // always_comb begin
-    //     cdb_valid_exist = 1'b0;
-    //     for (int i = 0; i < CDB_WIDTH; i++) begin
-    //         if (cdb_rs[i].valid) begin
-    //             cdb_valid_exist = 1'b1;
-    //             break;
-    //         end
-    //     end
-    // end
-
     // rs array update
     always_ff @(posedge clk) begin 
         // rs array reset to all available, and top point to 0
