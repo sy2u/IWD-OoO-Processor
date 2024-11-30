@@ -260,7 +260,7 @@ import lsu_types::*;
     assign cdb_out.rs2_value_dbg = rvfi_reg_out.rs2_value_dbg;
 
     assign to_rob.valid     = rvfi_out_valid;
-    assign to_rob.rob_id    = rvfi_reg_out.rob_id;
+    assign to_rob.rob_id    = cdb_reg_out.rob_id;
     assign to_rob.addr_dbg  = rvfi_reg_out.addr_dbg;
     assign to_rob.rmask_dbg = rvfi_reg_out.mask_dbg;
     assign to_rob.rdata_dbg = rvfi_reg_out.rdata_dbg;
