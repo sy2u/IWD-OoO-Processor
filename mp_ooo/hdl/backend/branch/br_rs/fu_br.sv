@@ -157,21 +157,5 @@ import int_rs_types::*;
     assign br_cdb.branch_taken   = cdb_reg_branch_taken;
     assign br_cdb.valid          = br_cdb_valid;
 
-    //////////////////////////
-    // Performance Counters //
-    //////////////////////////
-
-    // logic   [31:0]              perf_br_cnt;
-    // logic   [31:0]              perf_br_mispredict_cnt;
-
-    // always_ff @(posedge clk) begin 
-    //     if (rst) begin 
-    //         perf_br_cnt             <= '0;
-    //         perf_br_mispredict_cnt  <= '0;
-    //     end else if (fu_br_valid) begin 
-    //         perf_br_cnt             <= perf_br_cnt + 1;
-    //         perf_br_mispredict_cnt  <= perf_br_mispredict_cnt + 32'(miss_predict);
-    //     end
-    // end
 
 endmodule

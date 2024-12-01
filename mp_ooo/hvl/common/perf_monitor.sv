@@ -8,16 +8,28 @@ module perf_monitor
     // Branch Performance Monitor //
     ////////////////////////////////
 
-    // logic   [31:0]              br_cnt;
-    // logic   [31:0]              br_mispredict_cnt;
-    // real                        br_mispredict_rate;
+    logic   [31:0]              br_cnt;
+    logic   [31:0]              br_mispredict_cnt;
+    logic                       fu_br_valid;
+    logic                       fu_br_mispredict;
+    real                        br_mispredict_rate;
 
-    // assign br_cnt = top_tb.dut.backend_i.branch_i.br_rs_i.fu_br_i.perf_br_cnt;
-    // assign br_mispredict_cnt = top_tb.dut.backend_i.branch_i.br_rs_i.fu_br_i.perf_br_mispredict_cnt;
+    assign fu_br_valid = top_tb.dut.backend_i.branch_i.br_rs_i.fu_br_i.fu_br_valid;
+    assign fu_br_mispredict = top_tb.dut.backend_i.branch_i.br_rs_i.fu_br_i.miss_predict;
 
-    // assign br_mispredict_rate = (br_cnt != 0) ? 
-    //                             real'(br_mispredict_cnt) / real'(br_cnt) : 
-    //                             0.0;
+    always_ff @(posedge clk) begin 
+        if (rst) begin 
+            br_cnt             <= '0;
+            br_mispredict_cnt  <= '0;
+        end else if (fu_br_valid) begin 
+            br_cnt             <= br_cnt + 1;
+            br_mispredict_cnt  <= br_mispredict_cnt + 32'(fu_br_mispredict);
+        end
+    end
+
+    assign br_mispredict_rate = (br_cnt != 0) ? 
+                                real'(br_mispredict_cnt) / real'(br_cnt) : 
+                                0.0;
 
     //////////////////////////////////
     // Dispatch Performance Monitor //
