@@ -83,9 +83,9 @@ import int_rs_types::*;
     logic   [INTRS_IDX-1:0] fu_issue_idx    [INT_ISSUE_WIDTH];
 
     // update mux logic
-    rs_update_sel_t         rs_update_sel   [INTRS_DEPTH];
-    logic [ID_WIDTH_IDX-1:0]rs_push_sel     [INTRS_DEPTH];
-    logic [ID_WIDTH_IDX-1:0]rs_compress_sel [INTRS_DEPTH];
+    rs_update_sel_t             rs_update_sel   [INTRS_DEPTH];
+    logic [ID_WIDTH_IDX-1:0]    rs_push_sel     [INTRS_DEPTH];
+    logic [INT_ISSUE_IDX-1:0]   rs_compress_sel [INTRS_DEPTH];
 
     ///////////////////////
     // Mux Select Logic  //
@@ -95,13 +95,16 @@ import int_rs_types::*;
             // init
             rs_push_sel[i] = 'x;
             rs_update_sel[i] = SELF;
-            rs_compress_sel[i] = 'x;
+            rs_compress_sel[i] = '0;
             // compress
             for( int j = 0; j < INT_ISSUE_WIDTH; j++ ) begin
-                if( int_rs_pop_en[j] ) begin
-                    if( (INTRS_IDX)'(unsigned'(i))>=fu_issue_idx[j] ) begin
-                        rs_update_sel[i] = NEXT;
-                        rs_compress_sel[i] = ID_WIDTH_IDX'(j+1);
+                if( rs_valid[i] & int_rs_pop_en[0] & (INTRS_IDX)'(unsigned'(i))>=fu_issue_idx[0] ) begin
+                    rs_update_sel[i] = NEXT;
+                    rs_compress_sel[i] = INT_ISSUE_IDX'(j);
+                    if(  j < INT_ISSUE_WIDTH-1  ) begin // handle corner case
+                        if( int_rs_pop_en[j+1] && INTRS_IDX'(i+j+1)==fu_issue_idx[j+1] ) begin
+                            rs_compress_sel[i] = rs_compress_sel[i] + INT_ISSUE_IDX'(1);
+                        end
                     end
                 end
             end
@@ -119,9 +122,9 @@ import int_rs_types::*;
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             unique case (rs_update_sel[i])
                 NEXT: begin
-                    if( i+rs_compress_sel[i] < INTRS_DEPTH ) begin
-                        rs_push_en[i] = rs_valid[i+rs_compress_sel[i]];
-                        rs_clear[i] = ~rs_valid[i+rs_compress_sel[i]];
+                    if( i+rs_compress_sel[i] < INTRS_DEPTH-1 ) begin
+                        rs_push_en[i] = rs_valid[i+rs_compress_sel[i]+1];
+                        rs_clear[i] = ~rs_valid[i+rs_compress_sel[i]+1];
                     end else begin
                         rs_push_en[i] = 1'b0;
                         rs_clear[i] = 1'b1;
@@ -147,8 +150,8 @@ import int_rs_types::*;
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             unique case (rs_update_sel[i])
                 NEXT: begin
-                    if (i < INTRS_DEPTH-1) begin
-                        rs_entry_in[i] = rs_entry_out[i+rs_compress_sel[i]];
+                    if (i+rs_compress_sel[i] < INTRS_DEPTH-1) begin
+                        rs_entry_in[i] = rs_entry_out[i+rs_compress_sel[i]+1];
                     end else begin
                         rs_entry_in[i] = 'x;
                     end
