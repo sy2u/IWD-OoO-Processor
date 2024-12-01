@@ -44,7 +44,9 @@ import int_rs_types::*;
     end
 
     generate for (genvar i = 0; i < INTRS_DEPTH; i++) begin : rs_array
-        int_rs_entry int_rs_entry_i (
+        rs_entry #(
+            .RS_ENTRY_T (int_rs_entry_t)
+        ) int_rs_entry_i (
             .clk            (clk),
             .rst            (rst),
 

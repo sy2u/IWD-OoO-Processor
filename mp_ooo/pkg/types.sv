@@ -397,6 +397,17 @@ import uop_types::*;
         logic                   rs2_valid;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [3:0]           fu_opcode;
+    } intm_rs_entry_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
         logic   [31:0]          imm;
         logic   [31:0]          pc;
         logic   [3:0]           fu_opcode;
@@ -405,6 +416,7 @@ import uop_types::*;
     } br_rs_entry_t;
 
     typedef struct packed {
+        logic   [31:0]          rd_value;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic                   valid;
     } cdb_rs_t;
@@ -480,6 +492,16 @@ import cpu_params::*;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic                   valid;
     } cdb_rs_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [31:0]          imm;
+        logic   [3:0]           fu_opcode;
+    } mem_rs_entry_t;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;

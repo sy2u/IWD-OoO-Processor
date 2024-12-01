@@ -1,7 +1,9 @@
-module int_rs_entry
+module rs_entry 
 import cpu_params::*;
 import uop_types::*;
-import int_rs_types::*;
+import int_rs_types::*; #(
+    parameter type RS_ENTRY_T = int_rs_entry_t
+)
 (
     input   logic               clk,
     input   logic               rst,
@@ -12,9 +14,9 @@ import int_rs_types::*;
     input   logic               grant, // permission to issue the entry
 
     input   logic               push_en, // push a new entry
-    input   int_rs_entry_t      entry_in, // new entry
-    output  int_rs_entry_t      entry_out, // current entry but with CDB forwarding (useful in shifting queues)
-    output  int_rs_entry_t      entry, // current entry
+    input   RS_ENTRY_T          entry_in, // new entry
+    output  RS_ENTRY_T          entry_out, // current entry but with CDB forwarding (useful in shifting queues)
+    output  RS_ENTRY_T          entry, // current entry
     input   logic               clear, // clear this entry (useful in shifting queues)
 
     cdb_itf.rs                  wakeup_cdb[CDB_WIDTH]
@@ -31,8 +33,8 @@ import int_rs_types::*;
     logic                       entry_valid;
     logic                       next_valid;
 
-    int_rs_entry_t              entry_reg;
-    int_rs_entry_t              next_entry;
+    RS_ENTRY_T                  entry_reg;
+    RS_ENTRY_T                  next_entry;
 
     always_ff @(posedge clk) begin
         if (rst || clear) begin
@@ -87,33 +89,19 @@ import int_rs_types::*;
         end
     end
 
-    logic           src1_ready;
-    logic           src2_ready;
+    logic                       src1_ready;
+    logic                       src2_ready;
+    logic   [CDB_WIDTH-1:0]     src1_may_bypass;
+    logic   [CDB_WIDTH-1:0]     src2_may_bypass;
 
-    always_comb begin
-        request = 1'b0;
-        src1_ready = 1'bx;
-        src2_ready = 1'bx;
-        if (entry_valid) begin
-            src1_ready = entry_reg.rs1_valid;
-            src2_ready = entry_reg.rs2_valid;
+    generate for (genvar i = 0; i < CDB_WIDTH; i++) begin
+        assign src1_may_bypass[i] = cdb_rs[i].valid && (entry_reg.rs1_phy == cdb_rs[i].rd_phy);
+        assign src2_may_bypass[i] = cdb_rs[i].valid && (entry_reg.rs2_phy == cdb_rs[i].rd_phy);
+    end endgenerate
 
-            for (int k = 0; k < CDB_WIDTH; k++) begin
-                // if (RS_CDB_BYPASS[0][k]) begin
-                    if (cdb_rs[k].valid) begin
-                        if (entry_reg.rs1_phy == cdb_rs[k].rd_phy) begin
-                            src1_ready = 1'b1;
-                        end
-                        if (entry_reg.rs2_phy == cdb_rs[k].rd_phy) begin
-                            src2_ready = 1'b1;
-                        end
-                    end
-                // end
-            end
-
-            request = src1_ready && src2_ready;
-        end
-    end
+    assign src1_ready = entry_reg.rs1_valid || |(src1_may_bypass);
+    assign src2_ready = entry_reg.rs2_valid || |(src2_may_bypass);
+    assign request = entry_valid && src1_ready && src2_ready;
 
     assign valid = entry_valid;
     assign entry = entry_reg;

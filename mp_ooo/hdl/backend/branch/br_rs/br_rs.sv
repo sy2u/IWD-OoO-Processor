@@ -17,157 +17,95 @@ import int_rs_types::*;
     // Reservation Stations  //
     ///////////////////////////
 
-    // local copy of cdb
-    cdb_rs_t cdb_rs[CDB_WIDTH];
-    generate 
-        for (genvar i = 0; i < CDB_WIDTH; i++) begin 
-            assign cdb_rs[i].valid  = cdb[i].valid;
-            assign cdb_rs[i].rd_phy = cdb[i].rd_phy;
-        end
-    endgenerate
+    logic   [BRRS_DEPTH-1:0]            rs_valid;
+    logic   [BRRS_DEPTH-1:0]            rs_request;
+    logic   [BRRS_DEPTH-1:0]            rs_grant;
+    logic   [BRRS_DEPTH-1:0]            rs_push_en;
+    br_rs_entry_t   [BRRS_DEPTH-1:0]    rs_entry;
+    br_rs_entry_t   [BRRS_DEPTH-1:0]    rs_entry_in;
+    br_rs_entry_t                       from_ds_entry;
+    br_rs_entry_t                       issued_entry;
 
-    typedef struct packed {
-        logic   [ROB_IDX-1:0]   rob_id;
-        logic   [PRF_IDX-1:0]   rs1_phy;
-        logic                   rs1_valid;
-        logic   [PRF_IDX-1:0]   rs2_phy;
-        logic                   rs2_valid;
-        logic   [PRF_IDX-1:0]   rd_phy;
-        logic   [ARF_IDX-1:0]   rd_arch;
-        logic   [31:0]          imm;
-        logic   [31:0]          pc;
-        logic   [3:0]           fu_opcode;
-        logic                   predict_taken;
-        logic   [31:0]          predict_target;
-    } br_rs_entry_t;
+    assign from_ds_entry.rob_id     = from_ds.uop.rob_id;
+    assign from_ds_entry.rs1_phy    = from_ds.uop.rs1_phy;
+    assign from_ds_entry.rs1_valid  = from_ds.uop.rs1_valid;
+    assign from_ds_entry.rs2_phy    = from_ds.uop.rs2_phy;
+    assign from_ds_entry.rs2_valid  = from_ds.uop.rs2_valid;
+    assign from_ds_entry.rd_phy     = from_ds.uop.rd_phy;
+    assign from_ds_entry.rd_arch    = from_ds.uop.rd_arch;
+    assign from_ds_entry.imm        = from_ds.uop.imm;
+    assign from_ds_entry.pc         = from_ds.uop.pc;
+    assign from_ds_entry.fu_opcode  = from_ds.uop.fu_opcode;
+    assign from_ds_entry.predict_taken = from_ds.uop.predict_taken;
+    assign from_ds_entry.predict_target = from_ds.uop.predict_target;
 
-    // rs array, store uop+available
-    br_rs_entry_t   br_rs_arr      [BRRS_DEPTH];
-    logic           br_rs_available  [BRRS_DEPTH];
+    generate for (genvar i = 0; i < BRRS_DEPTH; i++) begin : rs_array
+        rs_entry #(
+            .RS_ENTRY_T (br_rs_entry_t)
+        ) br_rs_entry_i (
+            .clk        (clk),
+            .rst        (rst),
 
-    // push logic
-    logic                   int_rs_push_en;
-    logic [BRRS_IDX-1:0]    int_rs_push_idx;
+            .valid      (rs_valid[i]),
+            .request    (rs_request[i]),
+            .grant      (rs_grant[i]),
 
-    // issue logic
-    logic                   int_rs_issue_en;
-    logic [BRRS_IDX-1:0]    int_rs_issue_idx;
-    logic                   src1_valid;
-    logic                   src2_valid;
+            .push_en    (rs_push_en[i]),
+            .entry_in   (rs_entry_in[i]),
+            .entry_out  (),
+            .entry      (rs_entry[i]),
+            .clear      (1'b0),
+            .wakeup_cdb (cdb)
+        );
+    end endgenerate
 
-    // rs array update
-    always_ff @(posedge clk) begin 
-        // rs array reset to all available, and top point to 0
-        if (rst) begin 
-            for (int i = 0; i < BRRS_DEPTH; i++) begin 
-                br_rs_available[i] <= 1'b1;
-            end
-        end else begin 
-            // issue > snoop cdb > push
-            // push renamed instruction
-            if (int_rs_push_en) begin 
-                // set rs to unavailable
-                br_rs_available[int_rs_push_idx]           <= 1'b0;
-                br_rs_arr[int_rs_push_idx].rob_id        <= from_ds.uop.rob_id;
-                br_rs_arr[int_rs_push_idx].rs1_phy       <= from_ds.uop.rs1_phy;
-                br_rs_arr[int_rs_push_idx].rs1_valid     <= from_ds.uop.rs1_valid;
-                br_rs_arr[int_rs_push_idx].rs2_phy       <= from_ds.uop.rs2_phy;
-                br_rs_arr[int_rs_push_idx].rs2_valid     <= from_ds.uop.rs2_valid;
-                br_rs_arr[int_rs_push_idx].rd_phy        <= from_ds.uop.rd_phy;
-                br_rs_arr[int_rs_push_idx].rd_arch       <= from_ds.uop.rd_arch;
-                br_rs_arr[int_rs_push_idx].imm           <= from_ds.uop.imm;
-                br_rs_arr[int_rs_push_idx].pc            <= from_ds.uop.pc;
-                br_rs_arr[int_rs_push_idx].fu_opcode     <= from_ds.uop.fu_opcode;
-                br_rs_arr[int_rs_push_idx].predict_taken <= from_ds.uop.predict_taken;
-                br_rs_arr[int_rs_push_idx].predict_target <= from_ds.uop.predict_target;
-            end
+    // Push Logic
+    logic   [BRRS_DEPTH-1:0]   entry_push_en_arr;
 
-            // snoop CDB to update rs1/rs2 valid
+    always_comb begin
+        rs_push_en = '0;
+        if (from_ds.valid && branch_ready) begin
+            // Look for first available RS entry
             for (int i = 0; i < BRRS_DEPTH; i++) begin
-                for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    // if the rs is unavailable (not empty), and rs1/rs2==cdb.rd,
-                    // set rs1/rs2 to valid
-                    if (cdb_rs[k].valid && !br_rs_available[i]) begin 
-                        if (br_rs_arr[i].rs1_phy == cdb_rs[k].rd_phy) begin 
-                            br_rs_arr[i].rs1_valid <= 1'b1;
-                        end
-                        if (br_rs_arr[i].rs2_phy == cdb_rs[k].rd_phy) begin 
-                            br_rs_arr[i].rs2_valid <= 1'b1;
-                        end
-                    end
-                end 
-            end
-
-            // pop issued instruction
-            if (int_rs_issue_en) begin 
-                // set rs to available
-                br_rs_available[int_rs_issue_idx] <= 1'b1;
-            end
-        end
-    end
-
-    // push logic, push instruction to rs if id is valid and rs is ready
-    // loop from top until the first available station
-    always_comb begin
-        int_rs_push_en  = '0;
-        int_rs_push_idx = '0;
-        if (from_ds.valid && branch_ready) begin 
-            for (int i = 0; i < BRRS_DEPTH; i++) begin 
-                if (br_rs_available[(BRRS_IDX)'(unsigned'(i))]) begin 
-                    int_rs_push_idx = (BRRS_IDX)'(unsigned'(i));
-                    int_rs_push_en = 1'b1;
+                if (!rs_valid[(BRRS_IDX)'(unsigned'(i))]) begin
+                    rs_push_en[i] = 1'b1;
                     break;
                 end
             end
         end
     end
 
-    // issue enable logic
-    // loop from top until src all valid
+    generate for (genvar i = 0; i < BRRS_DEPTH; i++) begin : push_muxes
+        assign rs_entry_in[i] = from_ds_entry;
+    end endgenerate
+
+    // Issue Logic
+    // loop from top and issue the first entry requesting for issue
     always_comb begin
-        int_rs_issue_en  = '0;
-        int_rs_issue_idx = '0; 
-        src1_valid       = '0;
-        src2_valid       = '0;
-        for (int i = 0; i < BRRS_DEPTH; i++) begin 
-            if (!br_rs_available[(BRRS_IDX)'(unsigned'(i))]) begin 
-
-                src1_valid = br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs1_valid;
-                src2_valid = br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs2_valid;
-                for (int k = 0; k < CDB_WIDTH; k++) begin 
-                    // if (RS_CDB_BYPASS[2][k]) begin
-                        if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                            src1_valid = 1'b1;
-                        end
-                        if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == br_rs_arr[(BRRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                            src2_valid = 1'b1;
-                        end
-                    // end
-                end
-
-                if (src1_valid && src2_valid) begin 
-                    int_rs_issue_en = '1;
-                    int_rs_issue_idx = (BRRS_IDX)'(unsigned'(i));
-                    break;
-                end
+        rs_grant = '0;
+        for (int i = 0; i < BRRS_DEPTH; i++) begin
+            if (rs_request[i]) begin
+                rs_grant[i] = 1'b1;
+                break;
             end
         end
     end
+
+    one_hot_mux #(
+        .T          (br_rs_entry_t),
+        .NUM_INPUTS (BRRS_DEPTH)
+    ) ohm (
+        .data_in    (rs_entry),
+        .select     (rs_grant),
+        .data_out   (issued_entry)
+    );
 
     // full logic, set rs.ready to 0 if rs is full
-    always_comb begin 
-    	from_ds.ready = '0;
-        for (int i = 0; i < BRRS_DEPTH; i++) begin 
-            if (br_rs_available[i]) begin 
-                from_ds.ready = '1;
-            end
-        end
-    end
-    // assign from_ds.ready = |br_rs_available;
+    assign from_ds.ready = |(~rs_valid);
 
     // communicate with prf
-    assign to_prf.rs1_phy = br_rs_arr[int_rs_issue_idx].rs1_phy;
-    assign to_prf.rs2_phy = br_rs_arr[int_rs_issue_idx].rs2_phy;
+    assign to_prf.rs1_phy = issued_entry.rs1_phy;
+    assign to_prf.rs2_phy = issued_entry.rs2_phy;
 
     //////////////////////
     // BR_RS to FU_ALU //
@@ -177,23 +115,20 @@ import int_rs_types::*;
     fu_br_reg_t     fu_br_reg_in;
 
     // handshake with fu_alu_reg:
-    assign br_rs_valid = int_rs_issue_en;
+    assign br_rs_valid = |rs_request;
 
     // send data to fu_alu_reg
-    always_comb begin 
-        fu_br_reg_in.rob_id         = br_rs_arr[int_rs_issue_idx].rob_id;
-        fu_br_reg_in.rd_phy         = br_rs_arr[int_rs_issue_idx].rd_phy;
-        fu_br_reg_in.rd_arch        = br_rs_arr[int_rs_issue_idx].rd_arch;
-        fu_br_reg_in.fu_opcode      = br_rs_arr[int_rs_issue_idx].fu_opcode;
-        fu_br_reg_in.imm            = br_rs_arr[int_rs_issue_idx].imm;
-        fu_br_reg_in.pc             = br_rs_arr[int_rs_issue_idx].pc;
-        fu_br_reg_in.predict_taken  = br_rs_arr[int_rs_issue_idx].predict_taken;
-        fu_br_reg_in.predict_target = br_rs_arr[int_rs_issue_idx].predict_target;
+    assign fu_br_reg_in.rob_id         = issued_entry.rob_id;
+    assign fu_br_reg_in.rd_phy         = issued_entry.rd_phy;
+    assign fu_br_reg_in.rd_arch        = issued_entry.rd_arch;
+    assign fu_br_reg_in.fu_opcode      = issued_entry.fu_opcode;
+    assign fu_br_reg_in.imm            = issued_entry.imm;
+    assign fu_br_reg_in.pc             = issued_entry.pc;
+    assign fu_br_reg_in.predict_taken  = issued_entry.predict_taken;
+    assign fu_br_reg_in.predict_target = issued_entry.predict_target;
 
-        fu_br_reg_in.rs1_value      = to_prf.rs1_value;
-        fu_br_reg_in.rs2_value      = to_prf.rs2_value;
-    end
-
+    assign fu_br_reg_in.rs1_value      = to_prf.rs1_value;
+    assign fu_br_reg_in.rs2_value      = to_prf.rs2_value;
 
     // Functional Units
     fu_br fu_br_i(
