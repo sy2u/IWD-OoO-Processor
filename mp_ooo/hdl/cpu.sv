@@ -38,7 +38,7 @@ import rv32i_types::*;
         .from_cb                (cb_bp_itf_i)
     );
 
-    arbiter arbiter_i(
+    bmem_arbiter bmem_arbiter_i(
         .clk            (clk),
         .rst            (rst),
         

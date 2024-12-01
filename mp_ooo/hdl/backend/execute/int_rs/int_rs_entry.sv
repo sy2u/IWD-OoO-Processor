@@ -7,7 +7,6 @@ import int_rs_types::*;
     input   logic               rst,
 
     output  logic               valid, // if the entry is valid
-    // output  logic               will_be_valid,
     output  logic               request, // if the entry is ready to be issued
     input   logic               grant, // permission to issue the entry
 

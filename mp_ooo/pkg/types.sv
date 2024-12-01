@@ -30,13 +30,17 @@ package cpu_params;
     localparam  unsigned    STQ_DEPTH       = 8;
     localparam  unsigned    STQ_IDX         = $clog2(STQ_DEPTH);
 
-    // Reservation Station Type: 0 - Normal, 1 - Age-ordered
+    // Reservation Station Type: 0(Normal), 1(Age-ordered)
     localparam unsigned     INT_RS_TYPE     = 1;
     localparam unsigned     INTM_RS_TYPE    = 0;
 
+    // Issue mode
+    localparam unsigned     INT_ISSUE_WIDTH = 2;
+    localparam unsigned     INT_ISSUE_IDX   = $clog2(INT_ISSUE_WIDTH);
+
     // Bypass Network
     localparam  unsigned    NUM_RS      = 4; // Number of RS
-    localparam  unsigned    CDB_WIDTH   = 4; // Number of CDB, could be different from NUM_RS
+    localparam  unsigned    CDB_WIDTH   = 5; // Number of CDB, could be different from NUM_RS
 
     // localparam logic        RS_CDB_BYPASS[NUM_RS][CDB_WIDTH] =
     //     '{'{1, 1, 1, 1}, // INTRS
@@ -460,7 +464,7 @@ import uop_types::*;
     } intm_rs_reg_t;
 
     typedef enum logic [1:0] {  
-        PREV        = 2'b00,
+        NEXT        = 2'b00,
         SELF        = 2'b10,
         PUSH_IN     = 2'b11
     } rs_update_sel_t;
