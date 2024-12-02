@@ -33,7 +33,7 @@ import cpu_params::*;
     end
 
     generate for (genvar i = 0; i < IF_WIDTH; i++) begin
-        assign pc_in[i] = pc & ~(unsigned'(IF_BLK_SIZE - 1)) + unsigned'(i) * 4;
+        assign pc_in[i] = (pc & ~(unsigned'(IF_BLK_SIZE - 1))) + unsigned'(i) * 4;
         assign predict_taken[i] = pht[ghr[PHT_IDX-1:0] ^ pc_in[i][PHT_IDX+1:2]] >= 2'b10;
     end endgenerate
 
