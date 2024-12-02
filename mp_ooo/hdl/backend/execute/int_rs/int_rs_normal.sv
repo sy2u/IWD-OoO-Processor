@@ -170,7 +170,6 @@ import int_rs_types::*;
         .rst                    (rst),
         .int_rs_valid           (int_rs_valid),
         .fu_alu_ready           (fu_alu_ready),
-        .bypass                 (),
         .fu_alu_reg_in          (fu_alu_reg_in),
         .cdb                    (fu_cdb_out)
     );
