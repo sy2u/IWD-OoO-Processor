@@ -91,7 +91,7 @@ import int_rs_types::*;
     // IP Control:
     //---------------------------------------------------------------------------------
 
-    assign  is_multiply = (intm_rs_reg.fu_opcode inside {MD_MUL, MD_MULH, MD_MULHSU, MD_MULHU});
+    assign  is_multiply = ~intm_rs_reg.fu_opcode[2];
     assign  complete = (is_multiply) ? mul_complete : div_complete;
     assign  div_complete = org_complete && (~div_start);
     assign  mul_start = (reg_start) && is_multiply;
@@ -160,7 +160,7 @@ import int_rs_types::*;
     // Instantiation:
     //---------------------------------------------------------------------------------
 
-    localparam                  NUM_CYC_DIV = 10;        // minimal possible delay
+    localparam                  NUM_CYC_DIV = 12;        // minimal possible delay
     localparam                  NUM_CYC_MUL = 3;        // minimal possible delay
     localparam                  TC_MODE = 1;        // signed
     localparam                  RST_MODE = 1;       // sync mode
@@ -194,7 +194,6 @@ import int_rs_types::*;
     always_ff @(posedge clk) begin 
         if (rst) begin 
             cdb_valid <= 1'b0;
-            fu_md_reg <= '0;
         end else begin 
             cdb_valid <= nxt_valid && cdb_ready;
             if (nxt_valid && cdb_ready) begin 

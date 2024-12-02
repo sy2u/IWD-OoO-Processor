@@ -18,7 +18,7 @@ package cpu_params;
     localparam unsigned     INTMRS_DEPTH    = 8;
     localparam unsigned     INTMRS_IDX      = $clog2(INTMRS_DEPTH);
 
-    localparam unsigned     BRRS_DEPTH      = 8;
+    localparam unsigned     BRRS_DEPTH      = 4;
     localparam unsigned     BRRS_IDX        = $clog2(BRRS_DEPTH);
     localparam  unsigned    CB_DEPTH        = 8;
 
@@ -29,6 +29,8 @@ package cpu_params;
     localparam  unsigned    LDQ_IDX         = $clog2(LDQ_DEPTH);
     localparam  unsigned    STQ_DEPTH       = 8;
     localparam  unsigned    STQ_IDX         = $clog2(STQ_DEPTH);
+    localparam  unsigned    STB_DEPTH       = 4;
+    localparam  unsigned    STB_IDX         = $clog2(STB_DEPTH);
 
     // Reservation Station Type: 0(Normal), 1(Age-ordered)
     localparam unsigned     INT_RS_TYPE     = 1;
@@ -58,7 +60,7 @@ package cpu_params;
     //       };
 
     localparam  unsigned    GHR_DEPTH       = 30;
-    localparam  unsigned    PHT_IDX         = 10;
+    localparam  unsigned    PHT_IDX         = 9;
     localparam  unsigned    PHT_DEPTH       = 2 ** PHT_IDX;
     localparam  unsigned    BIMODAL_DEPTH   = 2;
 
@@ -402,6 +404,17 @@ import uop_types::*;
         logic                   rs2_valid;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic   [ARF_IDX-1:0]   rd_arch;
+        logic   [3:0]           fu_opcode;
+    } intm_rs_entry_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [ARF_IDX-1:0]   rd_arch;
         logic   [31:0]          imm;
         logic   [31:0]          pc;
         logic   [3:0]           fu_opcode;
@@ -410,6 +423,7 @@ import uop_types::*;
     } br_rs_entry_t;
 
     typedef struct packed {
+        logic   [31:0]          rd_value;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic                   valid;
     } cdb_rs_t;
@@ -488,6 +502,16 @@ import cpu_params::*;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic                   rs1_valid;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic                   rs2_valid;
+        logic   [31:0]          imm;
+        logic   [3:0]           fu_opcode;
+    } mem_rs_entry_t;
+
+    typedef struct packed {
+        logic   [ROB_IDX-1:0]   rob_id;
         logic   [3:0]           fu_opcode;
         logic   [31:0]          imm;
         logic   [31:0]          rs1_value;
@@ -520,7 +544,6 @@ import cpu_params::*;
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
         logic                   addr_valid;
-        logic   [3:0]           fu_opcode;
         logic   [31:0]          addr;
         logic   [3:0]           mask;
         logic   [31:0]          wdata;
@@ -529,10 +552,15 @@ import cpu_params::*;
     } stq_entry_t;
 
     typedef struct packed {
+        logic                   valid;
+        logic   [31:0]          addr;
+        logic   [3:0]           mask;
+        logic   [31:0]          wdata;
+    } stb_entry_t;
+
+    typedef struct packed {
         logic                   valid; // If the entry is valid
         logic                   addr_valid; // If the addr and mask is ready
-        logic                   load_exec; // If the load is executed
-        logic                   load_success; // If the load is successful
         logic   [STQ_IDX:0]     track_stq_ptr;
         logic   [ROB_IDX-1:0]   rob_id;
         logic   [3:0]           fu_opcode;

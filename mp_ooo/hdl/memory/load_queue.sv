@@ -12,7 +12,8 @@ import lsu_types::*;
     cdb_itf.fu                  cdb_out,
     ldq_rob_itf.ldq             to_rob,
     ldq_dmem_itf.ldq            dmem,
-    ldq_stq_itf.ldq             from_stq
+    ldq_stq_itf.ldq             from_stq,
+    ldq_stb_itf.ldq             from_stb
 );
     ldq_entry_t             ldq_arr     [LDQ_DEPTH];
     ldq_entry_t             ldq_arr_nxt [LDQ_DEPTH];
@@ -109,6 +110,7 @@ import lsu_types::*;
     generate for (genvar i = 0; i < LDQ_DEPTH; i++) begin
         assign from_stq.ldq_tracker[i] = ldq_arr[i].track_stq_ptr;
         assign from_stq.ldq_addr[i] = ldq_arr[i].addr;
+        assign from_stb.ldq_addr[i] = ldq_arr[i].addr;
     end endgenerate
 
     always_comb begin
@@ -128,7 +130,7 @@ import lsu_types::*;
         for (int unsigned i = 0; i < LDQ_DEPTH; i++) begin
             if (ldq_arr[i].valid && ldq_arr[i].addr_valid) begin
                 // if (ldq_arr[i].track_stq_ptr == '0) begin
-                if (ldq_arr[i].track_stq_ptr == '0 || !from_stq.has_conflicting_store[i]) begin
+                if ((ldq_arr[i].track_stq_ptr == '0 || !from_stq.has_conflicting_store[i]) && (!from_stb.has_conflicting_store[i])) begin
                     issue_en = 1'b1;
                     issue_idx = (LDQ_IDX)'(i);
                     break;

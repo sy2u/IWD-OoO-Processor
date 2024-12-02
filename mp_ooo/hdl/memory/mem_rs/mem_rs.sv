@@ -15,157 +15,102 @@ import lsu_types::*;
     // Reservation Stations  //
     ///////////////////////////
 
-    // local copy of cdb
-    cdb_rs_t cdb_rs[CDB_WIDTH];
-    generate 
-        for (genvar i = 0; i < CDB_WIDTH; i++) begin 
-            assign cdb_rs[i].valid  = cdb[i].valid;
-            assign cdb_rs[i].rd_phy = cdb[i].rd_phy;
-        end
-    endgenerate
+    logic   [MEMRS_DEPTH-1:0]            rs_valid;
+    logic   [MEMRS_DEPTH-1:0]            rs_request;
+    logic   [MEMRS_DEPTH-1:0]            rs_grant;
+    logic   [MEMRS_DEPTH-1:0]            rs_push_en;
+    mem_rs_entry_t   [MEMRS_DEPTH-1:0]   rs_entry;
+    mem_rs_entry_t   [MEMRS_DEPTH-1:0]   rs_entry_in;
+    mem_rs_entry_t                       from_ds_entry;
+    mem_rs_entry_t                       issued_entry;
 
-    typedef struct packed {
-        logic   [ROB_IDX-1:0]   rob_id;
-        logic   [PRF_IDX-1:0]   rs1_phy;
-        logic                   rs1_valid;
-        logic   [PRF_IDX-1:0]   rs2_phy;
-        logic                   rs2_valid;
-        logic   [31:0]          imm;
-        logic   [3:0]           fu_opcode;
-    } mem_rs_entry_t;
+    always_comb begin
+        from_ds_entry.rob_id     = from_ds.uop.rob_id;
+        from_ds_entry.rs1_phy    = from_ds.uop.rs1_phy;
+        from_ds_entry.rs1_valid  = from_ds.uop.rs1_valid;
+        from_ds_entry.rs2_phy    = from_ds.uop.rs2_phy;
+        from_ds_entry.rs2_valid  = from_ds.uop.rs2_valid;
+        from_ds_entry.imm        = from_ds.uop.imm;
+        from_ds_entry.fu_opcode  = from_ds.uop.fu_opcode;
+    end
 
-    // rs array, store uop+valid
-    mem_rs_entry_t  mem_rs_arr    [MEMRS_DEPTH];
-    logic           mem_rs_valid  [MEMRS_DEPTH];
+    generate for (genvar i = 0; i < MEMRS_DEPTH; i++) begin : rs_array
+        rs_entry #(
+            .RS_ENTRY_T (mem_rs_entry_t)
+        ) mem_rs_entry_i (
+            .clk        (clk),
+            .rst        (rst),
 
-    // push logic
-    logic                 push_en;
-    logic [MEMRS_IDX-1:0] push_idx;
+            .valid      (rs_valid[i]),
+            .request    (rs_request[i]),
+            .grant      (rs_grant[i]),
 
-    // issue logic
-    logic                 issue_en;
-    logic [MEMRS_IDX-1:0] issue_idx;
+            .push_en    (rs_push_en[i]),
+            .entry_in   (rs_entry_in[i]),
+            .entry_out  (),
+            .entry      (rs_entry[i]),
+            .clear      (1'b0),
+            .wakeup_cdb (cdb)
+        );
+    end endgenerate
 
-    // rs array update
-    always_ff @(posedge clk) begin 
-        // rs array reset to all available, and top point to 0
-        if (rst) begin 
-            for (int i = 0; i < MEMRS_DEPTH; i++) begin 
-                mem_rs_valid[i] <= 1'b0;
-            end
-        end else begin 
-        // end else if (push_or_issue_or_cdb) begin 
-            // issue > snoop cdb > push
-            // push renamed instruction
-            if (push_en) begin 
-                // set rs to unavailable
-                mem_rs_valid[push_idx]  <= 1'b1;
-                mem_rs_arr[push_idx].rob_id    <= from_ds.uop.rob_id;
-                mem_rs_arr[push_idx].rs1_phy   <= from_ds.uop.rs1_phy;
-                mem_rs_arr[push_idx].rs1_valid <= from_ds.uop.rs1_valid;
-                mem_rs_arr[push_idx].rs2_phy   <= from_ds.uop.rs2_phy;
-                mem_rs_arr[push_idx].rs2_valid <= from_ds.uop.rs2_valid;
-                mem_rs_arr[push_idx].imm       <= from_ds.uop.imm;
-                mem_rs_arr[push_idx].fu_opcode <= from_ds.uop.fu_opcode;
-            end
+    // Push Logic
+    logic   [MEMRS_DEPTH-1:0]   entry_push_en_arr;
 
-            // snoop CDB to update rs1 valid
+    always_comb begin
+        rs_push_en = '0;
+        if (from_ds.valid && from_ds.ready) begin
+            // Look for first available RS entry
             for (int i = 0; i < MEMRS_DEPTH; i++) begin
-                for (int k = 0; k < CDB_WIDTH; k++) begin
-                    if (cdb_rs[k].valid && mem_rs_valid[i]) begin 
-                        if (mem_rs_arr[i].rs1_phy == cdb_rs[k].rd_phy) begin 
-                            mem_rs_arr[i].rs1_valid <= 1'b1;
-                        end
-                        if (mem_rs_arr[i].rs2_phy == cdb_rs[k].rd_phy) begin 
-                            mem_rs_arr[i].rs2_valid <= 1'b1;
-                        end
-                    end
-                end 
-            end
-
-            // pop issued instruction
-            if (issue_en) begin 
-                // set rs to available
-                mem_rs_valid[issue_idx] <= 1'b0;
-            end
-        end
-    end
-
-    // push logic, push instruction to rs if id is valid and rs is ready
-    // loop from top until the first available station
-    always_comb begin
-        push_en  = '0;
-        push_idx = '0;
-        if (from_ds.valid && from_ds.ready) begin 
-            for (int i = 0; i < MEMRS_DEPTH; i++) begin 
-                if (!mem_rs_valid[(MEMRS_IDX)'(unsigned'(i))]) begin 
-                    push_idx = (MEMRS_IDX)'(unsigned'(i));
-                    push_en = 1'b1;
+                if (!rs_valid[(MEMRS_IDX)'(unsigned'(i))]) begin
+                    rs_push_en[i] = 1'b1;
                     break;
                 end
             end
         end
     end
 
-    // issue enable logic
-    // loop from top until src all valid
-    logic                 src1_valid;
-    logic                 src2_valid;
+    generate for (genvar i = 0; i < MEMRS_DEPTH; i++) begin : push_muxes
+        assign rs_entry_in[i] = from_ds_entry;
+    end endgenerate
 
+    // Issue Logic
+    // loop from top and issue the first entry requesting for issue
     always_comb begin
-        issue_en  = '0;
-        issue_idx = '0;
-        src1_valid       = '0;
-        src2_valid       = '0;
-        for (int i = 0; i < MEMRS_DEPTH; i++) begin 
-            if (mem_rs_valid[(MEMRS_IDX)'(unsigned'(i))]) begin
-                src1_valid = mem_rs_arr[(MEMRS_IDX)'(unsigned'(i))].rs1_valid;
-                src2_valid = mem_rs_arr[(MEMRS_IDX)'(unsigned'(i))].rs2_valid;
-                for (int k = 0; k < CDB_WIDTH; k++) begin
-                    // if (RS_CDB_BYPASS[3][k]) begin
-                        if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == mem_rs_arr[(MEMRS_IDX)'(unsigned'(i))].rs1_phy)) begin 
-                            src1_valid = 1'b1;
-                        end
-                        if (cdb_rs[k].valid && (cdb_rs[k].rd_phy == mem_rs_arr[(MEMRS_IDX)'(unsigned'(i))].rs2_phy)) begin 
-                            src2_valid = 1'b1;
-                        end
-                    // end
-                end
-
-                if (src1_valid && src2_valid) begin 
-                    issue_en = '1;
-                    issue_idx = (MEMRS_IDX)'(unsigned'(i));
-                    break;
-                end
-            end
-        end
-    end
-
-    // full logic, set rs.ready to 0 if rs is full
-    always_comb begin 
-        from_ds.ready = '0;
-        for (int i = 0; i < MEMRS_DEPTH; i++) begin 
-            if (!mem_rs_valid[i]) begin 
-                from_ds.ready = '1;
+        rs_grant = '0;
+        for (int i = 0; i < MEMRS_DEPTH; i++) begin
+            if (rs_request[i]) begin
+                rs_grant[i] = 1'b1;
                 break;
             end
         end
     end
 
+    one_hot_mux #(
+        .T          (mem_rs_entry_t),
+        .NUM_INPUTS (MEMRS_DEPTH)
+    ) ohm (
+        .data_in    (rs_entry),
+        .select     (rs_grant),
+        .data_out   (issued_entry)
+    );
+
+    // full logic, set rs.ready to 0 if rs is full
+    assign from_ds.ready = |(~rs_valid);
+
     // communicate with prf
-    assign to_prf.rs1_phy = mem_rs_arr[issue_idx].rs1_phy;
-    assign to_prf.rs2_phy = mem_rs_arr[issue_idx].rs2_phy;
+    assign to_prf.rs1_phy = issued_entry.rs1_phy;
+    assign to_prf.rs2_phy = issued_entry.rs2_phy;
 
     ///////////////////////
     // INT_MEM to FU_AGU //
     ///////////////////////
-    logic           fu_agu_valid;
     agu_reg_t       agu_reg_in;
     agu_lsq_t       agu_lsq;
 
-    assign agu_reg_in.rob_id = mem_rs_arr[issue_idx].rob_id;
-    assign agu_reg_in.fu_opcode = mem_rs_arr[issue_idx].fu_opcode;
-    assign agu_reg_in.imm = mem_rs_arr[issue_idx].imm;
+    assign agu_reg_in.rob_id = issued_entry.rob_id;
+    assign agu_reg_in.fu_opcode = issued_entry.fu_opcode;
+    assign agu_reg_in.imm = issued_entry.imm;
     assign agu_reg_in.rs1_value = to_prf.rs1_value;
     assign agu_reg_in.rs2_value = to_prf.rs2_value;
 
@@ -173,7 +118,7 @@ import lsu_types::*;
         .clk(clk),
         .rst(rst),
 
-        .prv_valid  (issue_en),
+        .prv_valid  (|rs_request),
         .prv_ready  (),
         .agu_reg_in (agu_reg_in),
 

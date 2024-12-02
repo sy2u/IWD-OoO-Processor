@@ -27,7 +27,7 @@ interface dmem_itf();
 
 endinterface
 
-interface stq_dmem_itf();
+interface stb_dmem_itf();
 
     logic           valid;
     logic           ready;

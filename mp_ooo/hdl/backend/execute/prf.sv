@@ -38,37 +38,65 @@ import prf_types::*;
         end
     end
 
+    logic   [CDB_WIDTH-1:0] prf_bypass_rs1 [CDB_WIDTH];
+    logic   [CDB_WIDTH-1:0] prf_bypass_rs2 [CDB_WIDTH];
+
+    generate for (genvar i = 0; i < CDB_WIDTH; i++) begin
+        for (genvar j = 0; j < CDB_WIDTH; j++) begin
+            assign prf_bypass_rs1[i][j] = cdb_local[j].valid && (cdb_local[j].rd_phy != '0) && (cdb_local[j].rd_phy == from_rs_local_in[i].rs1_phy);
+            assign prf_bypass_rs2[i][j] = cdb_local[j].valid && (cdb_local[j].rd_phy != '0) && (cdb_local[j].rd_phy == from_rs_local_in[i].rs2_phy);
+        end
+    end endgenerate
+
     always_comb begin
-        for (int j = 0; j < CDB_WIDTH; j++) begin
-            if (from_rs_local_in[j].rs1_phy == '0) begin 
-                from_rs_local_out[j].rs1_value = '0;
-            end else begin
-                from_rs_local_out[j].rs1_value = prf_data[from_rs_local_in[j].rs1_phy];
-                for (int i = 0; i < CDB_WIDTH; i++) begin
-                    // if (PRF_FORWARDING[j][i]) begin
-                        if (cdb_local[i].valid && (cdb_local[i].rd_phy == from_rs_local_in[j].rs1_phy)) begin 
-                            from_rs_local_out[j].rs1_value = cdb_local[i].rd_value;
-                        end
-                    // end
+        for (int i = 0; i < CDB_WIDTH; i++) begin
+            // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
+            unique case (prf_bypass_rs1[i])
+                4'b0000: begin
+                    from_rs_local_out[i].rs1_value = (from_rs_local_in[i].rs1_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs1_phy];
                 end
-            end
+                4'b0001: begin
+                    from_rs_local_out[i].rs1_value = cdb_local[0].rd_value;
+                end
+                4'b0010: begin
+                    from_rs_local_out[i].rs1_value = cdb_local[1].rd_value;
+                end
+                4'b0100: begin
+                    from_rs_local_out[i].rs1_value = cdb_local[2].rd_value;
+                end
+                4'b1000: begin
+                    from_rs_local_out[i].rs1_value = cdb_local[3].rd_value;
+                end
+                default: begin
+                    from_rs_local_out[i].rs1_value = 'x;
+                end
+            endcase
         end
     end
 
     always_comb begin
-        for (int j = 0; j < CDB_WIDTH; j++) begin
-            if (from_rs_local_in[j].rs2_phy == '0) begin 
-                from_rs_local_out[j].rs2_value = '0;
-            end else begin
-                from_rs_local_out[j].rs2_value = prf_data[from_rs_local_in[j].rs2_phy];
-                for (int i = 0; i < CDB_WIDTH; i++) begin
-                    // if (PRF_FORWARDING[j][i]) begin
-                        if (cdb_local[i].valid && (cdb_local[i].rd_phy == from_rs_local_in[j].rs2_phy)) begin 
-                            from_rs_local_out[j].rs2_value = cdb_local[i].rd_value;
-                        end
-                    // end
+        for (int i = 0; i < CDB_WIDTH; i++) begin
+            // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
+            unique case (prf_bypass_rs2[i])
+                4'b0000: begin
+                    from_rs_local_out[i].rs2_value = (from_rs_local_in[i].rs2_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs2_phy];
                 end
-            end
+                4'b0001: begin
+                    from_rs_local_out[i].rs2_value = cdb_local[0].rd_value;
+                end
+                4'b0010: begin
+                    from_rs_local_out[i].rs2_value = cdb_local[1].rd_value;
+                end
+                4'b0100: begin
+                    from_rs_local_out[i].rs2_value = cdb_local[2].rd_value;
+                end
+                4'b1000: begin
+                    from_rs_local_out[i].rs2_value = cdb_local[3].rd_value;
+                end
+                default: begin
+                    from_rs_local_out[i].rs2_value = 'x;
+                end
+            endcase
         end
     end
 
