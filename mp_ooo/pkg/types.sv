@@ -29,6 +29,8 @@ package cpu_params;
     localparam  unsigned    LDQ_IDX         = $clog2(LDQ_DEPTH);
     localparam  unsigned    STQ_DEPTH       = 8;
     localparam  unsigned    STQ_IDX         = $clog2(STQ_DEPTH);
+    localparam  unsigned    STB_DEPTH       = 4;
+    localparam  unsigned    STB_IDX         = $clog2(STB_DEPTH);
 
     // Reservation Station Type: 0 - Normal, 1 - Age-ordered
     localparam unsigned     INT_RS_TYPE     = 1;
@@ -537,7 +539,6 @@ import cpu_params::*;
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
         logic                   addr_valid;
-        logic   [3:0]           fu_opcode;
         logic   [31:0]          addr;
         logic   [3:0]           mask;
         logic   [31:0]          wdata;
@@ -546,10 +547,15 @@ import cpu_params::*;
     } stq_entry_t;
 
     typedef struct packed {
+        logic                   valid;
+        logic   [31:0]          addr;
+        logic   [3:0]           mask;
+        logic   [31:0]          wdata;
+    } stb_entry_t;
+
+    typedef struct packed {
         logic                   valid; // If the entry is valid
         logic                   addr_valid; // If the addr and mask is ready
-        logic                   load_exec; // If the load is executed
-        logic                   load_success; // If the load is successful
         logic   [STQ_IDX:0]     track_stq_ptr;
         logic   [ROB_IDX-1:0]   rob_id;
         logic   [3:0]           fu_opcode;

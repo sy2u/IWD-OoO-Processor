@@ -74,6 +74,7 @@ import rvfi_types::*;
     logic   [ROB_IDX-1:0]   rob_id      [ID_WIDTH];
     logic   [PRF_IDX-1:0]   rd_phy      [ID_WIDTH];
     logic   [ARF_IDX-1:0]   rd_arch     [ID_WIDTH];
+    logic                   is_store    [ID_WIDTH];
     rvfi_dbg_t              rvfi_dbg    [ID_WIDTH];
 
     modport id (
@@ -83,6 +84,7 @@ import rvfi_types::*;
         input               rob_id,
         output              rd_phy,
         output              rd_arch,
+        output              is_store,
         output              rvfi_dbg
     );
 
@@ -93,6 +95,7 @@ import rvfi_types::*;
         output              rob_id,
         input               rd_phy,
         input               rd_arch,
+        input               is_store,
         input               rvfi_dbg
     );
 
@@ -364,6 +367,23 @@ import cpu_params::*;
 
 endinterface
 
+interface ldq_stb_itf();
+import cpu_params::*;
+
+    logic   [31:0]          ldq_addr[LDQ_DEPTH];
+    logic                   has_conflicting_store[LDQ_DEPTH];
+
+    modport ldq (
+        output              ldq_addr,
+        input               has_conflicting_store
+    );
+
+    modport stb (
+        input               ldq_addr,
+        output              has_conflicting_store
+    );
+
+endinterface
 
 interface ldq_rob_itf();
 import cpu_params::*;
@@ -395,7 +415,6 @@ endinterface
 interface stq_rob_itf();
 import cpu_params::*;
 
-    logic   [ROB_PTR_IDX-1:0]   rob_head;
     logic   [ROB_IDX-1:0]       rob_id;
     logic   [31:0]              addr_dbg;
     logic   [3:0]               wmask_dbg;
@@ -403,27 +422,55 @@ import cpu_params::*;
     logic   [31:0]              rs1_value_dbg;
     logic   [31:0]              rs2_value_dbg;
     logic                       valid;
+    logic                       ready;
 
     modport stq (
-        input               rob_head,
         output              rob_id,
         output              addr_dbg,
         output              wmask_dbg,
         output              wdata_dbg,
         output              rs1_value_dbg,
         output              rs2_value_dbg,
-        output              valid
+        output              valid,
+        input               ready
     );
 
     modport rob (
-        output              rob_head,
         input               rob_id,
         input               addr_dbg,
         input               wmask_dbg,
         input               wdata_dbg,
         input               rs1_value_dbg,
         input               rs2_value_dbg,
-        input               valid
+        input               valid,
+        output              ready
+    );
+
+endinterface
+
+interface stq_stb_itf();
+import cpu_params::*;
+
+    logic                       valid;
+    logic                       ready;
+    logic   [31:0]              addr;
+    logic   [3:0]               wmask;
+    logic   [31:0]              wdata;
+
+    modport stq (
+        output              valid,
+        input               ready,
+        output              addr,
+        output              wmask,
+        output              wdata
+    );
+
+    modport stb (
+        input               valid,
+        output              ready,
+        input               addr,
+        input               wmask,
+        input               wdata
     );
 
 endinterface

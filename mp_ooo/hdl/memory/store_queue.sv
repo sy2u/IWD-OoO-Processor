@@ -10,7 +10,7 @@ import lsu_types::*;
     ds_rs_mono_itf.rs           from_ds,
     agu_lsq_itf.lsq             from_agu,
     stq_rob_itf.stq             to_rob,
-    stq_dmem_itf.stq            dmem,
+    stq_stb_itf.stq             to_stb,
     ldq_stq_itf.stq             from_ldq
 );
     stq_entry_t             fifo[STQ_DEPTH];
@@ -83,7 +83,6 @@ import lsu_types::*;
         if (enqueue) begin
             fifo[wr_ptr_actual].rob_id <= from_ds.uop.rob_id;
             fifo[wr_ptr_actual].addr_valid <= 1'b0;
-            fifo[wr_ptr_actual].fu_opcode <= from_ds.uop.fu_opcode;
         end
     end
 
@@ -100,30 +99,30 @@ import lsu_types::*;
         if (empty) begin
             want_dequeue = 1'b0;
         end else begin
-            want_dequeue = fifo[rd_ptr_actual].addr_valid && (to_rob.rob_head == ROB_PTR_IDX'(fifo[rd_ptr_actual].rob_id / ID_WIDTH)); // check ROB
+            want_dequeue = fifo[rd_ptr_actual].addr_valid;
         end
     end
 
-    assign dequeue = want_dequeue && dmem.ready;
+    assign dequeue = want_dequeue && to_rob.ready && to_stb.ready;
 
     assign full = (wr_ptr_actual == rd_ptr_actual) && (wr_ptr_flag == ~rd_ptr_flag);
     assign empty = (wr_ptr == rd_ptr);
     assign from_ds.ready = ~full;
 
-    /////////////////////////
-    // DCache Access Logic //
-    /////////////////////////
+    ///////////////
+    // STB Logic //
+    ///////////////
 
-    assign dmem.valid = want_dequeue;
-    assign dmem.wmask = fifo[rd_ptr_actual].mask;
-    assign dmem.addr =  {fifo[rd_ptr_actual].addr[31:2], 2'b00};
-    assign dmem.wdata = fifo[rd_ptr_actual].wdata;
+    assign to_stb.valid = want_dequeue && to_rob.ready;
+    assign to_stb.wmask = fifo[rd_ptr_actual].mask;
+    assign to_stb.addr =  {fifo[rd_ptr_actual].addr[31:2], 2'b00};
+    assign to_stb.wdata = fifo[rd_ptr_actual].wdata;
 
-    ////////////////
-    // CDB Output //
-    ////////////////
+    ///////////////
+    // ROB Logic //
+    ///////////////
 
-    assign to_rob.valid = dequeue;
+    assign to_rob.valid = want_dequeue && to_stb.ready;
     assign to_rob.rob_id = fifo[rd_ptr_actual].rob_id;
     assign to_rob.addr_dbg = {fifo[rd_ptr_actual].addr[31:2], 2'b00};
     assign to_rob.wmask_dbg = fifo[rd_ptr_actual].mask;

@@ -35,6 +35,7 @@ import uop_types::*;
     logic                       rd_en[ID_WIDTH];
     logic   [ARF_IDX-1:0]       rs1_arch[ID_WIDTH];
     logic   [ARF_IDX-1:0]       rs2_arch[ID_WIDTH];
+    logic                       is_store[ID_WIDTH];
 
     //////////////////////////
     //     Decode Stage     //
@@ -53,7 +54,8 @@ import uop_types::*;
             .rd_arch                (rd_arch[i]),
             .rd_en                  (rd_en[i]),
             .rs1_arch               (rs1_arch[i]),
-            .rs2_arch               (rs2_arch[i])
+            .rs2_arch               (rs2_arch[i]),
+            .is_store               (is_store[i])
         );
 
         assign uops_raw_valid[i] = from_fifo.packet.valid[i];
@@ -187,6 +189,7 @@ import uop_types::*;
         assign to_rob.inst_valid[i] = uops_valid[i];
         assign to_rob.rd_phy[i] = uops[i].rd_phy;
         assign to_rob.rd_arch[i] = rd_arch[i];
+        assign to_rob.is_store[i] = is_store[i];
         assign uops[i].rob_id = to_rob.rob_id[i];
     end endgenerate
 

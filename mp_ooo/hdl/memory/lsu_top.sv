@@ -43,8 +43,10 @@ import lsu_types::*;
 
     dmem_itf                    dmem_itf_i();
     ldq_dmem_itf                ld_dmem_itf_i();
-    stq_dmem_itf                st_dmem_itf_i();
+    stq_stb_itf                 stq_stb_i();
+    stb_dmem_itf                st_dmem_itf_i();
     ldq_stq_itf                 ldq_stq_i();
+    ldq_stb_itf                 ldq_stb_i();
 
     load_queue ldq_i(
         .clk                    (clk),
@@ -56,7 +58,8 @@ import lsu_types::*;
         .cdb_out                (fu_cdb_out),
         .to_rob                 (ld_to_rob),
         .dmem                   (ld_dmem_itf_i),
-        .from_stq               (ldq_stq_i)
+        .from_stq               (ldq_stq_i),
+        .from_stb               (ldq_stb_i)
     );
 
     store_queue stq_i(
@@ -67,8 +70,17 @@ import lsu_types::*;
         .from_ds                (ds_stq_i),
         .from_agu               (agu_lsq_i),
         .to_rob                 (st_to_rob),
-        .dmem                   (st_dmem_itf_i),
+        .to_stb                 (stq_stb_i),
         .from_ldq               (ldq_stq_i)
+    );
+
+    store_buf stb_i(
+        .clk                    (clk),
+        .rst                    (rst),
+
+        .from_stq               (stq_stb_i),
+        .dmem                   (st_dmem_itf_i),
+        .from_ldq               (ldq_stb_i)
     );
 
     dmem_arbiter dmem_arb_i(

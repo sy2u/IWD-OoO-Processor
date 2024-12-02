@@ -28,6 +28,7 @@ import rvfi_types::*;
         logic                   ready;
         logic   [PRF_IDX-1:0]   rd_phy;
         logic   [ARF_IDX-1:0]   rd_arch;
+        logic                   is_store;
     } rob_entry_t;
 
     rob_entry_t             rob_arr [ROB_DEPTH] [ID_WIDTH];
@@ -57,14 +58,14 @@ import rvfi_types::*;
     assign {head_ptr_flag, head_ptr} = head_ptr_reg;
     assign {tail_ptr_flag, tail_ptr} = tail_ptr_reg;
 
-    assign from_stq.rob_head = head_ptr;
-
     assign full = (tail_ptr == head_ptr) && (tail_ptr_flag != head_ptr_flag);
     assign empty = (tail_ptr == head_ptr) && (tail_ptr_flag == head_ptr_flag);
 
     always_comb begin
         if (empty) begin
             pop = 1'b0;
+        end else if (from_stq.valid && from_stq.ready) begin
+            pop = 1'b1;
         end else begin
             pop = 1'b1;
             for (int i = 0; i < ID_WIDTH; i++) begin
@@ -102,6 +103,7 @@ import rvfi_types::*;
                     rob_arr[tail_ptr][i].ready <= 1'b0;
                     rob_arr[tail_ptr][i].rd_phy <= from_id.rd_phy[i];
                     rob_arr[tail_ptr][i].rd_arch <= from_id.rd_arch[i];
+                    rob_arr[tail_ptr][i].is_store <= from_id.is_store[i];
                     rvfi_array[tail_ptr][i] <= from_id.rvfi_dbg[i];       // for rvfi storage
                 end
             end
@@ -117,17 +119,6 @@ import rvfi_types::*;
                     rvfi_array[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].rs1_rdata <= cdb_rob[i].rs1_value_dbg;
                     rvfi_array[cdb_rob[i].rob_id / ID_WIDTH][cdb_rob[i].rob_id % ID_WIDTH].rs2_rdata <= cdb_rob[i].rs2_value_dbg;
                 end
-            end
-
-            if (from_stq.valid) begin
-                rob_arr   [from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].ready <= 1'b1;
-                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].rs1_rdata <= from_stq.rs1_value_dbg;
-                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].rs2_rdata <= from_stq.rs2_value_dbg;
-                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_addr <= from_stq.addr_dbg;
-                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_rmask <= '0;
-                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_wmask <= from_stq.wmask_dbg;
-                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_rdata <= '0;
-                rvfi_array[from_stq.rob_id / ID_WIDTH][from_stq.rob_id % ID_WIDTH].mem_wdata <= from_stq.wdata_dbg;
             end
 
             if (from_ldq.valid) begin
@@ -165,6 +156,18 @@ import rvfi_types::*;
     assign backend_flush = dequeue && from_cb.miss_predict;
     assign backend_redirect_pc = from_cb.target_address;
 
+    // interface with store queue
+    logic       stq_ready;
+    always_comb begin
+        stq_ready = ROB_PTR_IDX'(from_stq.rob_id / ID_WIDTH) == head_ptr;
+        for (int i = 0; i < ID_WIDTH; i++) begin
+            if (rob_arr[head_ptr][i].valid && !rob_arr[head_ptr][i].is_store && !rob_arr[head_ptr][i].ready) begin
+                stq_ready = 1'b0;
+            end
+        end
+    end
+    assign from_stq.ready = stq_ready;
+
     //////////////////////////
     //          RVFI        //
     //////////////////////////
@@ -176,19 +179,19 @@ import rvfi_types::*;
         assign rvfi_itf[i].inst = rvfi_head[i].inst;
         assign rvfi_itf[i].rs1_addr = rvfi_head[i].rs1_addr;
         assign rvfi_itf[i].rs2_addr = rvfi_head[i].rs2_addr;
-        assign rvfi_itf[i].rs1_rdata = rvfi_head[i].rs1_rdata;
-        assign rvfi_itf[i].rs2_rdata = rvfi_head[i].rs2_rdata;
+        assign rvfi_itf[i].rs1_rdata = (from_stq.valid && from_stq.ready && 32'(from_stq.rob_id % ID_WIDTH) == i) ? from_stq.rs1_value_dbg : rvfi_head[i].rs1_rdata;
+        assign rvfi_itf[i].rs2_rdata = (from_stq.valid && from_stq.ready && 32'(from_stq.rob_id % ID_WIDTH) == i) ? from_stq.rs2_value_dbg : rvfi_head[i].rs2_rdata;
         assign rvfi_itf[i].rd_addr = rvfi_head[i].rd_addr;
         assign rvfi_itf[i].rd_wdata = rvfi_head[i].rd_wdata;
         assign rvfi_itf[i].frd_addr = rvfi_head[i].frd_addr;
         assign rvfi_itf[i].frd_wdata = rvfi_head[i].frd_wdata;
         assign rvfi_itf[i].pc_rdata = rvfi_head[i].pc_rdata;
         assign rvfi_itf[i].pc_wdata = (backend_flush && 32'(from_cb.rob_id % ID_WIDTH) == i) ? backend_redirect_pc : rvfi_head[i].pc_wdata;
-        assign rvfi_itf[i].mem_addr = rvfi_head[i].mem_addr;
-        assign rvfi_itf[i].mem_rmask = rvfi_head[i].mem_rmask;
-        assign rvfi_itf[i].mem_wmask = rvfi_head[i].mem_wmask;
-        assign rvfi_itf[i].mem_rdata = rvfi_head[i].mem_rdata;
-        assign rvfi_itf[i].mem_wdata = rvfi_head[i].mem_wdata;
+        assign rvfi_itf[i].mem_addr = (from_stq.valid && from_stq.ready && 32'(from_stq.rob_id % ID_WIDTH) == i) ? from_stq.addr_dbg : rvfi_head[i].mem_addr;
+        assign rvfi_itf[i].mem_rmask = (from_stq.valid && from_stq.ready && 32'(from_stq.rob_id % ID_WIDTH) == i) ? '0 : rvfi_head[i].mem_rmask;
+        assign rvfi_itf[i].mem_wmask = (from_stq.valid && from_stq.ready && 32'(from_stq.rob_id % ID_WIDTH) == i) ? from_stq.wmask_dbg : rvfi_head[i].mem_wmask;
+        assign rvfi_itf[i].mem_rdata = (from_stq.valid && from_stq.ready && 32'(from_stq.rob_id % ID_WIDTH) == i) ? '0 : rvfi_head[i].mem_rdata;
+        assign rvfi_itf[i].mem_wdata = (from_stq.valid && from_stq.ready && 32'(from_stq.rob_id % ID_WIDTH) == i) ? from_stq.wdata_dbg : rvfi_head[i].mem_wdata;
     end endgenerate
 
     always_ff @(posedge clk) begin

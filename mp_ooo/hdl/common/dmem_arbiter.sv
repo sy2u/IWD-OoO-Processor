@@ -5,7 +5,7 @@ module dmem_arbiter
     input   logic               backend_flush,
 
     ldq_dmem_itf.cache          load,
-    stq_dmem_itf.cache          store,
+    stb_dmem_itf.cache          store,
     dmem_itf.cpu                cache
 );
 
