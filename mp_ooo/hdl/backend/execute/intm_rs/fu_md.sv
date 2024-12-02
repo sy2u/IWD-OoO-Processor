@@ -91,7 +91,7 @@ import int_rs_types::*;
     // IP Control:
     //---------------------------------------------------------------------------------
 
-    assign  is_multiply = ~intm_rs_reg.fu_opcode[3];
+    assign  is_multiply = ~intm_rs_reg.fu_opcode[2];
     assign  complete = (is_multiply) ? mul_complete : div_complete;
     assign  div_complete = org_complete && (~div_start);
     assign  mul_start = (reg_start) && is_multiply;
@@ -194,7 +194,6 @@ import int_rs_types::*;
     always_ff @(posedge clk) begin 
         if (rst) begin 
             cdb_valid <= 1'b0;
-            fu_md_reg <= '0;
         end else begin 
             cdb_valid <= nxt_valid && cdb_ready;
             if (nxt_valid && cdb_ready) begin 
