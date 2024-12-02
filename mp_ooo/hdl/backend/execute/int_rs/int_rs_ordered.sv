@@ -79,7 +79,6 @@ import int_rs_types::*;
 
     // issue logic
     int_rs_entry_t          issued_entry    [INT_ISSUE_WIDTH];
-    bypass_network_t        fu_alu_bypass   [INT_ISSUE_WIDTH];
     logic                   fu_issue_en     [INT_ISSUE_WIDTH];
     logic   [INTRS_IDX-1:0] fu_issue_idx    [INT_ISSUE_WIDTH];
 
@@ -102,8 +101,8 @@ import int_rs_types::*;
                 if( rs_valid[i] & int_rs_pop_en[j] & (INTRS_IDX)'(unsigned'(i))>=fu_issue_idx[j] ) begin
                     rs_update_sel[i] = NEXT;
                     rs_compress_sel[i] = INT_ISSUE_IDX'(unsigned'(j));
-                    if(  j < INT_ISSUE_WIDTH-1  ) begin // handle corner case
-                        if( int_rs_pop_en[j+1] && INTRS_IDX'(i+j+1)==fu_issue_idx[j+1] ) begin
+                    if(  unsigned'(j) < INT_ISSUE_WIDTH-unsigned'(1)  ) begin // handle corner case
+                        if( int_rs_pop_en[j+1] && INTRS_IDX'(unsigned'(i+j)+1)==fu_issue_idx[j+1] ) begin
                             rs_compress_sel[i] = rs_compress_sel[i] + INT_ISSUE_IDX'(unsigned'(1));
                         end
                     end
@@ -123,9 +122,9 @@ import int_rs_types::*;
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             unique case (rs_update_sel[i])
                 NEXT: begin
-                    if( i+{31'b0, rs_compress_sel[i]} < INTRS_DEPTH-1 ) begin
-                        rs_push_en[i] = rs_valid[i+{31'b0, rs_compress_sel[i]}+unsigned'(1)];
-                        rs_clear[i] = ~rs_valid[i+{31'b0, rs_compress_sel[i]}+unsigned'(1)];
+                    if( unsigned'(i)+{31'b0, rs_compress_sel[i]} < INTRS_DEPTH-unsigned'(1) ) begin
+                        rs_push_en[i] = rs_valid[unsigned'(i)+{31'b0, rs_compress_sel[i]}+1];
+                        rs_clear[i] = ~rs_valid[unsigned'(i)+{31'b0, rs_compress_sel[i]}+1];
                     end else begin
                         rs_push_en[i] = 1'b0;
                         rs_clear[i] = 1'b1;
@@ -151,8 +150,8 @@ import int_rs_types::*;
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             unique case (rs_update_sel[i])
                 NEXT: begin
-                    if (i+{31'b0, rs_compress_sel[i]} < INTRS_DEPTH-1) begin
-                        rs_entry_in[i] = rs_entry_out[i+{31'b0, rs_compress_sel[i]}+unsigned'(1)];
+                    if (unsigned'(i)+{31'b0, rs_compress_sel[i]} < INTRS_DEPTH-unsigned'(1)) begin
+                        rs_entry_in[i] = rs_entry_out[unsigned'(i)+{31'b0, rs_compress_sel[i]}+unsigned'(1)];
                     end else begin
                         rs_entry_in[i] = 'x;
                     end
@@ -274,7 +273,6 @@ import int_rs_types::*;
             .int_rs_valid           (fu_issue_en[i]),
             .fu_alu_ready           (alu_ready[i]),
             .fu_alu_reg_in          (fu_alu_reg_in[i]),
-            .bypass                 (fu_alu_bypass[i]),
             .cdb                    (fu_cdb_out[i])
         );
     end endgenerate
