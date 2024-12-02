@@ -18,7 +18,7 @@ package cpu_params;
     localparam unsigned     INTMRS_DEPTH    = 8;
     localparam unsigned     INTMRS_IDX      = $clog2(INTMRS_DEPTH);
 
-    localparam unsigned     BRRS_DEPTH      = 8;
+    localparam unsigned     BRRS_DEPTH      = 4;
     localparam unsigned     BRRS_IDX        = $clog2(BRRS_DEPTH);
     localparam  unsigned    CB_DEPTH        = 8;
 

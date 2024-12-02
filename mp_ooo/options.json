@@ -1,5 +1,5 @@
 {
-    "clock"       : 2000,
+    "clock"       : 1900,
     "c_ext"       : false,
     "f_ext"       : false,
     "bmem_0_on_x" : true,
