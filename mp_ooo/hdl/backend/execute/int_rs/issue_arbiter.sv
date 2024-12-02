@@ -21,9 +21,9 @@ import cpu_params::*;
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             if (rs_request[i]) begin
                 rs_grant[i] = 1'b1;
-                fu_issue_en[next_issue_idx] = '1;
-                fu_issue_idx[next_issue_idx] = (INTRS_IDX)'(unsigned'(i));
-                next_issue_idx = (INT_ISSUE_IDX+1)'(next_issue_idx + 1);
+                fu_issue_en[next_issue_idx[0]] = '1;
+                fu_issue_idx[next_issue_idx[0]] = (INTRS_IDX)'(unsigned'(i));
+                next_issue_idx = (INT_ISSUE_IDX+1)'(next_issue_idx + unsigned'(1));
                 if ( (INT_ISSUE_IDX+1)'(next_issue_idx) >= (INT_ISSUE_IDX+1)'(INT_ISSUE_WIDTH) ) break;
             end
         end

@@ -68,7 +68,6 @@ import int_rs_types::*;
     logic [INTRS_IDX-1:0]   int_rs_top, rs_top_next;
 
     // pop logic
-    logic                   int_rs_valid;
     logic                   int_rs_pop_en   [INT_ISSUE_WIDTH];
     logic                   alu_ready       [INT_ISSUE_WIDTH];
 
@@ -98,12 +97,12 @@ import int_rs_types::*;
             rs_compress_sel[i] = '0;
             // compress
             for( int j = 0; j < INT_ISSUE_WIDTH; j++ ) begin
-                if( rs_valid[i] & int_rs_pop_en[0] & (INTRS_IDX)'(unsigned'(i))>=fu_issue_idx[0] ) begin
+                if( rs_valid[i] & int_rs_pop_en[j] & (INTRS_IDX)'(unsigned'(i))>=fu_issue_idx[j] ) begin
                     rs_update_sel[i] = NEXT;
-                    rs_compress_sel[i] = INT_ISSUE_IDX'(j);
+                    rs_compress_sel[i] = INT_ISSUE_IDX'(unsigned'(j));
                     if(  j < INT_ISSUE_WIDTH-1  ) begin // handle corner case
                         if( int_rs_pop_en[j+1] && INTRS_IDX'(i+j+1)==fu_issue_idx[j+1] ) begin
-                            rs_compress_sel[i] = rs_compress_sel[i] + INT_ISSUE_IDX'(1);
+                            rs_compress_sel[i] = rs_compress_sel[i] + INT_ISSUE_IDX'(unsigned'(1));
                         end
                     end
                 end
@@ -123,8 +122,8 @@ import int_rs_types::*;
             unique case (rs_update_sel[i])
                 NEXT: begin
                     if( i+rs_compress_sel[i] < INTRS_DEPTH-1 ) begin
-                        rs_push_en[i] = rs_valid[i+rs_compress_sel[i]+1];
-                        rs_clear[i] = ~rs_valid[i+rs_compress_sel[i]+1];
+                        rs_push_en[i] = rs_valid[i+rs_compress_sel[i]+unsigned'(1)];
+                        rs_clear[i] = ~rs_valid[i+rs_compress_sel[i]+unsigned'(1)];
                     end else begin
                         rs_push_en[i] = 1'b0;
                         rs_clear[i] = 1'b1;
@@ -151,7 +150,7 @@ import int_rs_types::*;
             unique case (rs_update_sel[i])
                 NEXT: begin
                     if (i+rs_compress_sel[i] < INTRS_DEPTH-1) begin
-                        rs_entry_in[i] = rs_entry_out[i+rs_compress_sel[i]+1];
+                        rs_entry_in[i] = rs_entry_out[i+rs_compress_sel[i]+unsigned'(1)];
                     end else begin
                         rs_entry_in[i] = 'x;
                     end
@@ -246,7 +245,7 @@ import int_rs_types::*;
     fu_alu_reg_t    fu_alu_reg_in   [INT_ISSUE_WIDTH];
 
     // handshake with fu_alu_reg:
-    assign int_rs_valid = |rs_grant;
+    // assign int_rs_valid = |rs_grant;
 
     // send data to fu_alu_reg
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin
@@ -270,7 +269,7 @@ import int_rs_types::*;
         fu_alu fu_alu_i(
             .clk                    (clk),
             .rst                    (rst),
-            .int_rs_valid           (int_rs_valid),
+            .int_rs_valid           (fu_issue_en[i]),
             .fu_alu_ready           (alu_ready[i]),
             .fu_alu_reg_in          (fu_alu_reg_in[i]),
             .bypass                 (fu_alu_bypass[i]),
