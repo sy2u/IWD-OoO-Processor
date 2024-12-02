@@ -121,24 +121,17 @@ import int_rs_types::*;
     logic                   cdb_reg_miss_predict;
     logic   [31:0]          cdb_reg_target_address;
     always_ff @(posedge clk) begin 
-        if (rst) begin 
-            cdb_reg                     <= '0;
-            cdb_reg_miss_predict        <= '0;
-            cdb_reg_target_address      <= '0;
-            cdb_reg_branch_taken        <= '0;
-        end else begin 
-            if (fu_br_valid && cdb_ready) begin 
-                cdb_reg.rob_id          <= fu_br_reg_out.rob_id;
-                cdb_reg.rd_arch         <= fu_br_reg_out.rd_arch;
-                cdb_reg.rd_phy          <= fu_br_reg_out.rd_phy;
-                cdb_reg.rd_value        <= rd_value;
-                cdb_reg.rs1_value_dbg   <= fu_br_reg_out.rs1_value;
-                cdb_reg.rs2_value_dbg   <= fu_br_reg_out.rs2_value;
+        if (fu_br_valid && cdb_ready) begin 
+            cdb_reg.rob_id          <= fu_br_reg_out.rob_id;
+            cdb_reg.rd_arch         <= fu_br_reg_out.rd_arch;
+            cdb_reg.rd_phy          <= fu_br_reg_out.rd_phy;
+            cdb_reg.rd_value        <= rd_value;
+            cdb_reg.rs1_value_dbg   <= fu_br_reg_out.rs1_value;
+            cdb_reg.rs2_value_dbg   <= fu_br_reg_out.rs2_value;
 
-                cdb_reg_miss_predict    <= miss_predict;
-                cdb_reg_target_address  <= target_address;
-                cdb_reg_branch_taken    <= branch_taken;
-            end
+            cdb_reg_miss_predict    <= miss_predict;
+            cdb_reg_target_address  <= target_address;
+            cdb_reg_branch_taken    <= branch_taken;
         end
     end
 
