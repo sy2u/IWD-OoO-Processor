@@ -14,7 +14,8 @@ import rv32i_types::*;
     output  logic   [ARF_IDX-1:0]   rd_arch,
     output  logic                   rd_en,
     output  logic   [ARF_IDX-1:0]   rs1_arch,
-    output  logic   [ARF_IDX-1:0]   rs2_arch
+    output  logic   [ARF_IDX-1:0]   rs2_arch,
+    output  logic                   is_store
 );
 
     logic   [6:0]               opcode;
@@ -30,6 +31,7 @@ import rv32i_types::*;
     assign rd_arch = (rd_en) ? inst[11:7] : '0;
     assign rs1_arch = (opcode inside {op_b_imm, op_b_reg, op_b_jalr, op_b_br, op_b_load, op_b_store}) ? inst[19:15] : '0;
     assign rs2_arch = (opcode inside {op_b_reg, op_b_br, op_b_store}) ? inst[24:20] : '0;
+    assign is_store = opcode == op_b_store;
 
     always_comb begin
         rs_type = RS_INT;
