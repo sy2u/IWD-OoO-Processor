@@ -52,20 +52,23 @@ import prf_types::*;
         for (int i = 0; i < CDB_WIDTH; i++) begin
             // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
             unique case (prf_bypass_rs1[i])
-                4'b0000: begin
+                5'b00000: begin
                     from_rs_local_out[i].rs1_value = (from_rs_local_in[i].rs1_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs1_phy];
                 end
-                4'b0001: begin
+                5'b00001: begin
                     from_rs_local_out[i].rs1_value = cdb_local[0].rd_value;
                 end
-                4'b0010: begin
+                5'b00010: begin
                     from_rs_local_out[i].rs1_value = cdb_local[1].rd_value;
                 end
-                4'b0100: begin
+                5'b00100: begin
                     from_rs_local_out[i].rs1_value = cdb_local[2].rd_value;
                 end
-                4'b1000: begin
+                5'b01000: begin
                     from_rs_local_out[i].rs1_value = cdb_local[3].rd_value;
+                end
+                5'b10000: begin
+                    from_rs_local_out[i].rs1_value = cdb_local[4].rd_value;
                 end
                 default: begin
                     from_rs_local_out[i].rs1_value = 'x;
@@ -78,20 +81,23 @@ import prf_types::*;
         for (int i = 0; i < CDB_WIDTH; i++) begin
             // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
             unique case (prf_bypass_rs2[i])
-                4'b0000: begin
+                5'b00000: begin
                     from_rs_local_out[i].rs2_value = (from_rs_local_in[i].rs2_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs2_phy];
                 end
-                4'b0001: begin
+                5'b00001: begin
                     from_rs_local_out[i].rs2_value = cdb_local[0].rd_value;
                 end
-                4'b0010: begin
+                5'b00010: begin
                     from_rs_local_out[i].rs2_value = cdb_local[1].rd_value;
                 end
-                4'b0100: begin
+                5'b00100: begin
                     from_rs_local_out[i].rs2_value = cdb_local[2].rd_value;
                 end
-                4'b1000: begin
+                5'b01000: begin
                     from_rs_local_out[i].rs2_value = cdb_local[3].rd_value;
+                end
+                5'b10000: begin
+                    from_rs_local_out[i].rs2_value = cdb_local[4].rd_value;
                 end
                 default: begin
                     from_rs_local_out[i].rs2_value = 'x;
