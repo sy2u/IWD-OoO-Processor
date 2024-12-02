@@ -117,7 +117,7 @@ import uop_types::*;
     );
 
     // merge to_prf and cdb_out for dual issue
-    parameter int subset_indices[INT_ISSUE_WIDTH] = '{0, 4};
+    parameter int subset_indices[MAX_ISSUE_WIDTH] = '{0, 4};
     rs_prf_itf int_to_prf       [INT_ISSUE_WIDTH] ();
     cdb_itf int_fu_cdb_out      [INT_ISSUE_WIDTH] (); 
     generate

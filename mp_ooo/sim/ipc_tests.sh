@@ -15,13 +15,12 @@ elif [[ "$1" == "vcs" ]]; then
 fi
 
 # Def Benchmarks
-benchmarks=("Coremark" "Compression" "Mergesort" "FFT" "aes_sha")
 elf_files=(
     "../testcode/coremark_im.elf"
-    "../testcode/additional_testcases/compression.elf"
-    "../testcode/cp3_release_benches/mergesort.elf"
-    "../testcode/cp3_release_benches/fft.elf"
-    "../testcode/cp3_release_benches/aes_sha.elf"
+    "../testcode/additional_testcases/compression_im.elf"
+    "../testcode/cp3_release_benches/mergesort_im.elf"
+    "../testcode/cp3_release_benches/fft_im.elf"
+    "../testcode/cp3_release_benches/aes_sha_im.elf"
 )
 
 # Output file

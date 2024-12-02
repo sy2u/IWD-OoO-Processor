@@ -37,6 +37,7 @@ package cpu_params;
     // Issue mode
     localparam unsigned     INT_ISSUE_WIDTH = 2;
     localparam unsigned     INT_ISSUE_IDX   = $clog2(INT_ISSUE_WIDTH);
+    localparam unsigned     MAX_ISSUE_WIDTH = 2;
 
     // Bypass Network
     localparam  unsigned    NUM_RS      = 4; // Number of RS
