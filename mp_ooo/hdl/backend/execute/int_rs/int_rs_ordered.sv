@@ -220,14 +220,7 @@ import int_rs_types::*;
 
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin
         assign issued_entry[i] = rs_entry[fu_issue_idx[i]];
-        one_hot_mux #(
-            .T          (bypass_t),
-            .NUM_INPUTS (INTRS_DEPTH)
-        ) ohm_rs1 (
-            .data_in    (rs_bypass),
-            .select     (rs_grant),
-            .data_out   (to_prf[i].rs_bypass)
-        );
+        assign to_prf[i].rs_bypass = rs_bypass[fu_issue_idx[i]];
     end endgenerate
 
     ////////////
