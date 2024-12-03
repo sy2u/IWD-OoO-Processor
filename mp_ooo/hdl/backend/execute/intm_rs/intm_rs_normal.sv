@@ -214,7 +214,7 @@ import int_rs_types::*;
         .cdb_out    (fu_mul_cdb_out)
     );
 
-    fu_div fu_div_i (
+    fu_div_dual fu_div_i (
         .clk        (clk),
         .rst        (rst),
         .prv_valid  (|rs_div_request),
@@ -249,7 +249,7 @@ import int_rs_types::*;
         .prv_valid  (cdb_valid),
         .prv_ready  (),
         .nxt_valid  (cdb_out_valid),
-        .nxt_ready  (1'b1),
+        // .nxt_ready  (1'b1),
         .prv_data   (cdb_reg_in),
         .nxt_data   (cdb_reg_out)
     );
