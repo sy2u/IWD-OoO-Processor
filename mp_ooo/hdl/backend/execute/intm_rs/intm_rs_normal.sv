@@ -186,8 +186,8 @@ import int_rs_types::*;
         intm_rs_in.rd_phy      = issued_entry.rd_phy;
         intm_rs_in.rd_arch     = issued_entry.rd_arch;
         intm_rs_in.fu_opcode   = issued_entry.fu_opcode;
-        intm_rs_in.rs1_value   = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs1_phy) ? alu_bypass.rd_value : to_prf.rs1_value;
-        intm_rs_in.rs2_value   = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs2_phy) ? alu_bypass.rd_value : to_prf.rs2_value;
+        intm_rs_in.rs1_value   = (alu_bypass.valid && (alu_bypass.rd_phy != '0) && alu_bypass.rd_phy == issued_entry.rs1_phy) ? alu_bypass.rd_value : to_prf.rs1_value;
+        intm_rs_in.rs2_value   = (alu_bypass.valid && (alu_bypass.rd_phy != '0) && alu_bypass.rd_phy == issued_entry.rs2_phy) ? alu_bypass.rd_value : to_prf.rs2_value;
     end
 
     //---------------------------------------------------------------------------------

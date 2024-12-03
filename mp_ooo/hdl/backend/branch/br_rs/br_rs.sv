@@ -129,8 +129,8 @@ import int_rs_types::*;
     assign fu_br_reg_in.predict_taken  = issued_entry.predict_taken;
     assign fu_br_reg_in.predict_target = issued_entry.predict_target;
 
-    assign fu_br_reg_in.rs1_value      = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs1_phy) ? alu_bypass.rd_value :  to_prf.rs1_value;
-    assign fu_br_reg_in.rs2_value      = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs2_phy) ? alu_bypass.rd_value :  to_prf.rs2_value;
+    assign fu_br_reg_in.rs1_value      = (alu_bypass.valid && (alu_bypass.rd_phy != '0) && alu_bypass.rd_phy == issued_entry.rs1_phy) ? alu_bypass.rd_value :  to_prf.rs1_value;
+    assign fu_br_reg_in.rs2_value      = (alu_bypass.valid && (alu_bypass.rd_phy != '0) && alu_bypass.rd_phy == issued_entry.rs2_phy) ? alu_bypass.rd_value :  to_prf.rs2_value;
 
     // Functional Units
     fu_br fu_br_i(
