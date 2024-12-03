@@ -12,6 +12,7 @@ import int_rs_types::*;
 
     // Next stage handshake
     output  logic               nxt_valid,
+    input   logic               nxt_ready,
 
     input   intm_rs_reg_t       iss_in,
 
@@ -52,12 +53,11 @@ import int_rs_types::*;
     logic                       prv_divider_ready;
 
     // Pipeline reg to interface with the previous stage
-    pipeline_reg #(
+    skid_buffer #(
         .DATA_T (intm_rs_reg_t)
     ) cdb_reg (
         .clk        (clk),
         .rst        (rst),
-        .flush      (1'b0),
         .prv_valid  (prv_valid),
         .prv_ready  (prv_ready),
         .nxt_valid  (reg_valid),
@@ -80,7 +80,7 @@ import int_rs_types::*;
     //---------------------------------------------------------------------------------
 
     assign  div_start = reg_valid && (~prv_reg_valid) || reg_valid && prv_divider_ready;
-    assign  divider_ready = nxt_valid;
+    assign  divider_ready = nxt_valid && nxt_ready;
 
     // mult: multiplier and multiplicand are interchanged
     assign  au = {1'b0, intm_rs_reg.rs1_value};
@@ -177,6 +177,8 @@ import int_rs_types::*;
 
     logic                   cdb_div1_valid;
     logic                   cdb_div2_valid;
+    logic                   cdb_div1_ready;
+    logic                   cdb_div2_ready;
     fu_cdb_reg_t            cdb_div1_out;
     fu_cdb_reg_t            cdb_div2_out;
 
@@ -190,6 +192,7 @@ import int_rs_types::*;
         .prv_valid  (fu_div1_valid),
         .prv_ready  (fu_div1_ready),
         .nxt_valid  (cdb_div1_valid),
+        .nxt_ready  (cdb_div1_ready),
         .iss_in     (iss_in),
         .cdb_out    (cdb_div1_out)
     );
@@ -200,12 +203,14 @@ import int_rs_types::*;
         .prv_valid  (fu_div2_valid),
         .prv_ready  (fu_div2_ready),
         .nxt_valid  (cdb_div2_valid),
+        .nxt_ready  (cdb_div2_ready),
         .iss_in     (iss_in),
         .cdb_out    (cdb_div2_out)
     );
 
-    // No need to arbitrate, the two FUs will never be valid at the same time
     assign nxt_valid = cdb_div1_valid || cdb_div2_valid;
     assign cdb_out = cdb_div1_valid ? cdb_div1_out : cdb_div2_out;
+    assign cdb_div1_ready = 1'b1;
+    assign cdb_div2_ready = ~cdb_div1_valid;
 
 endmodule
