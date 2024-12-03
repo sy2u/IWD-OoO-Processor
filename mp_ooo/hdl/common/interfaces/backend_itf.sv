@@ -482,19 +482,25 @@ import cpu_params::*;
     logic   [PRF_IDX-1:0]   rs2_phy;
     logic   [31:0]          rs1_value;
     logic   [31:0]          rs2_value;
+    logic   [CDB_WIDTH:0]   rs1_bypass_en;
+    logic   [CDB_WIDTH:0]   rs2_bypass_en;
 
     modport rs (
         output              rs1_phy,
         output              rs2_phy,
         input               rs1_value,
-        input               rs2_value
+        input               rs2_value,
+        output              rs1_bypass_en,
+        output              rs2_bypass_en
     );
 
     modport prf (
         input               rs1_phy,
         input               rs2_phy,
         output              rs1_value,
-        output              rs2_value
+        output              rs2_value,
+        input               rs1_bypass_en,
+        input               rs2_bypass_en
     );
 
 endinterface

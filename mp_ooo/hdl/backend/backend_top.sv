@@ -199,7 +199,8 @@ import int_rs_types::*;
         .clk                    (clk),
 
         .from_rs                (rs_prf_itfs),
-        .cdb                    (cdb_itfs)
+        .cdb                    (cdb_itfs),
+        .alu_bypass             (alu_bypass)
     );
 
 endmodule
