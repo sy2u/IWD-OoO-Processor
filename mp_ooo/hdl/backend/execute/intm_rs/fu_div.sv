@@ -33,7 +33,6 @@ import int_rs_types::*;
 
     logic [A_WIDTH+B_WIDTH-1:0] product;
 
-    logic                       div_complete, org_complete;
     logic [A_WIDTH-1:0]         quotient;
     logic [B_WIDTH-1:0]         remainder;
     logic                       divide_by_0;
@@ -48,48 +47,40 @@ import int_rs_types::*;
     //---------------------------------------------------------------------------------
 
     logic                       reg_valid;
+    logic                       prv_reg_valid;
     logic                       reg_start;
+    logic                       divider_ready;
+    logic                       prv_divider_ready;
 
-    // handshake control
-    assign prv_ready = ~reg_valid || (nxt_valid && nxt_ready);
-
-    always_ff @( posedge clk ) begin
-        if( rst ) begin
-            reg_valid <= '0;
-        end else if (prv_ready) begin
-            reg_valid <= prv_valid;
-        end
-    end
-
-    // load meta data
-    always_ff @( posedge clk ) begin
-        if( rst ) begin
-            intm_rs_reg <= '0;
-        end else if( prv_ready && prv_valid )begin
-            intm_rs_reg <= iss_in;
-        end
-    end
+    // Pipeline reg to interface with the previous stage
+    skid_buffer #(
+        .DATA_T (intm_rs_reg_t)
+    ) cdb_reg (
+        .clk        (clk),
+        .rst        (rst),
+        .prv_valid  (prv_valid),
+        .prv_ready  (prv_ready),
+        .nxt_valid  (reg_valid),
+        .nxt_ready  (divider_ready),
+        .prv_data   (iss_in),
+        .nxt_data   (intm_rs_reg)
+    );
 
     // start signal generation
     always_ff @( posedge clk ) begin
-        if( rst ) begin
-            reg_start <= '0;
-        end else begin
-            if ( reg_start ) begin
-                reg_start <= '0;
-            end else if( prv_ready && prv_valid ) begin
-                reg_start <= '1;
-            end
-        end
+        prv_reg_valid <= reg_valid;
+    end
+
+    always_ff @( posedge clk ) begin
+        prv_divider_ready <= divider_ready;
     end
 
     //---------------------------------------------------------------------------------
     // IP Control:
     //---------------------------------------------------------------------------------
 
-    assign  complete = div_complete;
-    assign  div_complete = org_complete && (~div_start);
-    assign  div_start = reg_start;
+    assign  div_start = reg_valid && (~prv_reg_valid) || reg_valid && prv_divider_ready;
+    assign  divider_ready = nxt_valid && nxt_ready;
 
     // mult: multiplier and multiplicand are interchanged
     assign  au = {1'b0, intm_rs_reg.rs1_value};
@@ -145,15 +136,81 @@ import int_rs_types::*;
                 RST_MODE, INPUT_MODE, OUTPUT_MODE, EARLY_START)
     divider (.clk(clk), .rst_n(~rst), .hold('0),
             .start(div_start), .a(a), .b(b),
-            .complete(org_complete), .divide_by_0(divide_by_0),
+            .complete(complete), .divide_by_0(divide_by_0),
             .quotient(quotient), .remainder(remainder) );
 
-    assign nxt_valid                = reg_valid && complete;
+    assign nxt_valid                = reg_valid && complete && ~div_start;
     assign cdb_out.rob_id           = intm_rs_reg.rob_id;
     assign cdb_out.rd_arch          = intm_rs_reg.rd_arch;
     assign cdb_out.rd_phy           = intm_rs_reg.rd_phy;
     assign cdb_out.rd_value         = outcome;
     assign cdb_out.rs1_value_dbg    = intm_rs_reg.rs1_value;
     assign cdb_out.rs2_value_dbg    = intm_rs_reg.rs2_value;
+
+endmodule
+
+module fu_div_dual
+import cpu_params::*;
+import uop_types::*;
+import int_rs_types::*;
+(
+    input   logic               clk,
+    input   logic               rst,
+
+    // Prev stage handshake
+    input   logic               prv_valid,
+    output  logic               prv_ready,
+
+    // Next stage handshake
+    output  logic               nxt_valid,
+    // input   logic               nxt_ready,
+
+    input   intm_rs_reg_t       iss_in,
+
+    output  fu_cdb_reg_t        cdb_out
+);
+
+    logic                   fu_div1_valid;
+    logic                   fu_div2_valid;
+    logic                   fu_div1_ready;
+    logic                   fu_div2_ready;
+
+    logic                   cdb_div1_valid;
+    logic                   cdb_div2_valid;
+    logic                   cdb_div1_ready;
+    logic                   cdb_div2_ready;
+    fu_cdb_reg_t            cdb_div1_out;
+    fu_cdb_reg_t            cdb_div2_out;
+
+    assign fu_div1_valid = prv_valid;
+    assign fu_div2_valid = prv_valid && ~fu_div1_ready;
+    assign prv_ready = fu_div1_ready || fu_div2_ready;
+
+    fu_div fu_div_1_i (
+        .clk        (clk),
+        .rst        (rst),
+        .prv_valid  (fu_div1_valid),
+        .prv_ready  (fu_div1_ready),
+        .nxt_valid  (cdb_div1_valid),
+        .nxt_ready  (cdb_div1_ready),
+        .iss_in     (iss_in),
+        .cdb_out    (cdb_div1_out)
+    );
+
+    fu_div fu_div_2_i (
+        .clk        (clk),
+        .rst        (rst),
+        .prv_valid  (fu_div2_valid),
+        .prv_ready  (fu_div2_ready),
+        .nxt_valid  (cdb_div2_valid),
+        .nxt_ready  (cdb_div2_ready),
+        .iss_in     (iss_in),
+        .cdb_out    (cdb_div2_out)
+    );
+
+    assign nxt_valid = cdb_div1_valid || cdb_div2_valid;
+    assign cdb_out = cdb_div1_valid ? cdb_div1_out : cdb_div2_out;
+    assign cdb_div1_ready = 1'b1;
+    assign cdb_div2_ready = ~cdb_div1_valid;
 
 endmodule
