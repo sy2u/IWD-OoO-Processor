@@ -68,8 +68,8 @@ package cpu_params;
 
     // DCache Parameters
     localparam  unsigned    D_OFFSET_IDX  = 5;
-    localparam  unsigned    D_SET_IDX     = 5;
-    localparam  unsigned    D_TAG_IDX     = 22;
+    localparam  unsigned    D_SET_IDX     = 4;
+    localparam  unsigned    D_TAG_IDX     = 23;
     localparam  unsigned    D_NUM_WAYS    = 4;
     localparam  unsigned    D_PLRU_BITS   = D_NUM_WAYS - 1;
     localparam  unsigned    D_WAY_BITS    = $clog2(D_NUM_WAYS);
