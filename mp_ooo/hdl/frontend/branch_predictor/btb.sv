@@ -8,7 +8,7 @@ import uop_types::*;
     cb_bp_itf.bp                            from_cb,
 
     input   logic [IF_WIDTH-1:0]            predict_taken_gshare,
-    input   logic [31:0]                    pc,
+    input   logic [31:0]                    blk_pc,
     output  logic [IF_WIDTH-1:0]  [31:0]    predict_target,
     output  logic [IF_WIDTH-1:0]	    predict_taken
 );
@@ -117,17 +117,17 @@ import uop_types::*;
     generate for (genvar k = 0; k < IF_WIDTH; k++) begin
         always_comb begin
 	    predict_taken[k] = 1'b0;
-            pc_in[k] = (pc & ~(unsigned'(IF_BLK_SIZE - 1))) + unsigned'(k) * 4;
-            predict_target[k] = (pc & ~(unsigned'(IF_BLK_SIZE - 1))) + unsigned'(k) * 4 + 4;
+            pc_in[k] = blk_pc + unsigned'(k) * 4;
+            predict_target[k] = blk_pc + unsigned'(k) * 4 + 4;
             for (int i = 0; i < BTB_DEPTH; i++) begin
                 if (predict_taken_gshare[k] && br_btb[i].valid && (br_btb[i].pc == pc_in[k])) begin
                     predict_target[k] = br_btb[i].target_address;
-		    predict_taken[k]  = 1'b1;
+		            predict_taken[k]  = 1'b1;
                     break;
                 end
                 if (j_btb[i].valid && (j_btb[i].pc == pc_in[k])) begin
                     predict_target[k] = j_btb[i].target_address;
-		    predict_taken[k] = 1'b1;
+		            predict_taken[k] = 1'b1;
                     break;
                 end
             end

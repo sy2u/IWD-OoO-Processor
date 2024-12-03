@@ -18,6 +18,9 @@ import int_rs_types::*; #(
     output  RS_ENTRY_T          entry, // current entry
     input   logic               clear, // clear this entry (useful in shifting queues)
 
+    input bypass_network_t      fast_bypass,
+    output  logic [CDB_WIDTH:0] rs1_bypass_en,
+    output  logic [CDB_WIDTH:0] rs2_bypass_en,
     cdb_itf.rs                  wakeup_cdb[CDB_WIDTH]
 );
 
@@ -90,16 +93,17 @@ import int_rs_types::*; #(
 
     logic                       src1_ready;
     logic                       src2_ready;
-    logic   [CDB_WIDTH-1:0]     src1_may_bypass;
-    logic   [CDB_WIDTH-1:0]     src2_may_bypass;
 
     generate for (genvar i = 0; i < CDB_WIDTH; i++) begin
-        assign src1_may_bypass[i] = cdb_rs[i].valid && (entry_reg.rs1_phy == cdb_rs[i].rd_phy);
-        assign src2_may_bypass[i] = cdb_rs[i].valid && (entry_reg.rs2_phy == cdb_rs[i].rd_phy);
+        assign rs1_bypass_en[i] = cdb_rs[i].valid && (cdb_rs[i].rd_phy != '0) && (entry_reg.rs1_phy == cdb_rs[i].rd_phy);
+        assign rs2_bypass_en[i] = cdb_rs[i].valid && (cdb_rs[i].rd_phy != '0) && (entry_reg.rs2_phy == cdb_rs[i].rd_phy);
     end endgenerate
 
-    assign src1_ready = entry_reg.rs1_valid || |(src1_may_bypass);
-    assign src2_ready = entry_reg.rs2_valid || |(src2_may_bypass);
+    assign rs1_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs1_phy == fast_bypass.rd_phy);
+    assign rs2_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs2_phy == fast_bypass.rd_phy);
+
+    assign src1_ready = entry_reg.rs1_valid || |(rs1_bypass_en);
+    assign src2_ready = entry_reg.rs2_valid || |(rs2_bypass_en);
     assign request = entry_valid && src1_ready && src2_ready;
 
     assign valid = entry_valid;

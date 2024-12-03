@@ -73,8 +73,8 @@ package cpu_params;
 
     // DCache Parameters
     localparam  unsigned    D_OFFSET_IDX  = 5;
-    localparam  unsigned    D_SET_IDX     = 5;
-    localparam  unsigned    D_TAG_IDX     = 22;
+    localparam  unsigned    D_SET_IDX     = 4;
+    localparam  unsigned    D_TAG_IDX     = 23;
     localparam  unsigned    D_NUM_WAYS    = 4;
     localparam  unsigned    D_PLRU_BITS   = D_NUM_WAYS - 1;
     localparam  unsigned    D_WAY_BITS    = $clog2(D_NUM_WAYS);
@@ -374,6 +374,8 @@ import cpu_params::*;
         logic   [PRF_IDX-1:0]   rs2_phy;
         logic   [31:0]          rs1_value;
         logic   [31:0]          rs2_value;
+        logic   [CDB_WIDTH:0]   rs1_bypass_en;
+        logic   [CDB_WIDTH:0]   rs2_bypass_en;
     } rs_prf_itf_t;
 
 endpackage

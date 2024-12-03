@@ -1,6 +1,7 @@
 module backend_top
 import cpu_params::*;
 import uop_types::*;
+import int_rs_types::*;
 (
     input   logic               clk,
     input   logic               rst,
@@ -116,6 +117,8 @@ import uop_types::*;
         .to_mem_rs              (ds_lsu_itf_i)
     );
 
+    bypass_network_t            alu_bypass;
+
     // merge to_prf and cdb_out for dual issue
     parameter int subset_indices[MAX_ISSUE_WIDTH] = '{0, 4};
     rs_prf_itf int_to_prf       [INT_ISSUE_WIDTH] ();
@@ -144,7 +147,8 @@ import uop_types::*;
                 .from_ds                (ds_int_rs_itf_i),
                 .to_prf                 (int_to_prf),
                 .cdb                    (cdb_itfs),
-                .fu_cdb_out             (int_fu_cdb_out)
+                .fu_cdb_out             (int_fu_cdb_out),
+                .alu_bypass             (alu_bypass)
             );
         end else begin
             int_rs_normal int_rs_i(
@@ -175,7 +179,8 @@ import uop_types::*;
                 .from_ds                (ds_intm_rs_itf_i),
                 .to_prf                 (rs_prf_itfs[1]),
                 .cdb                    (cdb_itfs),
-                .fu_cdb_out             (cdb_itfs[1])
+                .fu_cdb_out             (cdb_itfs[1]),
+                .alu_bypass             (alu_bypass)
             );
         end
     endgenerate
@@ -190,7 +195,8 @@ import uop_types::*;
         .cdb                    (cdb_itfs),
         .fu_cdb_out             (cdb_itfs[2]),
         .to_rob                 (cb_rob_itf_i),
-        .to_bp                  (to_bp)
+        .to_bp                  (to_bp),
+        .alu_bypass             (alu_bypass)
     );
 
     lsu_top lsu_i(
@@ -204,6 +210,7 @@ import uop_types::*;
         .ld_to_rob              (ldq_rob_itf),
         .st_to_rob              (stq_rob_itf),
         .dcache_itf             (dcache_itf),
+        .alu_bypass             (alu_bypass),
 
         .backend_flush          (backend_flush)
     );
@@ -212,7 +219,8 @@ import uop_types::*;
         .clk                    (clk),
 
         .from_rs                (rs_prf_itfs),
-        .cdb                    (cdb_itfs)
+        .cdb                    (cdb_itfs),
+        .alu_bypass             (alu_bypass)
     );
 
 endmodule

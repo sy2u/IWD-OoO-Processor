@@ -2,6 +2,7 @@ module mem_rs
 import cpu_params::*;
 import uop_types::*;
 import lsu_types::*;
+import int_rs_types::*;
 (
     input   logic               clk,
     input   logic               rst,
@@ -9,7 +10,8 @@ import lsu_types::*;
     ds_rs_mono_itf.rs           from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
-    agu_lsq_itf.agu             to_lsq
+    agu_lsq_itf.agu             to_lsq,
+    input bypass_network_t      alu_bypass
 );
     ///////////////////////////
     // Reservation Stations  //
@@ -23,6 +25,8 @@ import lsu_types::*;
     mem_rs_entry_t   [MEMRS_DEPTH-1:0]   rs_entry_in;
     mem_rs_entry_t                       from_ds_entry;
     mem_rs_entry_t                       issued_entry;
+    logic   [MEMRS_DEPTH-1:0] [CDB_WIDTH:0] rs1_bypass_en;
+    logic   [MEMRS_DEPTH-1:0] [CDB_WIDTH:0] rs2_bypass_en;
 
     always_comb begin
         from_ds_entry.rob_id     = from_ds.uop.rob_id;
@@ -50,7 +54,10 @@ import lsu_types::*;
             .entry_out  (),
             .entry      (rs_entry[i]),
             .clear      (1'b0),
-            .wakeup_cdb (cdb)
+            .wakeup_cdb (cdb),
+            .fast_bypass(alu_bypass),
+            .rs1_bypass_en  (rs1_bypass_en[i]),
+            .rs2_bypass_en  (rs2_bypass_en[i])
         );
     end endgenerate
 
@@ -93,6 +100,24 @@ import lsu_types::*;
         .data_in    (rs_entry),
         .select     (rs_grant),
         .data_out   (issued_entry)
+    );
+
+    one_hot_mux #(
+        .T          (logic [CDB_WIDTH:0]),
+        .NUM_INPUTS (MEMRS_DEPTH)
+    ) ohm_rs1 (
+        .data_in    (rs1_bypass_en),
+        .select     (rs_grant),
+        .data_out   (to_prf.rs1_bypass_en)
+    );
+
+    one_hot_mux #(
+        .T          (logic [CDB_WIDTH:0]),
+        .NUM_INPUTS (MEMRS_DEPTH)
+    ) ohm_rs2 (
+        .data_in    (rs2_bypass_en),
+        .select     (rs_grant),
+        .data_out   (to_prf.rs2_bypass_en)
     );
 
     // full logic, set rs.ready to 0 if rs is full

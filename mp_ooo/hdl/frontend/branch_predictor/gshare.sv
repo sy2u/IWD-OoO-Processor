@@ -5,7 +5,7 @@ import cpu_params::*;
     input   logic                   rst,
 
     cb_bp_itf.bp                    from_cb,
-    input   logic [31:0]            pc,
+    input   logic [31:0]            blk_pc,
     output  logic [IF_WIDTH-1:0]    predict_taken
 );
     localparam  unsigned    IF_BLK_SIZE = IF_WIDTH * 4;
@@ -29,11 +29,11 @@ import cpu_params::*;
                     pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] <= (pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] == 2'b00) ? 2'b00 : pht[ghr[PHT_IDX-1:0] ^ from_cb.pc[PHT_IDX+1:2]] - 2'd1;
                 end
             end
-        end    
+        end
     end
 
     generate for (genvar i = 0; i < IF_WIDTH; i++) begin
-        assign pc_in[i] = (pc & ~(unsigned'(IF_BLK_SIZE - 1))) + unsigned'(i) * 4;
+        assign pc_in[i] = blk_pc + unsigned'(i) * 4;
         assign predict_taken[i] = pht[ghr[PHT_IDX-1:0] ^ pc_in[i][PHT_IDX+1:2]] >= 2'b10;
     end endgenerate
 

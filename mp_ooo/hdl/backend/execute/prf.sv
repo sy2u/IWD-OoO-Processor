@@ -1,11 +1,13 @@
 module prf
 import cpu_params::*;
 import prf_types::*;
+import int_rs_types::*;
 (
     input   logic               clk,
 
     rs_prf_itf.prf              from_rs[CDB_WIDTH],
-    cdb_itf.prf                 cdb[CDB_WIDTH]
+    cdb_itf.prf                 cdb[CDB_WIDTH],
+    input bypass_network_t      alu_bypass
 );
     // physical register file
     logic [31:0]    prf_data            [PRF_DEPTH-1:1];
@@ -25,6 +27,8 @@ import prf_types::*;
             assign from_rs_local_in[i].rs2_phy = from_rs[i].rs2_phy;
             assign from_rs_local_in[i].rs1_value = 'x; // silence Spyglass
             assign from_rs_local_in[i].rs2_value = 'x; // silence Spyglass
+            assign from_rs_local_in[i].rs1_bypass_en = from_rs[i].rs1_bypass_en;
+            assign from_rs_local_in[i].rs2_bypass_en = from_rs[i].rs2_bypass_en;
             assign from_rs[i].rs1_value     = from_rs_local_out[i].rs1_value;
             assign from_rs[i].rs2_value     = from_rs_local_out[i].rs2_value;
         end
@@ -38,20 +42,20 @@ import prf_types::*;
         end
     end
 
-    logic   [CDB_WIDTH-1:0] prf_bypass_rs1 [CDB_WIDTH];
-    logic   [CDB_WIDTH-1:0] prf_bypass_rs2 [CDB_WIDTH];
+    // logic   [CDB_WIDTH-1:0] prf_bypass_rs1 [CDB_WIDTH];
+    // logic   [CDB_WIDTH-1:0] prf_bypass_rs2 [CDB_WIDTH];
 
-    generate for (genvar i = 0; i < CDB_WIDTH; i++) begin
-        for (genvar j = 0; j < CDB_WIDTH; j++) begin
-            assign prf_bypass_rs1[i][j] = cdb_local[j].valid && (cdb_local[j].rd_phy != '0) && (cdb_local[j].rd_phy == from_rs_local_in[i].rs1_phy);
-            assign prf_bypass_rs2[i][j] = cdb_local[j].valid && (cdb_local[j].rd_phy != '0) && (cdb_local[j].rd_phy == from_rs_local_in[i].rs2_phy);
-        end
-    end endgenerate
+    // generate for (genvar i = 0; i < CDB_WIDTH; i++) begin
+    //     for (genvar j = 0; j < CDB_WIDTH; j++) begin
+    //         assign prf_bypass_rs1[i][j] = cdb_local[j].valid && (cdb_local[j].rd_phy != '0) && (cdb_local[j].rd_phy == from_rs_local_in[i].rs1_phy);
+    //         assign prf_bypass_rs2[i][j] = cdb_local[j].valid && (cdb_local[j].rd_phy != '0) && (cdb_local[j].rd_phy == from_rs_local_in[i].rs2_phy);
+    //     end
+    // end endgenerate
 
     always_comb begin
         for (int i = 0; i < CDB_WIDTH; i++) begin
             // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
-            unique case (prf_bypass_rs1[i])
+            unique case (from_rs_local_in[i].rs1_bypass_en)
                 5'b00000: begin
                     from_rs_local_out[i].rs1_value = (from_rs_local_in[i].rs1_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs1_phy];
                 end
@@ -68,7 +72,7 @@ import prf_types::*;
                     from_rs_local_out[i].rs1_value = cdb_local[3].rd_value;
                 end
                 5'b10000: begin
-                    from_rs_local_out[i].rs1_value = cdb_local[4].rd_value;
+                    from_rs_local_out[i].rs1_value = alu_bypass.rd_value;
                 end
                 default: begin
                     from_rs_local_out[i].rs1_value = 'x;
@@ -80,7 +84,7 @@ import prf_types::*;
     always_comb begin
         for (int i = 0; i < CDB_WIDTH; i++) begin
             // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
-            unique case (prf_bypass_rs2[i])
+            unique case (from_rs_local_in[i].rs2_bypass_en)
                 5'b00000: begin
                     from_rs_local_out[i].rs2_value = (from_rs_local_in[i].rs2_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs2_phy];
                 end
@@ -97,7 +101,7 @@ import prf_types::*;
                     from_rs_local_out[i].rs2_value = cdb_local[3].rd_value;
                 end
                 5'b10000: begin
-                    from_rs_local_out[i].rs2_value = cdb_local[4].rd_value;
+                    from_rs_local_out[i].rs2_value = alu_bypass.rd_value;
                 end
                 default: begin
                     from_rs_local_out[i].rs2_value = 'x;

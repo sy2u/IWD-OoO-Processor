@@ -90,7 +90,7 @@ import cpu_params::*;
         .clk                    (clk),
         .rst                    (rst),
         .from_cb                (from_cb),
-        .pc                     (pc), 
+        .blk_pc                 (blk_pc), 
         .predict_taken          (predict_taken_gshare)              
     );
 
@@ -99,9 +99,9 @@ import cpu_params::*;
         .rst                    (rst),
         .from_cb                (from_cb),
         .predict_taken_gshare   (predict_taken_gshare),
-        .pc                     (pc),
+        .blk_pc                 (blk_pc),
         .predict_target         (predict_target),
-	.predict_taken		(predict_taken)	
+	    .predict_taken		    (predict_taken)
     );
 
     assign if1_ready = to_fifo.ready;
