@@ -110,8 +110,8 @@ import int_rs_types::*;
 
     generate for (genvar i = 0; i < INTMRS_DEPTH; i++) begin : issue_logic
         always_comb begin
-            rs_mul_request[i] = rs_request[i] && rs_entry[i].fu_opcode[2];
-            rs_div_request[i] = rs_request[i] && ~rs_entry[i].fu_opcode[2];
+            rs_mul_request[i] = rs_request[i] && ~rs_entry[i].fu_opcode[2];
+            rs_div_request[i] = rs_request[i] && rs_entry[i].fu_opcode[2];
         end
     end endgenerate
 
@@ -206,7 +206,7 @@ import int_rs_types::*;
     fu_mul fu_mul_i (
         .clk        (clk),
         .rst        (rst),
-        .prv_valid  ((|rs_div_request) ? '0 : |rs_mul_request),
+        .prv_valid  ((|rs_div_grant) ? '0 : |rs_mul_request),
         .prv_ready  (fu_mul_ready),
         .nxt_valid  (fu_mul_valid),
         .nxt_ready  (cdb_mul_ready),

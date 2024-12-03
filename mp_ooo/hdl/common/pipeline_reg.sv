@@ -40,9 +40,7 @@ module pipeline_reg #(
     end
 
     always_ff @(posedge clk) begin
-        if (rst) begin
-            reg_data <= '0;
-        end else if (prv_ready && prv_valid) begin
+        if (prv_ready && prv_valid) begin
             reg_data <= prv_data;
         end
     end
