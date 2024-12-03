@@ -244,7 +244,7 @@ import int_rs_types::*;
         .prv_valid  (|rs_div_request),
         .prv_ready  (fu_div_ready),
         .nxt_valid  (fu_div_valid),
-        .nxt_ready  (cdb_div_ready),
+        // .nxt_ready  (cdb_div_ready),
         .iss_in     (intm_rs_in),
         .cdb_out    (fu_div_cdb_out)
     );

@@ -32,7 +32,6 @@ import int_rs_types::*;
 
     logic [A_WIDTH+B_WIDTH-1:0] product;
 
-    logic                       div_complete, org_complete;
     logic [A_WIDTH-1:0]         quotient;
     logic [B_WIDTH-1:0]         remainder;
     logic                       divide_by_0;
@@ -72,13 +71,16 @@ import int_rs_types::*;
         prv_reg_valid <= reg_valid;
     end
 
+    always_ff @( posedge clk ) begin
+        prv_divider_ready <= divider_ready;
+    end
+
     //---------------------------------------------------------------------------------
     // IP Control:
     //---------------------------------------------------------------------------------
 
-    assign  div_start = reg_valid && (~prv_reg_valid) || prv_divider_ready;
-    assign  complete = org_complete && ~div_start;
-    assign  divider_ready = complete;
+    assign  div_start = reg_valid && (~prv_reg_valid) || reg_valid && prv_divider_ready;
+    assign  divider_ready = nxt_valid;
 
     // mult: multiplier and multiplicand are interchanged
     assign  au = {1'b0, intm_rs_reg.rs1_value};
@@ -134,10 +136,10 @@ import int_rs_types::*;
                 RST_MODE, INPUT_MODE, OUTPUT_MODE, EARLY_START)
     divider (.clk(clk), .rst_n(~rst), .hold('0),
             .start(div_start), .a(a), .b(b),
-            .complete(org_complete), .divide_by_0(divide_by_0),
+            .complete(complete), .divide_by_0(divide_by_0),
             .quotient(quotient), .remainder(remainder) );
 
-    assign nxt_valid                = reg_valid && complete;
+    assign nxt_valid                = reg_valid && complete && ~div_start;
     assign cdb_out.rob_id           = intm_rs_reg.rob_id;
     assign cdb_out.rd_arch          = intm_rs_reg.rd_arch;
     assign cdb_out.rd_phy           = intm_rs_reg.rd_phy;
