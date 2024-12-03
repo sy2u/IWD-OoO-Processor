@@ -273,7 +273,7 @@ import int_rs_types::*;
         .prv_valid  (cdb_valid),
         .prv_ready  (),
         .nxt_valid  (cdb_out_valid),
-        // .nxt_ready  (1'b1),
+        .nxt_ready  (1'b1),
         .prv_data   (cdb_reg_in),
         .nxt_data   (cdb_reg_out)
     );
