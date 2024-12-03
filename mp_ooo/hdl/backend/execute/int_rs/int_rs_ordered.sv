@@ -9,7 +9,8 @@ import int_rs_types::*;
     ds_rs_itf.rs                from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
-    cdb_itf.fu                  fu_cdb_out
+    cdb_itf.fu                  fu_cdb_out,
+    output bypass_network_t     alu_bypass
 );
     ///////////////////////////
     // Reservation Stations  //
@@ -26,6 +27,8 @@ import int_rs_types::*;
     int_rs_entry_t                      rs_entry_out[INTRS_DEPTH];
     int_rs_entry_t                      from_ds_entry[ID_WIDTH];
     int_rs_entry_t                      issued_entry;
+    logic   [INTRS_DEPTH-1:0] [CDB_WIDTH:0] rs1_bypass_en;
+    logic   [INTRS_DEPTH-1:0] [CDB_WIDTH:0] rs2_bypass_en;
 
     always_comb begin
         for (int w = 0; w < ID_WIDTH; w++) begin
@@ -60,7 +63,10 @@ import int_rs_types::*;
             .entry_out      (rs_entry_out[i]),
             .entry          (rs_entry[i]),
             .clear          (rs_clear[i]),
-            .wakeup_cdb     (cdb)
+            .wakeup_cdb     (cdb),
+            .fast_bypass    (alu_bypass),
+            .rs1_bypass_en  (rs1_bypass_en[i]),
+            .rs2_bypass_en  (rs2_bypass_en[i])
         );
     end endgenerate
 
@@ -82,8 +88,6 @@ import int_rs_types::*;
     // update logic
     rs_update_sel_t         rs_update_sel   [INTRS_DEPTH];
     logic [ID_WIDTH_IDX-1:0]rs_push_sel     [INTRS_DEPTH];
-
-    bypass_network_t        fu_alu_bypass;
 
     // rs available update
     always_ff @(posedge clk) begin
@@ -200,6 +204,24 @@ import int_rs_types::*;
 
     assign issued_entry = rs_entry[int_rs_issue_idx];
 
+    one_hot_mux #(
+        .T          (logic [CDB_WIDTH:0]),
+        .NUM_INPUTS (INTRS_DEPTH)
+    ) ohm_rs1 (
+        .data_in    (rs1_bypass_en),
+        .select     (rs_grant),
+        .data_out   (to_prf.rs1_bypass_en)
+    );
+
+    one_hot_mux #(
+        .T          (logic [CDB_WIDTH:0]),
+        .NUM_INPUTS (INTRS_DEPTH)
+    ) ohm_rs2 (
+        .data_in    (rs2_bypass_en),
+        .select     (rs_grant),
+        .data_out   (to_prf.rs2_bypass_en)
+    );
+
     // ready logic
     logic   [INTRS_IDX:0]    n_available_slots;
     always_comb begin
@@ -246,7 +268,7 @@ import int_rs_types::*;
         .int_rs_valid           (int_rs_valid),
         .fu_alu_ready           (fu_alu_ready),
         .fu_alu_reg_in          (fu_alu_reg_in),
-        .bypass                 (fu_alu_bypass),
+        .bypass                 (alu_bypass),
         .cdb                    (fu_cdb_out)
     );
 

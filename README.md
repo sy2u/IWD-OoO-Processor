@@ -33,8 +33,11 @@
 | CP3: Bmem Arbiter         | |||✅|
 | 2-Way Superscalar         |✅||||
 | Split LSQ                 |✅||||
+| Post-Commit Store Buffer  |✅||||
 | Age-Ordered Scheduling    ||||✅|
-| Branch Predictor          |||✅||
+| Branch Predictor (FF Gshare+uBTB) |||✅||
+| Pipelined Mul/Div         ||✅|||
+| Dual Issue (not merged) ||||✅|
 
 ## Advanced Feature Stastic
 ### Age-Ordered Reservation Station

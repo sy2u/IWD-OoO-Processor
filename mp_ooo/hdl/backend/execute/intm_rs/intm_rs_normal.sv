@@ -9,7 +9,8 @@ import int_rs_types::*;
     ds_rs_itf.rs                from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
-    cdb_itf.fu                  fu_cdb_out
+    cdb_itf.fu                  fu_cdb_out,
+    input bypass_network_t      alu_bypass
 );
 
     //---------------------------------------------------------------------------------
@@ -24,6 +25,8 @@ import int_rs_types::*;
     intm_rs_entry_t [INTMRS_DEPTH-1:0]  rs_entry_in;
     intm_rs_entry_t [ID_WIDTH-1:0]      from_ds_entry;
     intm_rs_entry_t                     issued_entry;
+    logic   [INTMRS_DEPTH-1:0] [CDB_WIDTH:0] rs1_bypass_en;
+    logic   [INTMRS_DEPTH-1:0] [CDB_WIDTH:0] rs2_bypass_en;
 
     always_comb begin
         for (int w = 0; w < ID_WIDTH; w++) begin
@@ -54,7 +57,10 @@ import int_rs_types::*;
             .entry_out  (),
             .entry      (rs_entry[i]),
             .clear      (1'b0),
-            .wakeup_cdb (cdb)
+            .wakeup_cdb (cdb),
+            .fast_bypass(alu_bypass),
+            .rs1_bypass_en  (rs1_bypass_en[i]),
+            .rs2_bypass_en  (rs2_bypass_en[i])
         );
     end endgenerate
 
@@ -146,6 +152,24 @@ import int_rs_types::*;
         .data_in    (rs_entry),
         .select     (rs_grant),
         .data_out   (issued_entry)
+    );
+
+    one_hot_mux #(
+        .T          (logic [CDB_WIDTH:0]),
+        .NUM_INPUTS (INTMRS_DEPTH)
+    ) ohm_rs1 (
+        .data_in    (rs1_bypass_en),
+        .select     (rs_grant),
+        .data_out   (to_prf.rs1_bypass_en)
+    );
+
+    one_hot_mux #(
+        .T          (logic [CDB_WIDTH:0]),
+        .NUM_INPUTS (INTMRS_DEPTH)
+    ) ohm_rs2 (
+        .data_in    (rs2_bypass_en),
+        .select     (rs_grant),
+        .data_out   (to_prf.rs2_bypass_en)
     );
 
     // ready logic

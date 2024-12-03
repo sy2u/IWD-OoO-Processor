@@ -2,6 +2,7 @@ module lsu_top
 import cpu_params::*;
 import uop_types::*;
 import lsu_types::*;
+import int_rs_types::*;
 (
     input   logic               clk,
     input   logic               rst,
@@ -13,6 +14,7 @@ import lsu_types::*;
     ldq_rob_itf.ldq             ld_to_rob,
     stq_rob_itf.stq             st_to_rob,
     cacheline_itf.master        dcache_itf,
+    input bypass_network_t      alu_bypass,
 
     // Flush signals
     input   logic               backend_flush
@@ -38,7 +40,8 @@ import lsu_types::*;
         .from_ds                (ds_mem_rs_i),
         .to_prf                 (to_prf),
         .cdb                    (cdb),
-        .to_lsq                 (agu_lsq_i)
+        .to_lsq                 (agu_lsq_i),
+        .alu_bypass             (alu_bypass)
     );
 
     dmem_itf                    dmem_itf_i();

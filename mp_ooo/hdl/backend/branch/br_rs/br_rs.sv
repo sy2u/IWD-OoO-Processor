@@ -11,7 +11,8 @@ import int_rs_types::*;
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
     br_cdb_itf.fu               br_cdb_out,
-    input   logic               branch_ready
+    input   logic               branch_ready,
+    input bypass_network_t      alu_bypass
 );
     ///////////////////////////
     // Reservation Stations  //
@@ -25,6 +26,8 @@ import int_rs_types::*;
     br_rs_entry_t   [BRRS_DEPTH-1:0]    rs_entry_in;
     br_rs_entry_t                       from_ds_entry;
     br_rs_entry_t                       issued_entry;
+    logic   [BRRS_DEPTH-1:0] [CDB_WIDTH:0] rs1_bypass_en;
+    logic   [BRRS_DEPTH-1:0] [CDB_WIDTH:0] rs2_bypass_en;
 
     assign from_ds_entry.rob_id     = from_ds.uop.rob_id;
     assign from_ds_entry.rs1_phy    = from_ds.uop.rs1_phy;
@@ -55,7 +58,10 @@ import int_rs_types::*;
             .entry_out  (),
             .entry      (rs_entry[i]),
             .clear      (1'b0),
-            .wakeup_cdb (cdb)
+            .wakeup_cdb (cdb),
+            .fast_bypass (alu_bypass),
+            .rs1_bypass_en  (rs1_bypass_en[i]),
+            .rs2_bypass_en  (rs2_bypass_en[i])
         );
     end endgenerate
 
@@ -98,6 +104,24 @@ import int_rs_types::*;
         .data_in    (rs_entry),
         .select     (rs_grant),
         .data_out   (issued_entry)
+    );
+
+    one_hot_mux #(
+        .T          (logic [CDB_WIDTH:0]),
+        .NUM_INPUTS (BRRS_DEPTH)
+    ) ohm_rs1 (
+        .data_in    (rs1_bypass_en),
+        .select     (rs_grant),
+        .data_out   (to_prf.rs1_bypass_en)
+    );
+
+    one_hot_mux #(
+        .T          (logic [CDB_WIDTH:0]),
+        .NUM_INPUTS (BRRS_DEPTH)
+    ) ohm_rs2 (
+        .data_in    (rs2_bypass_en),
+        .select     (rs_grant),
+        .data_out   (to_prf.rs2_bypass_en)
     );
 
     // full logic, set rs.ready to 0 if rs is full
