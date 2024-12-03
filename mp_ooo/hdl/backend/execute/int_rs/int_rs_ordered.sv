@@ -219,30 +219,30 @@ import int_rs_types::*;
         .fu_issue_en(fu_issue_en),
         .fu_issue_idx(fu_issue_idx)
     );
+
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin
         assign issued_entry[i] = rs_entry[fu_issue_idx[i]];
+        one_hot_mux #(
+            .T          (logic [CDB_WIDTH:0]),
+            .NUM_INPUTS (INTRS_DEPTH)
+        ) ohm_rs1 (
+            .data_in    (rs1_bypass_en),
+            .select     (rs_grant),
+            .data_out   (to_prf[i].rs1_bypass_en)
+        );
+
+        one_hot_mux #(
+            .T          (logic [CDB_WIDTH:0]),
+            .NUM_INPUTS (INTRS_DEPTH)
+        ) ohm_rs2 (
+            .data_in    (rs2_bypass_en),
+            .select     (rs_grant),
+            .data_out   (to_prf[i].rs2_bypass_en)
+        );
     end endgenerate
-    
+
     ////////////
     // Ready  //
-    one_hot_mux #(
-        .T          (logic [CDB_WIDTH:0]),
-        .NUM_INPUTS (INTRS_DEPTH)
-    ) ohm_rs1 (
-        .data_in    (rs1_bypass_en),
-        .select     (rs_grant),
-        .data_out   (to_prf.rs1_bypass_en)
-    );
-
-    one_hot_mux #(
-        .T          (logic [CDB_WIDTH:0]),
-        .NUM_INPUTS (INTRS_DEPTH)
-    ) ohm_rs2 (
-        .data_in    (rs2_bypass_en),
-        .select     (rs_grant),
-        .data_out   (to_prf.rs2_bypass_en)
-    );
-
     ////////////
     logic   [INTRS_IDX:0]    n_available_slots;
     always_comb begin
@@ -269,9 +269,6 @@ import int_rs_types::*;
 
     fu_alu_reg_t    fu_alu_reg_in   [INT_ISSUE_WIDTH];
 
-    // handshake with fu_alu_reg:
-    // assign int_rs_valid = |rs_grant;
-
     // send data to fu_alu_reg
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin
         always_comb begin
@@ -288,6 +285,8 @@ import int_rs_types::*;
         end
     end endgenerate
 
+    bypass_network_t     fu_alu_bypass  [INT_ISSUE_WIDTH];
+    assign  alu_bypass = fu_alu_bypass[0];
 
     // Functional Units
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin : alu
@@ -297,6 +296,7 @@ import int_rs_types::*;
             .int_rs_valid           (fu_issue_en[i]),
             .fu_alu_ready           (alu_ready[i]),
             .fu_alu_reg_in          (fu_alu_reg_in[i]),
+            .bypass                 (fu_alu_bypass[i]),
             .cdb                    (fu_cdb_out[i])
         );
     end endgenerate

@@ -127,6 +127,8 @@ import int_rs_types::*;
         for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin
             assign rs_prf_itfs[subset_indices[i]].rs1_phy   =   int_to_prf[i].rs1_phy;
             assign rs_prf_itfs[subset_indices[i]].rs2_phy   =   int_to_prf[i].rs2_phy;
+            assign rs_prf_itfs[subset_indices[i]].rs1_bypass_en   =   int_to_prf[i].rs1_bypass_en;
+            assign rs_prf_itfs[subset_indices[i]].rs2_bypass_en   =   int_to_prf[i].rs2_bypass_en;
             assign int_to_prf[i].rs1_value  =   rs_prf_itfs[subset_indices[i]].rs1_value;
             assign int_to_prf[i].rs2_value  =   rs_prf_itfs[subset_indices[i]].rs2_value;
             assign cdb_itfs[subset_indices[i]].rob_id        = int_fu_cdb_out[i].rob_id;

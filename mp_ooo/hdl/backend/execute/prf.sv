@@ -56,22 +56,25 @@ import int_rs_types::*;
         for (int i = 0; i < CDB_WIDTH; i++) begin
             // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
             unique case (from_rs_local_in[i].rs1_bypass_en)
-                5'b00000: begin
+                6'b000000: begin
                     from_rs_local_out[i].rs1_value = (from_rs_local_in[i].rs1_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs1_phy];
                 end
-                5'b00001: begin
+                6'b000001: begin
                     from_rs_local_out[i].rs1_value = cdb_local[0].rd_value;
                 end
-                5'b00010: begin
+                6'b000010: begin
                     from_rs_local_out[i].rs1_value = cdb_local[1].rd_value;
                 end
-                5'b00100: begin
+                6'b000100: begin
                     from_rs_local_out[i].rs1_value = cdb_local[2].rd_value;
                 end
-                5'b01000: begin
+                6'b001000: begin
                     from_rs_local_out[i].rs1_value = cdb_local[3].rd_value;
                 end
-                5'b10000: begin
+                6'b010000: begin
+                    from_rs_local_out[i].rs1_value = cdb_local[4].rd_value;
+                end
+                6'b100000: begin
                     from_rs_local_out[i].rs1_value = alu_bypass.rd_value;
                 end
                 default: begin
@@ -85,22 +88,25 @@ import int_rs_types::*;
         for (int i = 0; i < CDB_WIDTH; i++) begin
             // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
             unique case (from_rs_local_in[i].rs2_bypass_en)
-                5'b00000: begin
+                6'b000000: begin
                     from_rs_local_out[i].rs2_value = (from_rs_local_in[i].rs2_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs2_phy];
                 end
-                5'b00001: begin
+                6'b000001: begin
                     from_rs_local_out[i].rs2_value = cdb_local[0].rd_value;
                 end
-                5'b00010: begin
+                6'b000010: begin
                     from_rs_local_out[i].rs2_value = cdb_local[1].rd_value;
                 end
-                5'b00100: begin
+                6'b000100: begin
                     from_rs_local_out[i].rs2_value = cdb_local[2].rd_value;
                 end
-                5'b01000: begin
+                6'b001000: begin
                     from_rs_local_out[i].rs2_value = cdb_local[3].rd_value;
                 end
-                5'b10000: begin
+                6'b010000: begin
+                    from_rs_local_out[i].rs2_value = cdb_local[4].rd_value;
+                end
+                6'b100000: begin
                     from_rs_local_out[i].rs2_value = alu_bypass.rd_value;
                 end
                 default: begin
