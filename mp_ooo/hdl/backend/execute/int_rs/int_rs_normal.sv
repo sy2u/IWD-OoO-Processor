@@ -58,8 +58,7 @@ import int_rs_types::*;
             .clear      (1'b0),
             .wakeup_cdb (cdb),
             .fast_bypass(),
-            .rs1_bypass_en(),
-            .rs2_bypass_en()
+            .rs_bypass()
         );
     end endgenerate
 
@@ -174,6 +173,7 @@ import int_rs_types::*;
         .int_rs_valid           (int_rs_valid),
         .fu_alu_ready           (fu_alu_ready),
         .fu_alu_reg_in          (fu_alu_reg_in),
+        .bypass                 (),
         .cdb                    (fu_cdb_out)
     );
 

@@ -102,6 +102,8 @@ import int_rs_types::*; #(
     always_comb begin
         rs_bypass.rs1_bypass_en[CDB_WIDTH] = '0;
         rs_bypass.rs2_bypass_en[CDB_WIDTH] = '0;
+        rs_bypass.rs1_bypass_sel = 'x;
+        rs_bypass.rs2_bypass_sel = 'x;
         // alu1 has higher priority, since oldest inst would be issued to alu1
         for ( int i = 0; i < INT_ISSUE_WIDTH; i++ ) begin
             if( fast_bypass[i].valid && (fast_bypass[i].rd_phy != '0) && (entry_reg.rs1_phy == fast_bypass[i].rd_phy) ) begin
