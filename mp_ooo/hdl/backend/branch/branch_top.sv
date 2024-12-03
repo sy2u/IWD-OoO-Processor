@@ -12,7 +12,8 @@ import int_rs_types::*;
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
     cb_bp_itf.cb                to_bp,
-    cb_rob_itf.cb               to_rob
+    cb_rob_itf.cb               to_rob,
+    input bypass_network_t      alu_bypass
 );
     br_cdb_itf                  br_cdb_itf_i();
 
@@ -46,6 +47,7 @@ import int_rs_types::*;
         .cdb                    (cdb),
         .fu_cdb_out             (fu_cdb_out),
         .br_cdb_out             (br_cdb_itf_i),
-        .branch_ready           (from_ds.ready)
+        .branch_ready           (from_ds.ready),
+        .alu_bypass             (alu_bypass)
     );
 endmodule

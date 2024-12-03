@@ -9,7 +9,8 @@ import int_rs_types::*;
     ds_rs_itf.rs                from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
-    cdb_itf.fu                  fu_cdb_out
+    cdb_itf.fu                  fu_cdb_out,
+    input bypass_network_t      alu_bypass
 );
 
     //---------------------------------------------------------------------------------
@@ -54,7 +55,8 @@ import int_rs_types::*;
             .entry_out  (),
             .entry      (rs_entry[i]),
             .clear      (1'b0),
-            .wakeup_cdb (cdb)
+            .wakeup_cdb (cdb),
+            .fast_bypass(alu_bypass)
         );
     end endgenerate
 
@@ -184,8 +186,8 @@ import int_rs_types::*;
         intm_rs_in.rd_phy      = issued_entry.rd_phy;
         intm_rs_in.rd_arch     = issued_entry.rd_arch;
         intm_rs_in.fu_opcode   = issued_entry.fu_opcode;
-        intm_rs_in.rs1_value   = to_prf.rs1_value;
-        intm_rs_in.rs2_value   = to_prf.rs2_value;
+        intm_rs_in.rs1_value   = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs1_phy) ? alu_bypass.rd_value : to_prf.rs1_value;
+        intm_rs_in.rs2_value   = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs2_phy) ? alu_bypass.rd_value : to_prf.rs2_value;
     end
 
     //---------------------------------------------------------------------------------

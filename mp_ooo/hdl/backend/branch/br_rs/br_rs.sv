@@ -11,7 +11,8 @@ import int_rs_types::*;
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
     br_cdb_itf.fu               br_cdb_out,
-    input   logic               branch_ready
+    input   logic               branch_ready,
+    input bypass_network_t      alu_bypass
 );
     ///////////////////////////
     // Reservation Stations  //
@@ -55,7 +56,8 @@ import int_rs_types::*;
             .entry_out  (),
             .entry      (rs_entry[i]),
             .clear      (1'b0),
-            .wakeup_cdb (cdb)
+            .wakeup_cdb (cdb),
+            .fast_bypass (alu_bypass)
         );
     end endgenerate
 
@@ -127,8 +129,8 @@ import int_rs_types::*;
     assign fu_br_reg_in.predict_taken  = issued_entry.predict_taken;
     assign fu_br_reg_in.predict_target = issued_entry.predict_target;
 
-    assign fu_br_reg_in.rs1_value      = to_prf.rs1_value;
-    assign fu_br_reg_in.rs2_value      = to_prf.rs2_value;
+    assign fu_br_reg_in.rs1_value      = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs1_phy) ? alu_bypass.rd_value :  to_prf.rs1_value;
+    assign fu_br_reg_in.rs2_value      = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs2_phy) ? alu_bypass.rd_value :  to_prf.rs2_value;
 
     // Functional Units
     fu_br fu_br_i(

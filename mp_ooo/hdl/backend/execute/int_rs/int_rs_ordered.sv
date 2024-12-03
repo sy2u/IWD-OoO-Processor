@@ -9,7 +9,8 @@ import int_rs_types::*;
     ds_rs_itf.rs                from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
-    cdb_itf.fu                  fu_cdb_out
+    cdb_itf.fu                  fu_cdb_out,
+    output bypass_network_t     alu_bypass
 );
     ///////////////////////////
     // Reservation Stations  //
@@ -60,7 +61,8 @@ import int_rs_types::*;
             .entry_out      (rs_entry_out[i]),
             .entry          (rs_entry[i]),
             .clear          (rs_clear[i]),
-            .wakeup_cdb     (cdb)
+            .wakeup_cdb     (cdb),
+            .fast_bypass    (alu_bypass)
         );
     end endgenerate
 
@@ -82,8 +84,6 @@ import int_rs_types::*;
     // update logic
     rs_update_sel_t         rs_update_sel   [INTRS_DEPTH];
     logic [ID_WIDTH_IDX-1:0]rs_push_sel     [INTRS_DEPTH];
-
-    bypass_network_t        fu_alu_bypass;
 
     // rs available update
     always_ff @(posedge clk) begin
@@ -234,8 +234,8 @@ import int_rs_types::*;
         fu_alu_reg_in.fu_opcode    = issued_entry.fu_opcode;
         fu_alu_reg_in.imm          = issued_entry.imm;
 
-        fu_alu_reg_in.rs1_value    = to_prf.rs1_value;
-        fu_alu_reg_in.rs2_value    = to_prf.rs2_value;
+        fu_alu_reg_in.rs1_value    = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs1_phy) ? alu_bypass.rd_value : to_prf.rs1_value;
+        fu_alu_reg_in.rs2_value    = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs2_phy) ? alu_bypass.rd_value : to_prf.rs2_value;
     end
 
 
@@ -246,7 +246,7 @@ import int_rs_types::*;
         .int_rs_valid           (int_rs_valid),
         .fu_alu_ready           (fu_alu_ready),
         .fu_alu_reg_in          (fu_alu_reg_in),
-        .bypass                 (fu_alu_bypass),
+        .bypass                 (alu_bypass),
         .cdb                    (fu_cdb_out)
     );
 

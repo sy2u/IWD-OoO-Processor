@@ -2,6 +2,7 @@ module mem_rs
 import cpu_params::*;
 import uop_types::*;
 import lsu_types::*;
+import int_rs_types::*;
 (
     input   logic               clk,
     input   logic               rst,
@@ -9,7 +10,8 @@ import lsu_types::*;
     ds_rs_mono_itf.rs           from_ds,
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
-    agu_lsq_itf.agu             to_lsq
+    agu_lsq_itf.agu             to_lsq,
+    input bypass_network_t      alu_bypass
 );
     ///////////////////////////
     // Reservation Stations  //
@@ -50,7 +52,8 @@ import lsu_types::*;
             .entry_out  (),
             .entry      (rs_entry[i]),
             .clear      (1'b0),
-            .wakeup_cdb (cdb)
+            .wakeup_cdb (cdb),
+            .fast_bypass(alu_bypass)
         );
     end endgenerate
 
@@ -111,8 +114,8 @@ import lsu_types::*;
     assign agu_reg_in.rob_id = issued_entry.rob_id;
     assign agu_reg_in.fu_opcode = issued_entry.fu_opcode;
     assign agu_reg_in.imm = issued_entry.imm;
-    assign agu_reg_in.rs1_value = to_prf.rs1_value;
-    assign agu_reg_in.rs2_value = to_prf.rs2_value;
+    assign agu_reg_in.rs1_value = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs1_phy) ? alu_bypass.rd_value :  to_prf.rs1_value;
+    assign agu_reg_in.rs2_value = (alu_bypass.valid && alu_bypass.rd_phy == issued_entry.rs2_phy) ? alu_bypass.rd_value :  to_prf.rs2_value;
 
     fu_agu fu_agu_i(
         .clk(clk),
