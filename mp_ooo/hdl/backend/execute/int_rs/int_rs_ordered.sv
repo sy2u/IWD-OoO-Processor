@@ -10,7 +10,7 @@ import int_rs_types::*;
     rs_prf_itf.rs               to_prf[INT_ISSUE_WIDTH],
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out[INT_ISSUE_WIDTH],
-    output bypass_network_t     alu_bypass
+    output bypass_network_t     alu_bypass[INT_ISSUE_WIDTH]
 );
 
     //---------------------------------------------------------------------------------
@@ -26,8 +26,7 @@ import int_rs_types::*;
     int_rs_entry_t                      rs_entry_in[INTRS_DEPTH];
     int_rs_entry_t                      rs_entry_out[INTRS_DEPTH];
     int_rs_entry_t                      from_ds_entry[ID_WIDTH];
-    logic   [INTRS_DEPTH-1:0] [CDB_WIDTH:0] rs1_bypass_en;
-    logic   [INTRS_DEPTH-1:0] [CDB_WIDTH:0] rs2_bypass_en;
+    bypass_t    [INTRS_DEPTH-1:0]       rs_bypass;
 
     always_comb begin
         for (int w = 0; w < ID_WIDTH; w++) begin
@@ -63,8 +62,7 @@ import int_rs_types::*;
             .clear          (rs_clear[i]),
             .wakeup_cdb     (cdb),
             .fast_bypass    (alu_bypass),
-            .rs1_bypass_en  (rs1_bypass_en[i]),
-            .rs2_bypass_en  (rs2_bypass_en[i])
+            .rs_bypass      (rs_bypass[i])
         );
     end endgenerate
 
@@ -223,21 +221,12 @@ import int_rs_types::*;
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin
         assign issued_entry[i] = rs_entry[fu_issue_idx[i]];
         one_hot_mux #(
-            .T          (logic [CDB_WIDTH:0]),
+            .T          (bypass_t),
             .NUM_INPUTS (INTRS_DEPTH)
         ) ohm_rs1 (
-            .data_in    (rs1_bypass_en),
+            .data_in    (rs_bypass),
             .select     (rs_grant),
-            .data_out   (to_prf[i].rs1_bypass_en)
-        );
-
-        one_hot_mux #(
-            .T          (logic [CDB_WIDTH:0]),
-            .NUM_INPUTS (INTRS_DEPTH)
-        ) ohm_rs2 (
-            .data_in    (rs2_bypass_en),
-            .select     (rs_grant),
-            .data_out   (to_prf[i].rs2_bypass_en)
+            .data_out   (to_prf[i].rs_bypass)
         );
     end endgenerate
 
@@ -285,9 +274,6 @@ import int_rs_types::*;
         end
     end endgenerate
 
-    bypass_network_t     fu_alu_bypass  [INT_ISSUE_WIDTH];
-    assign  alu_bypass = fu_alu_bypass[0];
-
     // Functional Units
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin : alu
         fu_alu fu_alu_i(
@@ -296,7 +282,7 @@ import int_rs_types::*;
             .int_rs_valid           (fu_issue_en[i]),
             .fu_alu_ready           (alu_ready[i]),
             .fu_alu_reg_in          (fu_alu_reg_in[i]),
-            .bypass                 (fu_alu_bypass[i]),
+            .bypass                 (alu_bypass[i]),
             .cdb                    (fu_cdb_out[i])
         );
     end endgenerate

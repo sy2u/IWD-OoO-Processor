@@ -7,7 +7,7 @@ import int_rs_types::*;
 
     rs_prf_itf.prf              from_rs[CDB_WIDTH],
     cdb_itf.prf                 cdb[CDB_WIDTH],
-    input bypass_network_t      alu_bypass
+    input bypass_network_t      alu_bypass[INT_ISSUE_WIDTH]
 );
     // physical register file
     logic [31:0]    prf_data            [PRF_DEPTH-1:1];
@@ -27,8 +27,7 @@ import int_rs_types::*;
             assign from_rs_local_in[i].rs2_phy = from_rs[i].rs2_phy;
             assign from_rs_local_in[i].rs1_value = 'x; // silence Spyglass
             assign from_rs_local_in[i].rs2_value = 'x; // silence Spyglass
-            assign from_rs_local_in[i].rs1_bypass_en = from_rs[i].rs1_bypass_en;
-            assign from_rs_local_in[i].rs2_bypass_en = from_rs[i].rs2_bypass_en;
+            assign from_rs_local_in[i].rs_bypass = from_rs[i].rs_bypass;
             assign from_rs[i].rs1_value     = from_rs_local_out[i].rs1_value;
             assign from_rs[i].rs2_value     = from_rs_local_out[i].rs2_value;
         end
@@ -55,7 +54,7 @@ import int_rs_types::*;
     always_comb begin
         for (int i = 0; i < CDB_WIDTH; i++) begin
             // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
-            unique case (from_rs_local_in[i].rs1_bypass_en)
+            unique case (from_rs_local_in[i].rs_bypass.rs1_bypass_en)
                 6'b000000: begin
                     from_rs_local_out[i].rs1_value = (from_rs_local_in[i].rs1_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs1_phy];
                 end
@@ -75,7 +74,7 @@ import int_rs_types::*;
                     from_rs_local_out[i].rs1_value = cdb_local[4].rd_value;
                 end
                 6'b100000: begin
-                    from_rs_local_out[i].rs1_value = alu_bypass.rd_value;
+                    from_rs_local_out[i].rs1_value = alu_bypass[from_rs_local_in[i].rs_bypass.rs1_bypass_sel].rd_value;
                 end
                 default: begin
                     from_rs_local_out[i].rs1_value = 'x;
@@ -87,7 +86,7 @@ import int_rs_types::*;
     always_comb begin
         for (int i = 0; i < CDB_WIDTH; i++) begin
             // Unfortunatly, we cannot generate a case statement based on CDB_WIDTH
-            unique case (from_rs_local_in[i].rs2_bypass_en)
+            unique case (from_rs_local_in[i].rs_bypass.rs2_bypass_en)
                 6'b000000: begin
                     from_rs_local_out[i].rs2_value = (from_rs_local_in[i].rs2_phy == '0) ? '0 : prf_data[from_rs_local_in[i].rs2_phy];
                 end
@@ -107,7 +106,7 @@ import int_rs_types::*;
                     from_rs_local_out[i].rs2_value = cdb_local[4].rd_value;
                 end
                 6'b100000: begin
-                    from_rs_local_out[i].rs2_value = alu_bypass.rd_value;
+                    from_rs_local_out[i].rs2_value = alu_bypass[from_rs_local_in[i].rs_bypass.rs2_bypass_sel].rd_value;
                 end
                 default: begin
                     from_rs_local_out[i].rs2_value = 'x;

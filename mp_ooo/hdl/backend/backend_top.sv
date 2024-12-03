@@ -117,7 +117,7 @@ import int_rs_types::*;
         .to_mem_rs              (ds_lsu_itf_i)
     );
 
-    bypass_network_t            alu_bypass;
+    bypass_network_t            alu_bypass  [INT_ISSUE_WIDTH];
 
     // merge to_prf and cdb_out for dual issue
     parameter int subset_indices[MAX_ISSUE_WIDTH] = '{0, 4};
@@ -125,12 +125,6 @@ import int_rs_types::*;
     cdb_itf int_fu_cdb_out      [INT_ISSUE_WIDTH] (); 
     generate
         for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin
-            assign rs_prf_itfs[subset_indices[i]].rs1_phy   =   int_to_prf[i].rs1_phy;
-            assign rs_prf_itfs[subset_indices[i]].rs2_phy   =   int_to_prf[i].rs2_phy;
-            assign rs_prf_itfs[subset_indices[i]].rs1_bypass_en   =   int_to_prf[i].rs1_bypass_en;
-            assign rs_prf_itfs[subset_indices[i]].rs2_bypass_en   =   int_to_prf[i].rs2_bypass_en;
-            assign int_to_prf[i].rs1_value  =   rs_prf_itfs[subset_indices[i]].rs1_value;
-            assign int_to_prf[i].rs2_value  =   rs_prf_itfs[subset_indices[i]].rs2_value;
             assign cdb_itfs[subset_indices[i]].rob_id        = int_fu_cdb_out[i].rob_id;
             assign cdb_itfs[subset_indices[i]].rd_phy        = int_fu_cdb_out[i].rd_phy;
             assign cdb_itfs[subset_indices[i]].rd_arch       = int_fu_cdb_out[i].rd_arch;
@@ -138,6 +132,12 @@ import int_rs_types::*;
             assign cdb_itfs[subset_indices[i]].valid         = int_fu_cdb_out[i].valid;
             assign cdb_itfs[subset_indices[i]].rs1_value_dbg = int_fu_cdb_out[i].rs1_value_dbg;
             assign cdb_itfs[subset_indices[i]].rs2_value_dbg = int_fu_cdb_out[i].rs2_value_dbg;
+
+            assign rs_prf_itfs[subset_indices[i]].rs1_phy       =   int_to_prf[i].rs1_phy;
+            assign rs_prf_itfs[subset_indices[i]].rs2_phy       =   int_to_prf[i].rs2_phy;
+            assign rs_prf_itfs[subset_indices[i]].rs_bypass     =   int_to_prf[i].rs_bypass;
+            assign int_to_prf[i].rs1_value                      =   rs_prf_itfs[subset_indices[i]].rs1_value;
+            assign int_to_prf[i].rs2_value                      =   rs_prf_itfs[subset_indices[i]].rs2_value;
         end
     endgenerate
 

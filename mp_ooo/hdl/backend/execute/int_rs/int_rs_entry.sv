@@ -18,9 +18,8 @@ import int_rs_types::*; #(
     output  RS_ENTRY_T          entry, // current entry
     input   logic               clear, // clear this entry (useful in shifting queues)
 
-    input bypass_network_t      fast_bypass,
-    output  logic [CDB_WIDTH:0] rs1_bypass_en,
-    output  logic [CDB_WIDTH:0] rs2_bypass_en,
+    input bypass_network_t      fast_bypass[INT_ISSUE_WIDTH],
+    output bypass_t             rs_bypass,
     cdb_itf.rs                  wakeup_cdb[CDB_WIDTH]
 );
 
@@ -95,15 +94,36 @@ import int_rs_types::*; #(
     logic                       src2_ready;
 
     generate for (genvar i = 0; i < CDB_WIDTH; i++) begin
-        assign rs1_bypass_en[i] = cdb_rs[i].valid && (cdb_rs[i].rd_phy != '0) && (entry_reg.rs1_phy == cdb_rs[i].rd_phy);
-        assign rs2_bypass_en[i] = cdb_rs[i].valid && (cdb_rs[i].rd_phy != '0) && (entry_reg.rs2_phy == cdb_rs[i].rd_phy);
+        assign rs_bypass.rs1_bypass_en[i] = cdb_rs[i].valid && (cdb_rs[i].rd_phy != '0) && (entry_reg.rs1_phy == cdb_rs[i].rd_phy);
+        assign rs_bypass.rs2_bypass_en[i] = cdb_rs[i].valid && (cdb_rs[i].rd_phy != '0) && (entry_reg.rs2_phy == cdb_rs[i].rd_phy);
     end endgenerate
 
-    assign rs1_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs1_phy == fast_bypass.rd_phy);
-    assign rs2_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs2_phy == fast_bypass.rd_phy);
+    // add dual issue support
+    always_comb begin
+        rs_bypass.rs1_bypass_en[CDB_WIDTH] = '0;
+        rs_bypass.rs2_bypass_en[CDB_WIDTH] = '0;
+        // alu1 has higher priority, since oldest inst would be issued to alu1
+        for ( int i = 0; i < INT_ISSUE_WIDTH; i++ ) begin
+            if( fast_bypass[i].valid && (fast_bypass[i].rd_phy != '0) && (entry_reg.rs1_phy == fast_bypass[i].rd_phy) ) begin
+                rs_bypass.rs1_bypass_en[CDB_WIDTH] = '1;
+                rs_bypass.rs1_bypass_sel = INT_ISSUE_IDX'(unsigned'(i));
+                break;
+            end
+        end
+        for ( int i = 0; i < INT_ISSUE_WIDTH; i++ ) begin
+            if( fast_bypass[i].valid && (fast_bypass[i].rd_phy != '0) && (entry_reg.rs2_phy == fast_bypass[i].rd_phy) ) begin
+                rs_bypass.rs2_bypass_en[CDB_WIDTH] = '1;
+                rs_bypass.rs2_bypass_sel = INT_ISSUE_IDX'(unsigned'(i));
+                break;
+            end
+        end
+    end
+    // assign rs1_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs1_phy == fast_bypass.rd_phy);
+    // assign rs2_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs2_phy == fast_bypass.rd_phy);
 
-    assign src1_ready = entry_reg.rs1_valid || |(rs1_bypass_en);
-    assign src2_ready = entry_reg.rs2_valid || |(rs2_bypass_en);
+
+    assign src1_ready = entry_reg.rs1_valid || |(rs_bypass.rs1_bypass_en);
+    assign src2_ready = entry_reg.rs2_valid || |(rs_bypass.rs2_bypass_en);
     assign request = entry_valid && src1_ready && src2_ready;
 
     assign valid = entry_valid;

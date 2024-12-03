@@ -360,29 +360,16 @@ import cpu_params::*;
 
 endpackage
 
-package prf_types;
-import cpu_params::*;
-
-    typedef struct packed {
-        logic   [PRF_IDX-1:0]   rd_phy;
-        logic   [31:0]          rd_value;
-        logic                   valid;
-    } cdb_prf_t;
-
-    typedef struct packed {
-        logic   [PRF_IDX-1:0]   rs1_phy;
-        logic   [PRF_IDX-1:0]   rs2_phy;
-        logic   [31:0]          rs1_value;
-        logic   [31:0]          rs2_value;
-        logic   [CDB_WIDTH:0]   rs1_bypass_en;
-        logic   [CDB_WIDTH:0]   rs2_bypass_en;
-    } rs_prf_itf_t;
-
-endpackage
-
 package int_rs_types;
 import cpu_params::*;
 import uop_types::*;
+
+    typedef struct packed {
+        logic   [CDB_WIDTH:0]   rs1_bypass_en;
+        logic   [CDB_WIDTH:0]   rs2_bypass_en;
+        logic   [INT_ISSUE_IDX-1:0] rs1_bypass_sel;
+        logic   [INT_ISSUE_IDX-1:0] rs2_bypass_sel;
+    } bypass_t;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
@@ -493,6 +480,28 @@ import uop_types::*;
     } bypass_network_t;
 
 endpackage
+
+
+package prf_types;
+import cpu_params::*;
+import int_rs_types::*;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+        logic                   valid;
+    } cdb_prf_t;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+        bypass_t                rs_bypass;
+    } rs_prf_itf_t;
+
+endpackage
+
 
 package lsu_types;
 import cpu_params::*;
