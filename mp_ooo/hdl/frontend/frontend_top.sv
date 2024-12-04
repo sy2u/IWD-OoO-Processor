@@ -94,7 +94,7 @@ import cpu_params::*;
         .predict_taken          (predict_taken_gshare)              
     );
 
-    btb btb_i(
+    ubtb ubtb_i(
         .clk                    (clk),
         .rst                    (rst),
         .from_cb                (from_cb),

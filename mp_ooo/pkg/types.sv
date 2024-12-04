@@ -59,14 +59,15 @@ package cpu_params;
     //       '{1, 1, 1, 1}  // FU_AGU
     //       };
 
-    localparam  unsigned    GHR_DEPTH       = 30;
-    localparam  unsigned    PHT_IDX         = 9;
-    localparam  unsigned    PHT_DEPTH       = 2 ** PHT_IDX;
-    localparam  unsigned    BIMODAL_DEPTH   = 2;
+    // GShare Parameters
+    localparam  unsigned    PHT_DEPTH       = 512;
+    localparam  unsigned    PHT_IDX         = $clog2(PHT_DEPTH);
 
-    localparam  unsigned    BTB_DEPTH       = 8;
-    localparam  unsigned    BTB_IDX         = $clog2(BTB_DEPTH);
-    
+    // uBTB Parameters
+    localparam  unsigned    UBTB_DEPTH      = 8;
+    localparam  unsigned    UBTB_IDX        = $clog2(UBTB_DEPTH);
+    localparam  unsigned    UBTB_TAG_IDX    = 20; // need at most 30 bits for matching
+
     // Do not change this
     localparam  unsigned    ARF_DEPTH   = 32;
     localparam  unsigned    ARF_IDX     = $clog2(ARF_DEPTH);
