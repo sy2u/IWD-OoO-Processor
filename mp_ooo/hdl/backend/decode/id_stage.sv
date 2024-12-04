@@ -129,7 +129,7 @@ import uop_types::*;
 
         always_comb begin
             for (int i = 0; i < ID_WIDTH; i++) begin
-                uops_valid[i] = uops_raw_valid[i] && dispatch_mask[i] && from_fifo.packet.inst[i] != '0;
+                uops_valid[i] = uops_raw_valid[i] && dispatch_mask[i];
             end
         end
 
