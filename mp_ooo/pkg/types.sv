@@ -15,7 +15,7 @@ package cpu_params;
     localparam unsigned     INTRS_DEPTH     = 8;
     localparam unsigned     INTRS_IDX       = $clog2(INTRS_DEPTH);
 
-    localparam unsigned     INTMRS_DEPTH    = 8;
+    localparam unsigned     INTMRS_DEPTH    = 4;
     localparam unsigned     INTMRS_IDX      = $clog2(INTMRS_DEPTH);
 
     localparam unsigned     BRRS_DEPTH      = 4;
@@ -32,13 +32,18 @@ package cpu_params;
     localparam  unsigned    STB_DEPTH       = 4;
     localparam  unsigned    STB_IDX         = $clog2(STB_DEPTH);
 
-    // Reservation Station Type: 0 - Normal, 1 - Age-ordered
+    // Reservation Station Type: 0(Normal), 1(Age-ordered)
     localparam unsigned     INT_RS_TYPE     = 1;
     localparam unsigned     INTM_RS_TYPE    = 0;
 
+    // Issue mode
+    localparam unsigned     INT_ISSUE_WIDTH = 2;
+    localparam unsigned     INT_ISSUE_IDX   = $clog2(INT_ISSUE_WIDTH);
+    localparam unsigned     MAX_ISSUE_WIDTH = 2;
+
     // Bypass Network
     localparam  unsigned    NUM_RS      = 4; // Number of RS
-    localparam  unsigned    CDB_WIDTH   = 4; // Number of CDB, could be different from NUM_RS
+    localparam  unsigned    CDB_WIDTH   = 5; // Number of CDB, could be different from NUM_RS
 
     // localparam logic        RS_CDB_BYPASS[NUM_RS][CDB_WIDTH] =
     //     '{'{1, 1, 1, 1}, // INTRS
@@ -355,29 +360,16 @@ import cpu_params::*;
 
 endpackage
 
-package prf_types;
-import cpu_params::*;
-
-    typedef struct packed {
-        logic   [PRF_IDX-1:0]   rd_phy;
-        logic   [31:0]          rd_value;
-        logic                   valid;
-    } cdb_prf_t;
-
-    typedef struct packed {
-        logic   [PRF_IDX-1:0]   rs1_phy;
-        logic   [PRF_IDX-1:0]   rs2_phy;
-        logic   [31:0]          rs1_value;
-        logic   [31:0]          rs2_value;
-        logic   [CDB_WIDTH:0]   rs1_bypass_en;
-        logic   [CDB_WIDTH:0]   rs2_bypass_en;
-    } rs_prf_itf_t;
-
-endpackage
-
 package int_rs_types;
 import cpu_params::*;
 import uop_types::*;
+
+    typedef struct packed {
+        logic   [CDB_WIDTH:0]   rs1_bypass_en;
+        logic   [CDB_WIDTH:0]   rs2_bypass_en;
+        // logic   [INT_ISSUE_IDX-1:0] rs1_bypass_sel;
+        // logic   [INT_ISSUE_IDX-1:0] rs2_bypass_sel;
+    } bypass_t;
 
     typedef struct packed {
         logic   [ROB_IDX-1:0]   rob_id;
@@ -476,7 +468,7 @@ import uop_types::*;
     } intm_rs_reg_t;
 
     typedef enum logic [1:0] {  
-        PREV        = 2'b00,
+        NEXT        = 2'b00,
         SELF        = 2'b10,
         PUSH_IN     = 2'b11
     } rs_update_sel_t;
@@ -488,6 +480,28 @@ import uop_types::*;
     } bypass_network_t;
 
 endpackage
+
+
+package prf_types;
+import cpu_params::*;
+import int_rs_types::*;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rd_phy;
+        logic   [31:0]          rd_value;
+        logic                   valid;
+    } cdb_prf_t;
+
+    typedef struct packed {
+        logic   [PRF_IDX-1:0]   rs1_phy;
+        logic   [PRF_IDX-1:0]   rs2_phy;
+        logic   [31:0]          rs1_value;
+        logic   [31:0]          rs2_value;
+        bypass_t                rs_bypass;
+    } rs_prf_itf_t;
+
+endpackage
+
 
 package lsu_types;
 import cpu_params::*;

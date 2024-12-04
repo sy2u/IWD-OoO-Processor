@@ -1,4 +1,4 @@
-module arbiter
+module bmem_arbiter
 (
     input   logic                   clk,
     input   logic                   rst,

@@ -87,7 +87,7 @@ import int_rs_types::*;
             rs_push_sel[i] = '0;
             rs_update_sel[i] = SELF;
             if( intm_rs_pop_en ) begin
-                if( (INTMRS_IDX)'(unsigned'(i))>=intm_rs_issue_idx ) rs_update_sel[i] = PREV;
+                if( (INTMRS_IDX)'(unsigned'(i))>=intm_rs_issue_idx ) rs_update_sel[i] = NEXT;
             end
             for( int j = 0; j < ID_WIDTH; j++ ) begin 
                 if ( intm_rs_push_en[j] && ((INTMRS_IDX)'(unsigned'(i)) == intm_rs_push_idx[j]) ) begin
@@ -103,7 +103,7 @@ import int_rs_types::*;
             rs_array_next[i] = 'x;
             rs_available_next[i] = 1'b1;
             unique case (rs_update_sel[i])
-                PREV: begin       
+                NEXT: begin       
                     if( i < INTMRS_DEPTH-1 ) begin
                         rs_array_next[i] = intm_rs_array[i+1];
                         rs_available_next[i] = intm_rs_available[i+1];
@@ -133,14 +133,14 @@ import int_rs_types::*;
                         if ( rs_update_sel[i] == SELF ) begin
                             rs_array_next[i].rs1_valid = 1'b1;
                         end else if ( i > 0 ) begin
-                            if (rs_update_sel[i-1] == PREV) rs_array_next[i-1].rs1_valid = 1'b1;
+                            if (rs_update_sel[i-1] == NEXT) rs_array_next[i-1].rs1_valid = 1'b1;
                         end
                     end
                     if (intm_rs_array[i].rs2_phy == cdb_rs[k].rd_phy) begin 
                         if ( rs_update_sel[i] == SELF ) begin
                             rs_array_next[i].rs2_valid = 1'b1;
                         end else if ( i > 0 ) begin
-                            if (rs_update_sel[i-1] == PREV) rs_array_next[i-1].rs2_valid = 1'b1;
+                            if (rs_update_sel[i-1] == NEXT) rs_array_next[i-1].rs2_valid = 1'b1;
                         end
                     end
                 end

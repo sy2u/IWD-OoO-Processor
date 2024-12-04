@@ -26,8 +26,7 @@ import int_rs_types::*;
     br_rs_entry_t   [BRRS_DEPTH-1:0]    rs_entry_in;
     br_rs_entry_t                       from_ds_entry;
     br_rs_entry_t                       issued_entry;
-    logic   [BRRS_DEPTH-1:0] [CDB_WIDTH:0] rs1_bypass_en;
-    logic   [BRRS_DEPTH-1:0] [CDB_WIDTH:0] rs2_bypass_en;
+    bypass_t   [BRRS_DEPTH-1:0]         rs_bypass;
 
     assign from_ds_entry.rob_id     = from_ds.uop.rob_id;
     assign from_ds_entry.rs1_phy    = from_ds.uop.rs1_phy;
@@ -60,8 +59,7 @@ import int_rs_types::*;
             .clear      (1'b0),
             .wakeup_cdb (cdb),
             .fast_bypass (alu_bypass),
-            .rs1_bypass_en  (rs1_bypass_en[i]),
-            .rs2_bypass_en  (rs2_bypass_en[i])
+            .rs_bypass   (rs_bypass[i])
         );
     end endgenerate
 
@@ -107,21 +105,12 @@ import int_rs_types::*;
     );
 
     one_hot_mux #(
-        .T          (logic [CDB_WIDTH:0]),
+        .T          (bypass_t),
         .NUM_INPUTS (BRRS_DEPTH)
     ) ohm_rs1 (
-        .data_in    (rs1_bypass_en),
+        .data_in    (rs_bypass),
         .select     (rs_grant),
-        .data_out   (to_prf.rs1_bypass_en)
-    );
-
-    one_hot_mux #(
-        .T          (logic [CDB_WIDTH:0]),
-        .NUM_INPUTS (BRRS_DEPTH)
-    ) ohm_rs2 (
-        .data_in    (rs2_bypass_en),
-        .select     (rs_grant),
-        .data_out   (to_prf.rs2_bypass_en)
+        .data_out   (to_prf.rs_bypass)
     );
 
     // full logic, set rs.ready to 0 if rs is full
