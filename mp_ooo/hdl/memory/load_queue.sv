@@ -110,7 +110,9 @@ import lsu_types::*;
     generate for (genvar i = 0; i < LDQ_DEPTH; i++) begin
         assign from_stq.ldq_tracker[i] = ldq_arr[i].track_stq_ptr;
         assign from_stq.ldq_addr[i] = ldq_arr[i].addr;
+        assign from_stq.ldq_rmask[i] = ldq_arr[i].mask;
         assign from_stb.ldq_addr[i] = ldq_arr[i].addr;
+        assign from_stb.ldq_rmask[i] = ldq_arr[i].mask;
     end endgenerate
 
     always_comb begin

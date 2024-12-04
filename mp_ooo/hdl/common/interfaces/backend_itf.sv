@@ -344,7 +344,7 @@ import cpu_params::*;
     logic                   stq_deq;
     logic   [STQ_IDX:0]     ldq_tracker[LDQ_DEPTH];
     logic   [31:0]          ldq_addr[LDQ_DEPTH];
-    // logic   [3:0]           ldq_fu_opcode[LDQ_DEPTH];
+    logic   [3:0]           ldq_rmask[LDQ_DEPTH];
     logic                   has_conflicting_store[LDQ_DEPTH];
     // logic                   forward_en[LDQ_DEPTH];
     // logic   [31:0]          forward_wdata[LDQ_DEPTH];
@@ -354,6 +354,7 @@ import cpu_params::*;
         input               stq_deq,
         output              ldq_tracker,
         output              ldq_addr,
+        output              ldq_rmask,
         input               has_conflicting_store
     );
 
@@ -362,6 +363,7 @@ import cpu_params::*;
         output              stq_deq,
         input               ldq_tracker,
         input               ldq_addr,
+        input               ldq_rmask,
         output              has_conflicting_store
     );
 
@@ -371,15 +373,18 @@ interface ldq_stb_itf();
 import cpu_params::*;
 
     logic   [31:0]          ldq_addr[LDQ_DEPTH];
+    logic   [3:0]           ldq_rmask[LDQ_DEPTH];
     logic                   has_conflicting_store[LDQ_DEPTH];
 
     modport ldq (
         output              ldq_addr,
+        output              ldq_rmask,
         input               has_conflicting_store
     );
 
     modport stb (
         input               ldq_addr,
+        input               ldq_rmask,
         output              has_conflicting_store
     );
 

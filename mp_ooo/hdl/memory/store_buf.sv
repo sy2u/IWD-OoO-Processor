@@ -105,7 +105,7 @@ import lsu_types::*;
         for (int i = 0; i < LDQ_DEPTH; i++) begin
             same_addr[i] = '0;
             for (int j = 0; j < STB_DEPTH; j++) begin
-                if (fifo[j].valid && fifo[j].addr[31:2] == from_ldq.ldq_addr[i][31:2]) begin
+                if (fifo[j].valid && fifo[j].addr[31:2] == from_ldq.ldq_addr[i][31:2] && ((from_ldq.ldq_rmask[i] & (~fifo[j].mask)) != from_ldq.ldq_rmask[i])) begin
                     same_addr[i][j] = 1'b1;
                 end
             end
