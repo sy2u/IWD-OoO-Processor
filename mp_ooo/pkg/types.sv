@@ -15,7 +15,7 @@ package cpu_params;
     localparam unsigned     INTRS_DEPTH     = 8;
     localparam unsigned     INTRS_IDX       = $clog2(INTRS_DEPTH);
 
-    localparam unsigned     INTMRS_DEPTH    = 8;
+    localparam unsigned     INTMRS_DEPTH    = 4;
     localparam unsigned     INTMRS_IDX      = $clog2(INTMRS_DEPTH);
 
     localparam unsigned     BRRS_DEPTH      = 4;
@@ -367,8 +367,8 @@ import uop_types::*;
     typedef struct packed {
         logic   [CDB_WIDTH:0]   rs1_bypass_en;
         logic   [CDB_WIDTH:0]   rs2_bypass_en;
-        logic   [INT_ISSUE_IDX-1:0] rs1_bypass_sel;
-        logic   [INT_ISSUE_IDX-1:0] rs2_bypass_sel;
+        // logic   [INT_ISSUE_IDX-1:0] rs1_bypass_sel;
+        // logic   [INT_ISSUE_IDX-1:0] rs2_bypass_sel;
     } bypass_t;
 
     typedef struct packed {

@@ -14,7 +14,7 @@ import int_rs_types::*;
     ldq_rob_itf.ldq             ld_to_rob,
     stq_rob_itf.stq             st_to_rob,
     cacheline_itf.master        dcache_itf,
-    input bypass_network_t      alu_bypass[INT_ISSUE_WIDTH],
+    input bypass_network_t      alu_bypass,
 
     // Flush signals
     input   logic               backend_flush

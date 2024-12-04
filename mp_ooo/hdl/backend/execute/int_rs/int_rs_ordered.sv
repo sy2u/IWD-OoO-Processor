@@ -10,7 +10,7 @@ import int_rs_types::*;
     rs_prf_itf.rs               to_prf[INT_ISSUE_WIDTH],
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out[INT_ISSUE_WIDTH],
-    output bypass_network_t     alu_bypass[INT_ISSUE_WIDTH]
+    output bypass_network_t     alu_bypass
 );
 
     //---------------------------------------------------------------------------------
@@ -268,6 +268,8 @@ import int_rs_types::*;
     end endgenerate
 
     // Functional Units
+    bypass_network_t     fu_alu_bypass  [INT_ISSUE_WIDTH];
+    assign  alu_bypass = fu_alu_bypass[0];
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin : alu
         fu_alu fu_alu_i(
             .clk                    (clk),
@@ -275,7 +277,7 @@ import int_rs_types::*;
             .int_rs_valid           (fu_issue_en[i]),
             .fu_alu_ready           (alu_ready[i]),
             .fu_alu_reg_in          (fu_alu_reg_in[i]),
-            .bypass                 (alu_bypass[i]),
+            .bypass                 (fu_alu_bypass[i]),
             .cdb                    (fu_cdb_out[i])
         );
     end endgenerate

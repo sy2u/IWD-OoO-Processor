@@ -18,7 +18,7 @@ import int_rs_types::*; #(
     output  RS_ENTRY_T          entry, // current entry
     input   logic               clear, // clear this entry (useful in shifting queues)
 
-    input bypass_network_t      fast_bypass[INT_ISSUE_WIDTH],
+    input bypass_network_t      fast_bypass,
     output bypass_t             rs_bypass,
     cdb_itf.rs                  wakeup_cdb[CDB_WIDTH]
 );
@@ -99,29 +99,29 @@ import int_rs_types::*; #(
     end endgenerate
 
     // add dual issue support
-    always_comb begin
-        rs_bypass.rs1_bypass_en[CDB_WIDTH] = '0;
-        rs_bypass.rs2_bypass_en[CDB_WIDTH] = '0;
-        rs_bypass.rs1_bypass_sel = 'x;
-        rs_bypass.rs2_bypass_sel = 'x;
-        // alu1 has higher priority, since oldest inst would be issued to alu1
-        for ( int i = 0; i < INT_ISSUE_WIDTH; i++ ) begin
-            if( fast_bypass[i].valid && (fast_bypass[i].rd_phy != '0) && (entry_reg.rs1_phy == fast_bypass[i].rd_phy) ) begin
-                rs_bypass.rs1_bypass_en[CDB_WIDTH] = '1;
-                rs_bypass.rs1_bypass_sel = INT_ISSUE_IDX'(unsigned'(i));
-                break;
-            end
-        end
-        for ( int i = 0; i < INT_ISSUE_WIDTH; i++ ) begin
-            if( fast_bypass[i].valid && (fast_bypass[i].rd_phy != '0) && (entry_reg.rs2_phy == fast_bypass[i].rd_phy) ) begin
-                rs_bypass.rs2_bypass_en[CDB_WIDTH] = '1;
-                rs_bypass.rs2_bypass_sel = INT_ISSUE_IDX'(unsigned'(i));
-                break;
-            end
-        end
-    end
-    // assign rs1_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs1_phy == fast_bypass.rd_phy);
-    // assign rs2_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs2_phy == fast_bypass.rd_phy);
+    // always_comb begin
+    //     rs_bypass.rs1_bypass_en[CDB_WIDTH] = '0;
+    //     rs_bypass.rs2_bypass_en[CDB_WIDTH] = '0;
+    //     rs_bypass.rs1_bypass_sel = 'x;
+    //     rs_bypass.rs2_bypass_sel = 'x;
+    //     // alu1 has higher priority, since oldest inst would be issued to alu1
+    //     for ( int i = 0; i < INT_ISSUE_WIDTH; i++ ) begin
+    //         if( fast_bypass[i].valid && (fast_bypass[i].rd_phy != '0) && (entry_reg.rs1_phy == fast_bypass[i].rd_phy) ) begin
+    //             rs_bypass.rs1_bypass_en[CDB_WIDTH] = '1;
+    //             rs_bypass.rs1_bypass_sel = INT_ISSUE_IDX'(unsigned'(i));
+    //             break;
+    //         end
+    //     end
+    //     for ( int i = 0; i < INT_ISSUE_WIDTH; i++ ) begin
+    //         if( fast_bypass[i].valid && (fast_bypass[i].rd_phy != '0) && (entry_reg.rs2_phy == fast_bypass[i].rd_phy) ) begin
+    //             rs_bypass.rs2_bypass_en[CDB_WIDTH] = '1;
+    //             rs_bypass.rs2_bypass_sel = INT_ISSUE_IDX'(unsigned'(i));
+    //             break;
+    //         end
+    //     end
+    // end
+    assign rs_bypass.rs1_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs1_phy == fast_bypass.rd_phy);
+    assign rs_bypass.rs2_bypass_en[CDB_WIDTH] = fast_bypass.valid && (fast_bypass.rd_phy != '0) && (entry_reg.rs2_phy == fast_bypass.rd_phy);
 
 
     assign src1_ready = entry_reg.rs1_valid || |(rs_bypass.rs1_bypass_en);

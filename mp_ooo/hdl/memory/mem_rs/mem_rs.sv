@@ -11,7 +11,7 @@ import int_rs_types::*;
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     agu_lsq_itf.agu             to_lsq,
-    input bypass_network_t      alu_bypass[INT_ISSUE_WIDTH]
+    input bypass_network_t      alu_bypass
 );
     ///////////////////////////
     // Reservation Stations  //

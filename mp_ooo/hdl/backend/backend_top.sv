@@ -117,7 +117,7 @@ import int_rs_types::*;
         .to_mem_rs              (ds_lsu_itf_i)
     );
 
-    bypass_network_t            alu_bypass  [INT_ISSUE_WIDTH];
+    bypass_network_t            alu_bypass;
 
     // merge to_prf and cdb_out for dual issue
     parameter int subset_indices[MAX_ISSUE_WIDTH] = '{0, 4};

@@ -10,7 +10,7 @@ import int_rs_types::*;
     rs_prf_itf.rs               to_prf,
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out,
-    input bypass_network_t      alu_bypass[INT_ISSUE_WIDTH]
+    input bypass_network_t      alu_bypass
 );
 
     //---------------------------------------------------------------------------------
@@ -227,13 +227,13 @@ import int_rs_types::*;
         .cdb_out    (fu_mul_cdb_out)
     );
 
-    fu_div_dual fu_div_i (
+    fu_div fu_div_i (
         .clk        (clk),
         .rst        (rst),
         .prv_valid  (|rs_div_request),
         .prv_ready  (fu_div_ready),
         .nxt_valid  (fu_div_valid),
-        // .nxt_ready  (cdb_div_ready),
+        .nxt_ready  (cdb_div_ready),
         .iss_in     (intm_rs_in),
         .cdb_out    (fu_div_cdb_out)
     );

@@ -13,7 +13,7 @@ import int_rs_types::*;
     cdb_itf.fu                  fu_cdb_out,
     cb_bp_itf.cb                to_bp,
     cb_rob_itf.cb               to_rob,
-    input bypass_network_t      alu_bypass[INT_ISSUE_WIDTH]
+    input bypass_network_t      alu_bypass
 );
     br_cdb_itf                  br_cdb_itf_i();
 
