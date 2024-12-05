@@ -9,14 +9,46 @@ module dmem_arbiter
     dmem_itf.cpu                cache
 );
 
+    typedef enum logic [0:0] {
+        LOAD        = 1'b0,
+        STORE       = 1'b1
+    } arbiter_priority_t;
+
     logic                   dmem_valid;
     logic                   dmem_pending;
     logic                   pending_store;
     logic                   dmem_busy;
     logic                   dmem_flushed;
+    arbiter_priority_t      arbiter_priority;
 
-    assign load.ready = ~dmem_busy && ~dmem_flushed && ~store.valid;
-    assign store.ready = ~dmem_busy && ~dmem_flushed;
+    assign load.ready = (arbiter_priority == LOAD) ? ~dmem_busy && ~dmem_flushed : ~dmem_busy && ~dmem_flushed && ~store.valid;
+    assign store.ready = (arbiter_priority == STORE) ?  ~dmem_busy && ~dmem_flushed : ~dmem_busy && ~dmem_flushed && ~load.valid;
+
+    // Round robin arbiter
+    // always_ff @(posedge clk) begin
+    //     if (rst) begin
+    //         arbiter_priority <= LOAD;
+    //     end else if (load.valid && load.ready) begin
+    //         arbiter_priority <= STORE;
+    //     end else if (store.valid && store.ready) begin
+    //         arbiter_priority <= LOAD;
+    //     end
+    // end
+
+    // Cyclic arbiter
+    // always_ff @(posedge clk) begin
+    //     if (rst) begin
+    //         arbiter_priority <= LOAD;
+    //     end else if (arbiter_priority == LOAD) begin
+    //         arbiter_priority <= STORE;
+    //     end else if (arbiter_priority == STORE) begin
+    //         arbiter_priority <= LOAD;
+    //     end
+    // end
+
+    // Fix priority arbiter
+    assign arbiter_priority = LOAD;
+    // assign arbiter_priority = STORE;
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -56,20 +88,13 @@ module dmem_arbiter
     assign load.rdata = cache.rdata;
 
     always_comb begin
-        unique case ({load.valid, store.valid})
-            2'b10: begin
-                cache.addr = load.addr;
-            end
-            2'b01: begin
-                cache.addr = store.addr;
-            end
-            2'b11: begin
-                cache.addr = store.addr;
-            end
-            default: begin
-                cache.addr = 'x;
-            end
-        endcase
+        if (load.valid && load.ready) begin
+            cache.addr = load.addr;
+        end else if (store.valid && store.ready) begin
+            cache.addr = store.addr;
+        end else begin
+            cache.addr = 'x;
+        end
     end
 
     assign load.resp = cache.resp && dmem_pending && ~pending_store && ~dmem_flushed;
