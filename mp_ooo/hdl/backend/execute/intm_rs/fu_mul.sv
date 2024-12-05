@@ -31,7 +31,6 @@ import int_rs_types::*;
     logic [A_WIDTH-1:0]         a; // Multiplier / Dividend
     logic [B_WIDTH-1:0]         b; // Multiplicand / Divisor
 
-    logic                       mul_complete;
     logic [A_WIDTH+B_WIDTH-1:0] product;
 
     logic                       complete;
@@ -44,47 +43,40 @@ import int_rs_types::*;
     //---------------------------------------------------------------------------------
 
     logic                       reg_valid;
+    logic                       prv_reg_valid;
     logic                       reg_start;
+    logic                       mul_ready;
+    logic                       prv_mul_ready;
 
-    // handshake control
-    assign prv_ready = ~reg_valid || (nxt_valid && nxt_ready);
-
-    always_ff @( posedge clk ) begin
-        if(rst) begin
-            reg_valid <= '0;
-        end else if (prv_ready) begin
-            reg_valid <= prv_valid;
-        end
-    end
-
-    // load meta data
-    always_ff @( posedge clk ) begin
-        if( rst ) begin
-            intm_rs_reg <= '0;
-        end else if( prv_ready && prv_valid )begin
-            intm_rs_reg <= iss_in;
-        end
-    end
+    // Pipeline reg to interface with the previous stage
+    skid_buffer #(
+        .DATA_T (intm_rs_reg_t)
+    ) cdb_reg (
+        .clk        (clk),
+        .rst        (rst),
+        .prv_valid  (prv_valid),
+        .prv_ready  (prv_ready),
+        .nxt_valid  (reg_valid),
+        .nxt_ready  (mul_ready),
+        .prv_data   (iss_in),
+        .nxt_data   (intm_rs_reg)
+    );
 
     // start signal generation
     always_ff @( posedge clk ) begin
-        if( rst ) begin
-            reg_start <= '0;
-        end else begin
-            if ( reg_start ) begin
-                reg_start <= '0;
-            end else if( prv_ready && prv_valid ) begin
-                reg_start <= '1;
-            end
-        end
+        prv_reg_valid <= reg_valid;
+    end
+
+    always_ff @( posedge clk ) begin
+        prv_mul_ready <= mul_ready;
     end
 
     //---------------------------------------------------------------------------------
     // IP Control:
     //---------------------------------------------------------------------------------
 
-    assign  complete = mul_complete;
-    assign  mul_start = reg_start;
+    assign  mul_start = reg_valid && (~prv_reg_valid) || reg_valid && prv_mul_ready;
+    assign  mul_ready = nxt_valid && nxt_ready;
 
     // mult: multiplier and multiplicand are interchanged
     assign  au = {1'b0, intm_rs_reg.rs1_value};
@@ -136,9 +128,9 @@ import int_rs_types::*;
                 RST_MODE, INPUT_MODE, OUTPUT_MODE, EARLY_START)
     signed_mul (.clk(clk), .rst_n(~rst), .hold('0),
                 .start(mul_start), .a(a), .b(b),
-                .complete(mul_complete), .product(product) );
+                .complete(complete), .product(product) );
 
-    assign nxt_valid                = reg_valid && complete;
+    assign nxt_valid                = reg_valid && complete && ~mul_start;
     assign cdb_out.rob_id           = intm_rs_reg.rob_id;
     assign cdb_out.rd_arch          = intm_rs_reg.rd_arch;
     assign cdb_out.rd_phy           = intm_rs_reg.rd_phy;

@@ -31,8 +31,6 @@ import int_rs_types::*;
     logic [A_WIDTH-1:0]         a; // Multiplier / Dividend
     logic [B_WIDTH-1:0]         b; // Multiplicand / Divisor
 
-    logic [A_WIDTH+B_WIDTH-1:0] product;
-
     logic [A_WIDTH-1:0]         quotient;
     logic [B_WIDTH-1:0]         remainder;
     logic                       divide_by_0;
