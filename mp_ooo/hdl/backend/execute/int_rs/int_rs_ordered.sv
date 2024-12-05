@@ -10,7 +10,7 @@ import int_rs_types::*;
     rs_prf_itf.rs               to_prf[INT_ISSUE_WIDTH],
     cdb_itf.rs                  cdb[CDB_WIDTH],
     cdb_itf.fu                  fu_cdb_out[INT_ISSUE_WIDTH],
-    output bypass_network_t     alu_bypass
+    output bypass_network_t     alu_bypass[NUM_FAST_BYPASS]
 );
 
     //---------------------------------------------------------------------------------
@@ -111,44 +111,26 @@ import int_rs_types::*;
                     if( unsigned'(i)+{30'b0, rs_compress[i]} < INTRS_DEPTH ) begin
                         rs_push_en[i] = rs_valid[unsigned'(i)+{30'b0, rs_compress[i]}];
                         rs_clear[i] = ~rs_valid[unsigned'(i)+{30'b0, rs_compress[i]}];
+                        rs_entry_in[i] = rs_entry_out[unsigned'(i)+{30'b0, rs_compress[i]}];
                     end else begin
                         rs_push_en[i] = 1'b0;
                         rs_clear[i] = 1'b1;
+                        rs_entry_in[i] = 'x;
                     end
                 end
                 SELF: begin
                     rs_push_en[i] = 1'b0;
                     rs_clear[i] = 1'b0;
+                    rs_entry_in[i] = 'x;
                 end
                 PUSH_IN: begin
                     rs_push_en[i] = 1'b1;
                     rs_clear[i] = 1'b0;
+                    rs_entry_in[i] = rs_push_entry[i];
                 end
                 default: begin
                     rs_push_en[i] = 1'bx;
                     rs_clear[i] = 1'bx;
-                end
-            endcase
-        end
-    end
-
-    always_comb begin : compress_mux 
-        for (int i = 0; i < INTRS_DEPTH; i++) begin
-            unique case (rs_update_sel[i])
-                NEXT: begin
-                    if (unsigned'(i)+{30'b0, rs_compress[i]} < INTRS_DEPTH) begin
-                        rs_entry_in[i] = rs_entry_out[unsigned'(i)+{30'b0, rs_compress[i]}];
-                    end else begin
-                        rs_entry_in[i] = 'x;
-                    end
-                end
-                SELF: begin
-                    rs_entry_in[i] = 'x;
-                end
-                PUSH_IN: begin
-                    rs_entry_in[i] = rs_push_entry[i];
-                end
-                default: begin
                     rs_entry_in[i] = 'x;
                 end
             endcase
@@ -278,7 +260,7 @@ import int_rs_types::*;
 
     // Functional Units
     bypass_network_t     fu_alu_bypass  [INT_ISSUE_WIDTH];
-    assign  alu_bypass = fu_alu_bypass[0];
+    assign  alu_bypass = fu_alu_bypass;
 
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin : alu
         fu_alu fu_alu_i(

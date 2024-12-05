@@ -42,8 +42,9 @@ package cpu_params;
     localparam unsigned     MAX_ISSUE_WIDTH = 2;
 
     // Bypass Network
-    localparam  unsigned    NUM_RS      = 4; // Number of RS
-    localparam  unsigned    CDB_WIDTH   = 5; // Number of CDB, could be different from NUM_RS
+    localparam  unsigned    NUM_RS          = 4; // Number of RS
+    localparam  unsigned    CDB_WIDTH       = 5; // Number of CDB, could be different from NUM_RS
+    localparam  unsigned    NUM_FAST_BYPASS = 2;
 
     // localparam logic        RS_CDB_BYPASS[NUM_RS][CDB_WIDTH] =
     //     '{'{1, 1, 1, 1}, // INTRS
@@ -368,8 +369,8 @@ import uop_types::*;
     typedef struct packed {
         logic   [CDB_WIDTH:0]   rs1_bypass_en;
         logic   [CDB_WIDTH:0]   rs2_bypass_en;
-        // logic   [INT_ISSUE_IDX-1:0] rs1_bypass_sel;
-        // logic   [INT_ISSUE_IDX-1:0] rs2_bypass_sel;
+        logic   [INT_ISSUE_IDX-1:0] rs1_bypass_sel;
+        logic   [INT_ISSUE_IDX-1:0] rs2_bypass_sel;
     } bypass_t;
 
     typedef struct packed {

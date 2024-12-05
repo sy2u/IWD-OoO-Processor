@@ -7,7 +7,7 @@ import int_rs_types::*;
 
     rs_prf_itf.prf              from_rs[CDB_WIDTH],
     cdb_itf.prf                 cdb[CDB_WIDTH],
-    input bypass_network_t      alu_bypass
+    input bypass_network_t      alu_bypass[NUM_FAST_BYPASS]
 );
     // physical register file
     logic [31:0]    prf_data            [PRF_DEPTH-1:1];
@@ -74,7 +74,7 @@ import int_rs_types::*;
                     from_rs_local_out[i].rs1_value = cdb_local[4].rd_value;
                 end
                 6'b100000: begin
-                    from_rs_local_out[i].rs1_value = alu_bypass.rd_value;
+                    from_rs_local_out[i].rs1_value = alu_bypass[from_rs_local_in[i].rs_bypass.rs1_bypass_sel].rd_value;
                 end
                 default: begin
                     from_rs_local_out[i].rs1_value = 'x;
@@ -106,7 +106,7 @@ import int_rs_types::*;
                     from_rs_local_out[i].rs2_value = cdb_local[4].rd_value;
                 end
                 6'b100000: begin
-                    from_rs_local_out[i].rs2_value = alu_bypass.rd_value;
+                    from_rs_local_out[i].rs2_value = alu_bypass[from_rs_local_in[i].rs_bypass.rs2_bypass_sel].rd_value;
                 end
                 default: begin
                     from_rs_local_out[i].rs2_value = 'x;

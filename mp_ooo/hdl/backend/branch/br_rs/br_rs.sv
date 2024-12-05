@@ -12,7 +12,7 @@ import int_rs_types::*;
     cdb_itf.fu                  fu_cdb_out,
     br_cdb_itf.fu               br_cdb_out,
     input   logic               branch_ready,
-    input bypass_network_t      alu_bypass
+    input bypass_network_t      alu_bypass[NUM_FAST_BYPASS]
 );
     ///////////////////////////
     // Reservation Stations  //
