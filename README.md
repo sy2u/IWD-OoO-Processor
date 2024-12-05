@@ -30,21 +30,21 @@
 | CP2: Free List            |✅ |  | | |
 | CP3: Memory Subsystem     |✅ ||||
 | CP3: Branches             | ||✅||
-| CP3: Bmem Arbiter         | |||✅|
+| CP3: BMEM Arbiter         | |||✅|
 | 2-Way Superscalar         |✅||||
 | Split LSQ                 |✅||||
 | Post-Commit Store Buffer  |✅||||
 | Age-Ordered Scheduling    ||||✅|
 | Branch Predictor (FF Gshare+uBTB) |||✅||
 | Pipelined Mul/Div         ||✅|||
-| Dual Issue (not merged) ||||✅|
+| Dual Issue    ||||✅|
 
-## Advanced Feature Stastic
+## Advanced Feature Statistics
 ### Age-Ordered Reservation Station
 Tested with Superscalar only
 | Chosen | ALU_RS | MDU_RS | Coremark | Compression | Mergesort | FFT | aes_sha 
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| | Normal | Normal   | `0.409681` | `0.412207` | `0.593525` | `0.541800` | `0.477922` 
-| | Normal | Ordered  | `0.409681` | `0.412207` | `0.593525` | `0.541800` | `0.477922` 
-|✅| Ordered | Normal   | `0.425735` | `0.606571` | `0.610516` | `0.558688` | `0.490431`
-| | Ordered | Ordered  | `0.425735` | `0.606571` | `0.610516` | `0.558688` | `0.490431` 
+| | Normal | Normal   | `0.409681` | `0.412207` | `0.593525` | `0.541800` | `0.477922` |
+| | Normal | Ordered  | `0.409681` | `0.412207` | `0.593525` | `0.541800` | `0.477922` |
+|✅| Ordered | Normal   | `0.425735` | `0.606571` | `0.610516` | `0.558688` | `0.490431` |
+| | Ordered | Ordered  | `0.425735` | `0.606571` | `0.610516` | `0.558688` | `0.490431` |
