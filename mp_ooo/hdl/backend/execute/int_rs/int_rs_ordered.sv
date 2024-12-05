@@ -22,10 +22,10 @@ import int_rs_types::*;
     logic   [INTRS_DEPTH-1:0]           rs_grant;
     logic   [INTRS_DEPTH-1:0]           rs_push_en;
     logic   [INTRS_DEPTH-1:0]           rs_clear;
-    int_rs_entry_t                      rs_entry[INTRS_DEPTH];
+    int_rs_entry_t [INTRS_DEPTH-1:0]    rs_entry;
     int_rs_entry_t                      rs_entry_in[INTRS_DEPTH];
     int_rs_entry_t                      rs_entry_out[INTRS_DEPTH];
-    int_rs_entry_t                      from_ds_entry[ID_WIDTH];
+    int_rs_entry_t [ID_WIDTH-1:0]       from_ds_entry;
     bypass_t    [INTRS_DEPTH-1:0]       rs_bypass;
 
     always_comb begin
@@ -74,51 +74,33 @@ import int_rs_types::*;
     logic [INTRS_IDX-1:0]   int_rs_top, rs_top_next;
 
     // pop logic
-    logic                   int_rs_pop_en   [INT_ISSUE_WIDTH];
     logic                   alu_ready       [INT_ISSUE_WIDTH];
 
     // allocate logic
-    logic                   int_rs_push_en  [ID_WIDTH];
-    logic [INTRS_IDX-1:0]   int_rs_push_idx [ID_WIDTH];
+    logic [ID_WIDTH-1:0]    rs_push         [INTRS_DEPTH];     // one-hot
+    int_rs_entry_t          rs_push_entry   [INTRS_DEPTH];
 
     // issue logic
+    logic                   int_rs_valid    [INT_ISSUE_WIDTH];
+    logic [INTRS_DEPTH-1:0] fu_issue        [INT_ISSUE_WIDTH];  // one-hot
     int_rs_entry_t          issued_entry    [INT_ISSUE_WIDTH];
-    logic                   fu_issue_en     [INT_ISSUE_WIDTH];
-    logic   [INTRS_IDX-1:0] fu_issue_idx    [INT_ISSUE_WIDTH];
 
     // update mux logic
     rs_update_sel_t             rs_update_sel   [INTRS_DEPTH];
-    logic [ID_WIDTH_IDX-1:0]    rs_push_sel     [INTRS_DEPTH];
-    logic [INT_ISSUE_IDX-1:0]   rs_compress_sel [INTRS_DEPTH];
+    logic [INT_ISSUE_WIDTH-1:0] rs_compress     [INTRS_DEPTH];
 
     ///////////////////////
     // Mux Select Logic  //
     ///////////////////////
-    always_comb begin : compress_control
+
+    always_comb begin
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             // init
-            rs_push_sel[i] = 'x;
             rs_update_sel[i] = SELF;
-            rs_compress_sel[i] = '0;
             // compress
-            for( int j = 0; j < INT_ISSUE_WIDTH; j++ ) begin
-                if( rs_valid[i] & int_rs_pop_en[j] & (INTRS_IDX)'(unsigned'(i))>=fu_issue_idx[j] ) begin
-                    rs_update_sel[i] = NEXT;
-                    rs_compress_sel[i] = INT_ISSUE_IDX'(unsigned'(j));
-                    if(  unsigned'(j) < INT_ISSUE_WIDTH-unsigned'(1)  ) begin // handle corner case
-                        if( int_rs_pop_en[j+1] && INTRS_IDX'(unsigned'(i+j)+1)==fu_issue_idx[j+1] ) begin
-                            rs_compress_sel[i] = rs_compress_sel[i] + INT_ISSUE_IDX'(unsigned'(1));
-                        end
-                    end
-                end
-            end
+            if( rs_valid[i] & |rs_compress[i] ) rs_update_sel[i] = NEXT;
             // push
-            for( int j = 0; j < ID_WIDTH; j++ ) begin 
-                if ( int_rs_push_en[j] && ((INTRS_IDX)'(unsigned'(i)) == int_rs_push_idx[j]) ) begin
-                    rs_update_sel[i] = PUSH_IN;
-                    rs_push_sel[i] = ID_WIDTH_IDX'(unsigned'(j));
-                end
-            end
+            if( |rs_push[i] ) rs_update_sel[i] = PUSH_IN;
         end
     end
 
@@ -126,9 +108,9 @@ import int_rs_types::*;
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             unique case (rs_update_sel[i])
                 NEXT: begin
-                    if( unsigned'(i)+{31'b0, rs_compress_sel[i]} < INTRS_DEPTH-unsigned'(1) ) begin
-                        rs_push_en[i] = rs_valid[unsigned'(i)+{31'b0, rs_compress_sel[i]}+1];
-                        rs_clear[i] = ~rs_valid[unsigned'(i)+{31'b0, rs_compress_sel[i]}+1];
+                    if( unsigned'(i)+{30'b0, rs_compress[i]} < INTRS_DEPTH ) begin
+                        rs_push_en[i] = rs_valid[unsigned'(i)+{30'b0, rs_compress[i]}];
+                        rs_clear[i] = ~rs_valid[unsigned'(i)+{30'b0, rs_compress[i]}];
                     end else begin
                         rs_push_en[i] = 1'b0;
                         rs_clear[i] = 1'b1;
@@ -154,8 +136,8 @@ import int_rs_types::*;
         for (int i = 0; i < INTRS_DEPTH; i++) begin
             unique case (rs_update_sel[i])
                 NEXT: begin
-                    if (unsigned'(i)+{31'b0, rs_compress_sel[i]} < INTRS_DEPTH-unsigned'(1)) begin
-                        rs_entry_in[i] = rs_entry_out[unsigned'(i)+{31'b0, rs_compress_sel[i]}+unsigned'(1)];
+                    if (unsigned'(i)+{30'b0, rs_compress[i]} < INTRS_DEPTH) begin
+                        rs_entry_in[i] = rs_entry_out[unsigned'(i)+{30'b0, rs_compress[i]}];
                     end else begin
                         rs_entry_in[i] = 'x;
                     end
@@ -164,7 +146,7 @@ import int_rs_types::*;
                     rs_entry_in[i] = 'x;
                 end
                 PUSH_IN: begin
-                    rs_entry_in[i] = from_ds_entry[rs_push_sel[i]];
+                    rs_entry_in[i] = rs_push_entry[i];
                 end
                 default: begin
                     rs_entry_in[i] = 'x;
@@ -190,23 +172,30 @@ import int_rs_types::*;
         rs_top_next = int_rs_top;
         // pop
         for( int i = 0; i < INT_ISSUE_WIDTH; i++ ) begin
-            int_rs_pop_en[i] = '0;
-            if( fu_issue_en[i] & alu_ready[i] ) begin
-                int_rs_pop_en[i] = '1;
+            if( int_rs_valid[i] & alu_ready[i] ) begin
                 rs_top_next = INTRS_IDX'(rs_top_next - 1); 
             end
         end
-        // push: Allocate logic
+        // push
+        for( int i = 0; i < INTRS_DEPTH; i++ ) rs_push[i] = '0;
         for( int i = 0; i < ID_WIDTH; i++ ) begin
-            int_rs_push_en[i] = '0;
-            int_rs_push_idx[i] = 'x;
             if( from_ds.valid[i] && from_ds.ready ) begin 
-                int_rs_push_en[i] = '1;
-                int_rs_push_idx[i] = rs_top_next;
+                rs_push[rs_top_next][i] = '1;
                 rs_top_next = INTRS_IDX'(rs_top_next + 1);
             end
         end
     end
+
+    generate for (genvar i = 0; i < INTRS_DEPTH; i++) begin
+        one_hot_mux #(
+            .T          (int_rs_entry_t),
+            .NUM_INPUTS (ID_WIDTH)
+        ) ohm_push (
+            .data_in    (from_ds_entry),
+            .select     (rs_push[i]),
+            .data_out   (rs_push_entry[i])
+        );
+    end endgenerate
 
     //////////////////
     // Issue Logic  //
@@ -214,14 +203,29 @@ import int_rs_types::*;
     issue_arbiter issue_arbiter_i( 
         .rs_request(rs_request),
         .rs_grant(rs_grant),
-        .fu_issue_en(fu_issue_en),
-        .fu_issue_idx(fu_issue_idx)
+        .rs_compress(rs_compress),
+        .fu_issue(fu_issue)
     );
 
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin
-        assign issued_entry[i] = rs_entry[fu_issue_idx[i]];
-        assign to_prf[i].rs_bypass = rs_bypass[fu_issue_idx[i]];
+        one_hot_mux #(
+            .T          (int_rs_entry_t),
+            .NUM_INPUTS (INTRS_DEPTH)
+        ) ohm_entry (
+            .data_in    (rs_entry),
+            .select     (fu_issue[i]),
+            .data_out   (issued_entry[i])
+        );
+        one_hot_mux #(
+            .T          (bypass_t),
+            .NUM_INPUTS (INTRS_DEPTH)
+        ) ohm_bypass (
+            .data_in    (rs_bypass),
+            .select     (fu_issue[i]),
+            .data_out   (to_prf[i].rs_bypass)
+        );
     end endgenerate
+
 
     ////////////
     // Ready  //
@@ -267,14 +271,20 @@ import int_rs_types::*;
         end
     end endgenerate
 
+    // handshake
+    generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin
+        assign int_rs_valid[i] = |fu_issue[i];
+    end endgenerate
+
     // Functional Units
     bypass_network_t     fu_alu_bypass  [INT_ISSUE_WIDTH];
     assign  alu_bypass = fu_alu_bypass[0];
+
     generate for (genvar i = 0; i < INT_ISSUE_WIDTH; i++) begin : alu
         fu_alu fu_alu_i(
             .clk                    (clk),
             .rst                    (rst),
-            .int_rs_valid           (fu_issue_en[i]),
+            .int_rs_valid           (int_rs_valid[i]),
             .fu_alu_ready           (alu_ready[i]),
             .fu_alu_reg_in          (fu_alu_reg_in[i]),
             .bypass                 (fu_alu_bypass[i]),
