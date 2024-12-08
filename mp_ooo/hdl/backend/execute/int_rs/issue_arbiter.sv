@@ -3,30 +3,50 @@ import cpu_params::*;
 (
     input   logic   [INTRS_DEPTH-1:0]           rs_request,
     output  logic   [INTRS_DEPTH-1:0]           rs_grant,
-    output  logic                               fu_issue_en     [INT_ISSUE_WIDTH],
-    output  logic   [INTRS_IDX-1:0]             fu_issue_idx    [INT_ISSUE_WIDTH]
+    output  logic   [INT_ISSUE_WIDTH-1:0]       rs_compress     [INTRS_DEPTH],
+    output  logic   [INTRS_DEPTH-1:0]           fu_issue        [INT_ISSUE_WIDTH]
 );
 
-    logic   [INT_ISSUE_IDX:0]   next_issue_idx;
+    // try structral style
+    // still behavior code, but more intuitive
+
+    logic   [INT_ISSUE_WIDTH-1:0]   prev_assigned [INTRS_DEPTH];
 
     always_comb begin
-        // init
         rs_grant = '0;
-        next_issue_idx = '0;
-        for ( int i = 0; i < INT_ISSUE_WIDTH; i++ ) begin
-            fu_issue_en[i] = '0;
-            fu_issue_idx[i] = 'x;
-        end
-        // issue
-        for (int i = 0; i < INTRS_DEPTH; i++) begin
-            if (rs_request[i]) begin
-                rs_grant[i] = 1'b1;
-                fu_issue_en[next_issue_idx[0]] = '1;
-                fu_issue_idx[next_issue_idx[0]] = (INTRS_IDX)'(unsigned'(i));
-                next_issue_idx = (INT_ISSUE_IDX+1)'(next_issue_idx + unsigned'(1));
-                if ( unsigned'(next_issue_idx) >= (INT_ISSUE_IDX+1)'(unsigned'(INT_ISSUE_WIDTH)) ) break;
+        fu_issue[0] = '0;
+        fu_issue[1] = '0;
+        for (int i = 0; i < INTRS_DEPTH; i++) begin 
+            prev_assigned[i][0] = '0;
+            prev_assigned[i][1] = '0;
+            for ( int j = 0; j < i; j++ ) begin
+                if(rs_request[j])                          prev_assigned[i][0] = '1;
+                if(rs_request[j] & prev_assigned[j][0])    prev_assigned[i][1] = '1;
+            end
+            if( ~prev_assigned[i][0] & rs_request[i] ) begin
+                rs_grant[i] = '1;
+                fu_issue[0][i] = '1;
+            end else if ( ~prev_assigned[i][1] & rs_request[i] ) begin
+                rs_grant[i] = '1;
+                fu_issue[1][i] = '1;
             end
         end
+    end
+
+    always_comb begin
+        // hardcoded for simplicity
+        for ( int i = 0; i < INTRS_DEPTH; i++ ) begin
+            unique case (prev_assigned[i])
+                2'b00:      rs_compress[i] = (rs_grant[i]) ? 2'b01: 2'b00;
+                2'b01:      rs_compress[i] = (rs_grant[i]) ? 2'b10: 2'b01;
+                2'b11:      rs_compress[i] = 2'b10;
+                default:    rs_compress[i] = 'x;
+            endcase
+        end       
+        // for consecutive pop corner case
+        for ( int i = 0; i < INTRS_DEPTH-1; i++ ) begin
+            if( rs_compress[i]!=2'b00 && rs_grant[i+1] )   rs_compress[i] = 2'b10;
+        end   
     end
 
 endmodule
