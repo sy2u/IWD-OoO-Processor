@@ -1,19 +1,11 @@
-# MP Out-of-Order I_Wanna_Drop
+# IWD
+IWD is a 2-way superscalar, OoO processor that focuses on a short pipeline and low instruction latency. Course final project of ECE411@UIUC FA24.
 
-## Superscalar Status
+Joint effort of [Chiming Ni](https://github.com/nice-mee), [Kongning Lai](https://github.com/kongninglai), [Siying Yu](https://github.com/FlippingLogic), and [Hengjia Yu](https://github.com/siriuxyu).
 
-| Components | Status |
-| --- | --- |
-| Fetch         | ✅ Superscalar Ready |
-| Decode        | ✅ Superscalar Ready |
-| Rename        | ✅ Superscalar Ready |
-| Dispatch      | ✅ Superscalar Ready |
-| ROB           | ✅ Superscalar Ready |
-| ROB (Commit)  | ✅ Superscalar Ready |
-| RAT           | ✅ Superscalar Ready |
-| Free List     | ✅ Superscalar Ready |
-| RRF           | ✅ Superscalar Ready |
-| Issue Queue   | ✅ Superscalar Ready |
+## Design
+
+## Benchmarks
 
 ## Contribution
 | Deliverable | Chiming Ni | Hengjia Yu | Kongning Lai | Siying Yu |
@@ -38,13 +30,3 @@
 | Branch Predictor (FF Gshare+uBTB) |||✅||
 | Pipelined Mul/Div         ||✅|||
 | Dual Issue    ||||✅|
-
-## Advanced Feature Statistics
-### Age-Ordered Reservation Station
-Tested with Superscalar only
-| Chosen | ALU_RS | MDU_RS | Coremark | Compression | Mergesort | FFT | aes_sha 
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| | Normal | Normal   | `0.409681` | `0.412207` | `0.593525` | `0.541800` | `0.477922` |
-| | Normal | Ordered  | `0.409681` | `0.412207` | `0.593525` | `0.541800` | `0.477922` |
-|✅| Ordered | Normal   | `0.425735` | `0.606571` | `0.610516` | `0.558688` | `0.490431` |
-| | Ordered | Ordered  | `0.425735` | `0.606571` | `0.610516` | `0.558688` | `0.490431` |
