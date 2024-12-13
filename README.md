@@ -4,8 +4,10 @@ IWD is a 2-way superscalar, OoO processor that focuses on a short pipeline and l
 Joint effort of [Chiming Ni](https://github.com/nice-mee), [Kongning Lai](https://github.com/kongninglai), [Siying Yu](https://github.com/FlippingLogic), and [Hengjia Yu](https://github.com/siriuxyu).
 
 ## Design
+![MP_OOO drawio](https://github.com/user-attachments/assets/c68859df-0414-4d0e-919b-69aff6267dbe)
 
 ## Benchmarks
+
 
 ## Contribution
 | Deliverable | Chiming Ni | Hengjia Yu | Kongning Lai | Siying Yu |
