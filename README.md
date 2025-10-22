@@ -1,7 +1,7 @@
 # IWD
 IWD is a 2-way superscalar, OoO processor that focuses on a short pipeline and low instruction latency. Course final project of ECE411@UIUC (Fall 2024).
 
-Joint effort of [Chiming Ni](https://github.com/nice-mee), [Kongning Lai](https://github.com/kongninglai), [Siying Yu](https://github.com/FlippingLogic), and [Hengjia Yu](https://github.com/siriuxyu).
+Joint effort of [Chiming Ni](https://github.com/nice-mee), [Kongning Lai](https://github.com/kongninglai), [Siying Yu](https://github.com/sy2u), and [Hengjia Yu](https://github.com/siriuxyu).
 
 ## Design
 ![MP_OOO drawio](mp_ooo/docs/images/orion-arch.png)
